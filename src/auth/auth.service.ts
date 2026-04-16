@@ -1,172 +1,302 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
-} from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
-import * as bcrypt from "bcrypt";
-import { JwtService } from "@nestjs/jwt";
-import { createHash, randomInt } from "crypto";
-import { User, UserDocument } from "../users/schemas/user.schema";
-import { SignupDto } from "./dto/signup.dto";
-import { SigninDto } from "./dto/signin.dto";
-import { ForgotPasswordDto } from "./dto/forgot-password.dto";
-import { VerifyOtpDto } from "./dto/verify-otp.dto";
-import { ResetPasswordDto } from "./dto/reset-password.dto";
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
+import {
+  ForgotPasswordDto,
+  RefreshTokenDto,
+  ResetPasswordDto,
+  SignInDto,
+  SignUpDto,
+  VerifyOtpDto,
+} from './dto/auth.dto';
+
+const SALT_ROUNDS = 12;
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
+    private readonly config: ConfigService,
   ) {}
 
-  private hashText(value: string) {
-    return createHash("sha256").update(value).digest("hex");
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  private async hashValue(plain: string): Promise<string> {
+    return bcrypt.hash(plain, SALT_ROUNDS);
   }
 
-  private async signTokens(userId: string, email: string) {
+  private async compareValue(plain: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(plain, hash);
+  }
+
+  private generateOtp(): string {
+    // 6-digit numeric OTP
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private generateTokens(userId: string, email: string) {
     const payload = { sub: userId, email };
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: "15m",
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m',
     });
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: "7d",
+
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
     });
+
     return { accessToken, refreshToken };
   }
 
-  async signup(dto: SignupDto) {
-    const existing = await this.userModel.findOne({ email: dto.email });
-    if (existing) throw new BadRequestException("Email already exists");
+  // ── 1. SIGN UP ─────────────────────────────────────────────────────────────
+  // Page: SignUpPage.tsx
+  // POST /api/v1/auth/signup
+  async signup(dto: SignUpDto) {
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) {
+      throw new ConflictException('An account with this email already exists');
+    }
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
-    const user = await this.userModel.create({
+    const hashedPassword = await this.hashValue(dto.password);
+
+    const user = await this.usersService.create({
       fullName: dto.fullName,
       email: dto.email,
-      passwordHash,
+      password: hashedPassword,
     });
 
-    const tokens = await this.signTokens(user.id, user.email);
-    user.refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 12);
-    await user.save();
-
     return {
-      user: { id: user.id, fullName: user.fullName, email: user.email },
-      ...tokens,
+      message: 'Account created successfully',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+      },
     };
   }
 
-  async signin(dto: SigninDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user) throw new UnauthorizedException("Invalid credentials");
-
-    const ok = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!ok) throw new UnauthorizedException("Invalid credentials");
-
-    const tokens = await this.signTokens(user.id, user.email);
-    user.refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 12);
-    await user.save();
-
-    return {
-      user: { id: user.id, fullName: user.fullName, email: user.email },
-      ...tokens,
-    };
-  }
-
-  async refresh(userId: string, refreshToken: string) {
-    const user = await this.userModel.findById(userId);
-    if (!user || !user.refreshTokenHash) throw new UnauthorizedException();
-
-    const ok = await bcrypt.compare(refreshToken, user.refreshTokenHash);
-    if (!ok) throw new UnauthorizedException();
-
-    const tokens = await this.signTokens(user.id, user.email);
-    user.refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 12);
-    await user.save();
-
-    return tokens;
-  }
-
-  async logout(userId: string) {
-    await this.userModel.findByIdAndUpdate(userId, { refreshTokenHash: null });
-    return { message: "Logged out" };
-  }
-
-  async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-
-    // Generic response for security
-    if (!user) return { message: "If email exists, OTP sent" };
-
-    const otp = String(randomInt(100000, 999999));
-    user.resetOtpHash = this.hashText(otp);
-    user.resetOtpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
-    user.resetOtpAttempts = 0;
-    await user.save();
-
-    // TODO: send email via mailer service
-    console.log("OTP for testing:", otp);
-
-    return { message: "If email exists, OTP sent" };
-  }
-
-  async verifyOtp(dto: VerifyOtpDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user || !user.resetOtpHash || !user.resetOtpExpiresAt) {
-      throw new BadRequestException("Invalid OTP");
+  // ── 2. SIGN IN ─────────────────────────────────────────────────────────────
+  // Page: SignInPage.tsx
+  // POST /api/v1/auth/signin
+  async signin(dto: SignInDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (user.resetOtpAttempts >= 5) {
-      throw new BadRequestException("Too many attempts");
+    const passwordMatch = await this.compareValue(dto.password, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (user.resetOtpExpiresAt.getTime() < Date.now()) {
-      throw new BadRequestException("OTP expired");
-    }
-
-    const otpHash = this.hashText(dto.otp);
-    if (otpHash !== user.resetOtpHash) {
-      user.resetOtpAttempts += 1;
-      await user.save();
-      throw new BadRequestException("Invalid OTP");
-    }
-
-    const resetToken = await this.jwtService.signAsync(
-      { sub: user.id, type: "reset" },
-      { secret: process.env.JWT_RESET_SECRET, expiresIn: "15m" },
+    const { accessToken, refreshToken } = this.generateTokens(
+      (user._id as string).toString(),
+      user.email,
     );
 
-    user.resetOtpHash = undefined;
-    user.resetOtpExpiresAt = undefined;
-    user.resetOtpAttempts = 0;
-    await user.save();
+    // Store hashed refresh token
+    const hashedRefreshToken = await this.hashValue(refreshToken);
+    await this.usersService.addRefreshToken(
+      (user._id as string).toString(),
+      hashedRefreshToken,
+    );
 
-    return { resetToken };
+    return {
+      message: 'Signed in successfully',
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+      },
+    };
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
-    let payload: { sub: string; type: string };
-    try {
-      payload = await this.jwtService.verifyAsync(dto.resetToken, {
-        secret: process.env.JWT_RESET_SECRET,
-      });
-    } catch {
-      throw new BadRequestException("Invalid or expired reset token");
+  // ── 3. FORGOT PASSWORD ─────────────────────────────────────────────────────
+  // Page: ForgotPasswordPage.tsx
+  // POST /api/v1/auth/forgot-password
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+
+    // Always return the same message to prevent email enumeration
+    const genericMessage =
+      'If that email is registered, an OTP has been sent.';
+
+    if (!user) return { message: genericMessage };
+
+    const otp = this.generateOtp();
+    const expiresMinutes =
+      this.config.get<number>('OTP_EXPIRES_MINUTES') || 10;
+    const otpExpiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000);
+
+    // Store hashed OTP
+    const hashedOtp = await this.hashValue(otp);
+    await this.usersService.setOtp(
+      (user._id as string).toString(),
+      hashedOtp,
+      otpExpiresAt,
+    );
+
+    await this.mailService.sendOtp(user.email, otp);
+
+    return { message: genericMessage };
+  }
+
+  // ── 4. VERIFY OTP ──────────────────────────────────────────────────────────
+  // Page: VerifyOtpPage.tsx
+  // POST /api/v1/auth/verify-otp
+  async verifyOtp(dto: VerifyOtpDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user || !user.otpCode || !user.otpExpiresAt) {
+      throw new BadRequestException('Invalid or expired OTP');
     }
 
-    if (payload.type !== "reset") throw new BadRequestException("Invalid token");
+    // Check expiry
+    if (new Date() > user.otpExpiresAt) {
+      await this.usersService.clearOtp((user._id as string).toString());
+      throw new BadRequestException('OTP has expired. Please request a new one.');
+    }
 
-    const user = await this.userModel.findById(payload.sub);
-    if (!user) throw new BadRequestException("User not found");
+    // Check OTP match
+    const otpMatch = await this.compareValue(dto.otp, user.otpCode);
+    if (!otpMatch) {
+      throw new BadRequestException('Invalid OTP');
+    }
 
-    user.passwordHash = await bcrypt.hash(dto.newPassword, 12);
-    user.refreshTokenHash = undefined; // force re-login on all devices
-    await user.save();
+    // OTP valid → clear it and issue a short-lived reset token
+    await this.usersService.clearOtp((user._id as string).toString());
 
-    return { message: "Password updated successfully" };
+    const resetToken = this.jwtService.sign(
+      { sub: (user._id as string).toString(), email: user.email, purpose: 'reset' },
+      {
+        secret: this.config.get<string>('JWT_RESET_SECRET'),
+        expiresIn: this.config.get<string>('JWT_RESET_EXPIRES_IN') || '10m',
+      },
+    );
+
+    return {
+      message: 'OTP verified successfully',
+      resetToken,
+    };
+  }
+
+  // ── 5. RESET PASSWORD ──────────────────────────────────────────────────────
+  // Page: ResetPasswordPage.tsx
+  // POST /api/v1/auth/reset-password
+  async resetPassword(dto: ResetPasswordDto) {
+    let payload: { sub: string; purpose: string };
+
+    try {
+      payload = this.jwtService.verify(dto.resetToken, {
+        secret: this.config.get<string>('JWT_RESET_SECRET'),
+      });
+    } catch {
+      throw new BadRequestException('Reset token is invalid or has expired');
+    }
+
+    if (payload.purpose !== 'reset') {
+      throw new BadRequestException('Invalid reset token');
+    }
+
+    const hashedPassword = await this.hashValue(dto.newPassword);
+    await this.usersService.updatePassword(payload.sub, hashedPassword);
+
+    // Invalidate all refresh tokens (force re-login everywhere)
+    await this.usersService.clearAllRefreshTokens(payload.sub);
+
+    return { message: 'Password updated successfully' };
+  }
+
+  // ── 6. REFRESH TOKEN ───────────────────────────────────────────────────────
+  // POST /api/v1/auth/refresh
+  async refreshTokens(dto: RefreshTokenDto) {
+    let payload: { sub: string; email: string };
+
+    try {
+      payload = this.jwtService.verify(dto.refreshToken, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Refresh token is invalid or expired');
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+    if (!user || !user.refreshTokens?.length) {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    // Find the matching hashed token
+    let matchedHash: string | null = null;
+    for (const hashed of user.refreshTokens) {
+      const match = await this.compareValue(dto.refreshToken, hashed);
+      if (match) {
+        matchedHash = hashed;
+        break;
+      }
+    }
+
+    if (!matchedHash) {
+      // Token reuse detected → nuke all tokens (security)
+      await this.usersService.clearAllRefreshTokens(payload.sub);
+      throw new UnauthorizedException('Refresh token reuse detected. Please sign in again.');
+    }
+
+    // Rotate refresh token
+    await this.usersService.removeRefreshToken(payload.sub, matchedHash);
+
+    const { accessToken, refreshToken: newRefreshToken } = this.generateTokens(
+      payload.sub,
+      payload.email,
+    );
+
+    const newHashedRefresh = await this.hashValue(newRefreshToken);
+    await this.usersService.addRefreshToken(payload.sub, newHashedRefresh);
+
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  // ── 7. SIGN OUT ────────────────────────────────────────────────────────────
+  // POST /api/v1/auth/signout
+  async signout(dto: RefreshTokenDto) {
+    let payload: { sub: string };
+
+    try {
+      payload = this.jwtService.verify(dto.refreshToken, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      // Even if token invalid, treat as signed out
+      return { message: 'Signed out' };
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+    if (!user) return { message: 'Signed out' };
+
+    for (const hashed of user.refreshTokens) {
+      const match = await this.compareValue(dto.refreshToken, hashed);
+      if (match) {
+        await this.usersService.removeRefreshToken(payload.sub, hashed);
+        break;
+      }
+    }
+
+    return { message: 'Signed out successfully' };
   }
 }

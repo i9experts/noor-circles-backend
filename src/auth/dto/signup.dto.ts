@@ -1,13 +1,15 @@
-import { IsEmail, IsString, MinLength } from "class-validator";
+/* eslint-disable prettier/prettier */
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class SignupDto {
+  @IsNotEmpty()
   @IsString()
-  fullName!: string;
+  name: string;
 
   @IsEmail()
-  email!: string;
+  email: string;
 
+  @IsNotEmpty()
   @IsString()
-  @MinLength(8)
-  password!: string;
+  password: string;
 }
