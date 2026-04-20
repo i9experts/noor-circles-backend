@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './user.schema';
+// import { AuthDto } from '../auth/dto/auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +18,31 @@ export class UsersService {
 
   async findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
+  }
+
+  // ── Get Profile ─────────────────────────────────────────────────────────────
+
+  async getProfile(userId: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId).select('-password').exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  // ── Update User Data ────────────────────────────────────────────────────────
+
+  async updateUserData(userId: string, updateUserDto: any): Promise<UserDocument> {
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: updateUserDto },
+      { new: true, runValidators: true }
+    ).select('-password').exec();
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   // ── Create ─────────────────────────────────────────────────────────────────

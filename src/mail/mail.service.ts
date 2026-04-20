@@ -4,55 +4,55 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private readonly logger = new Logger(MailService.name);
-  private transporter: nodemailer.Transporter;
+  private transporter; // nodemailer ka sender object
+  private logger = new Logger(MailService.name);
 
-  constructor(private readonly config: ConfigService) {
+  constructor(private config: ConfigService) {
+    // Ek baar transporter banao — Gmail SMTP se connect karo
     this.transporter = nodemailer.createTransport({
-      host: this.config.get<string>('MAIL_HOST'),
-      port: this.config.get<number>('MAIL_PORT'),
-      secure: this.config.get<string>('MAIL_SECURE') === 'true',
+      host: this.config.get('MAIL_HOST'),       // smtp.gmail.com
+      port: this.config.get('MAIL_PORT'),        // 587
+      secure: false,                             // TLS use karega
       auth: {
-        user: this.config.get<string>('MAIL_USER'),
-        pass: this.config.get<string>('MAIL_PASS'),
+        user: this.config.get('MAIL_USER'),
+        pass: this.config.get('MAIL_PASS'),
       },
     });
   }
 
-  async sendOtp(to: string, otp: string): Promise<void> {
-    const from = this.config.get<string>('MAIL_FROM');
-    const expiresMinutes = this.config.get<number>('OTP_EXPIRES_MINUTES') || 10;
-
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e2e8f0;border-radius:8px;">
-        <h2 style="color:#1a202c;margin-bottom:8px;">Password Reset OTP</h2>
-        <p style="color:#4a5568;font-size:15px;">
-          Use the code below to reset your <strong>Noor Circle</strong> password.
-          It expires in <strong>${expiresMinutes} minutes</strong>.
-        </p>
-        <div style="margin:24px 0;text-align:center;">
-          <span style="display:inline-block;letter-spacing:8px;font-size:32px;font-weight:700;color:#2d3748;background:#f7fafc;padding:16px 24px;border-radius:8px;border:1px solid #e2e8f0;">
-            ${otp}
-          </span>
-        </div>
-        <p style="color:#718096;font-size:13px;">
-          If you did not request this, please ignore this email.
-          Your account remains secure.
-        </p>
-      </div>
-    `;
+  async sendOtp(toEmail: string, otp: string): Promise<void> {
+    const expiresIn = this.config.get('OTP_EXPIRES_MINUTES') || 10;
 
     try {
       await this.transporter.sendMail({
-        from,
-        to,
-        subject: 'Your Noor Circle Password Reset OTP',
-        html,
+        from: this.config.get('MAIL_FROM'),
+        to: toEmail,
+        subject: 'Noor Circle — Password Reset OTP',
+        // Simple HTML email
+        html: `
+          <div style="font-family: Arial; padding: 24px; max-width: 480px;">
+            <h2>Password Reset OTP</h2>
+            <p>Yeh code use karo apna password reset karne ke liye:</p>
+            <div style="font-size: 36px; font-weight: bold; 
+                        letter-spacing: 8px; padding: 16px;
+                        background: #f4f4f4; border-radius: 8px;
+                        text-align: center;">
+              ${otp}
+            </div>
+            <p style="color: #666; margin-top: 16px;">
+              Yeh code <strong>${expiresIn} minutes</strong> mein expire ho jayega.
+            </p>
+            <p style="color: #999; font-size: 12px;">
+              Agar tumne yeh request nahi ki to ignore karo.
+            </p>
+          </div>
+        `,
       });
-      this.logger.log(`OTP email sent to ${to}`);
-    } catch (err) {
-      this.logger.error(`Failed to send OTP email to ${to}`, err);
-      throw err;
+
+      this.logger.log(`OTP email bheja gaya: ${toEmail}`);
+    } catch (error) {
+      this.logger.error(`Email bhejne mein error: ${toEmail}`, error);
+      throw error;
     }
   }
 }

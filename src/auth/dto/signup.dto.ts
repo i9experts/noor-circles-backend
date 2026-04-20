@@ -1,15 +1,14 @@
-/* eslint-disable prettier/prettier */
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
-export class SignupDto {
-  @IsNotEmpty()
+// Ye class batati hai ke signup mein kya-kya aana chahiye
+export class SignUpDto {
   @IsString()
-  name: string;
+  fullName: string;
 
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
   @IsString()
+  @MinLength(8) // 8 se kam hoga to error dega automatically
   password: string;
 }

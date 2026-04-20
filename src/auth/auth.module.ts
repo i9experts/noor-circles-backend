@@ -1,21 +1,23 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-
+import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';   //signin
+import { PassportModule } from '@nestjs/passport';  //signin
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { User, UserSchema } from '../user/user.schema';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
-import { UsersModule } from '../users/users.module';
+
 import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
-    PassportModule,
-    JwtModule.register({}), // secrets injected per-call via ConfigService
-    UsersModule,
+    // User model is module mein available hoga
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    PassportModule,   //signin
+    JwtModule.register({}),   //signin
     MailModule,
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtAccessStrategy],
+  controllers: [AuthController], // routes
+  providers: [AuthService, JwtAccessStrategy],      // signin [JwtAccessStrategy]
 })
 export class AuthModule {}

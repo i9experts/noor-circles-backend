@@ -10,6 +10,11 @@ import { UploadService } from './upload.service';
 import { createMulterOptions } from './multer.config';
 import { ConfigService } from '@nestjs/config';
 
+// Create a factory function that returns the interceptor
+const createFileInterceptor = (configService: ConfigService) => {
+  return FileInterceptor('file', createMulterOptions(configService));
+};
+
 @Controller('upload')
 export class UploadController {
   constructor(
@@ -18,10 +23,8 @@ export class UploadController {
   ) {}
 
   @Post('image')
-  @UseInterceptors(
-    FileInterceptor('file', createMulterOptions(new ConfigService())), // ✅ use CloudinaryStorage
-  )
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadService.uploadFile(file); // no need to upload again
+  @UseInterceptors(createFileInterceptor(new ConfigService()))
+  async uploadImage(@UploadedFile() file: any) {
+    return this.uploadService.uploadFile(file);
   }
 }
