@@ -11,7 +11,7 @@ export class MailService {
     // Ek baar transporter banao — Gmail SMTP se connect karo
     this.transporter = nodemailer.createTransport({
       host: this.config.get('MAIL_HOST'),       // smtp.gmail.com
-      port: this.config.get('MAIL_PORT'),        // 587
+      port: Number(this.config.get('MAIL_PORT')),        // 587
       secure: false,                             // TLS use karega
       auth: {
         user: this.config.get('MAIL_USER'),

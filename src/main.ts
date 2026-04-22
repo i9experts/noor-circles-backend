@@ -7,10 +7,15 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1'); // sab routes /api/v1 se start honge
 
-   app.enableCors({
+  app.enableCors({
     origin: 'http://localhost:5173', // 👈 frontend URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-reset-email',      // ✅ yeh add karo — custom header allow karo
+    ],
   });
   // Ye line DTO validation ON karta hai
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));

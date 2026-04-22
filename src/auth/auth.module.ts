@@ -1,23 +1,25 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { JwtModule } from '@nestjs/jwt';   //signin
-import { PassportModule } from '@nestjs/passport';  //signin
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User, UserSchema } from '../user/user.schema';
-import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
-
 import { MailModule } from '../mail/mail.module';
+import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 @Module({
   imports: [
-    // User model is module mein available hoga
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    PassportModule,   //signin
-    JwtModule.register({}),   //signin
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    // Secrets are loaded per-strategy via ConfigService — no global secret needed here
+    JwtModule.register({}),
     MailModule,
   ],
-  controllers: [AuthController], // routes
-  providers: [AuthService, JwtAccessStrategy],      // signin [JwtAccessStrategy]
+  controllers: [AuthController],
+  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
+  exports: [AuthService, JwtAccessStrategy],
 })
 export class AuthModule {}

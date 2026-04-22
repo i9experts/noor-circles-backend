@@ -1,29 +1,35 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectModel } from '@nestjs/mongoose';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
+
 import { User, UserDocument } from '../../user/user.schema';
+import { JwtPayload } from '../interface/auth.interface';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     config: ConfigService,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {
     super({
-      // Request ke Authorization header se token nikalo
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get('JWT_ACCESS_SECRET'),
+      secretOrKey: config.get<string>('JWT_ACCESS_SECRET'),
+      ignoreExpiration: false,
     });
   }
 
-  // Token valid hone ke baad yeh function chalta hai
-  // Jo bhi return karo woh req.user mein aa jata hai
-  async validate(payload: { sub: string; email: string }) {
-    const user = await this.userModel.findById(payload.sub);
-    if (!user) throw new UnauthorizedException('User nahi mila');
+  async validate(payload: JwtPayload): Promise<UserDocument> {
+    const user = await this.userModel
+      .findById(payload.sub)
+      .select('+password'); // explicitly include if needed downstream
+
+    if (!user) {
+      throw new UnauthorizedException('User no longer exists.');
+    }
+
     return user;
   }
 }
