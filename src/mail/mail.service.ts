@@ -1,58 +1,66 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private transporter; // nodemailer ka sender object
-  private logger = new Logger(MailService.name);
+  private readonly transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(MailService.name);
 
-  constructor(private config: ConfigService) {
-    // Ek baar transporter banao — Gmail SMTP se connect karo
+  constructor(private readonly config: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: this.config.get('MAIL_HOST'),       // smtp.gmail.com
-      port: Number(this.config.get('MAIL_PORT')),        // 587
-      secure: false,                             // TLS use karega
+      host: this.config.getOrThrow('MAIL_HOST'),
+      port: Number(this.config.getOrThrow('MAIL_PORT')),
+      secure: this.config.get('MAIL_SECURE') === 'true',
       auth: {
-        user: this.config.get('MAIL_USER'),
-        pass: this.config.get('MAIL_PASS'),
+        user: this.config.getOrThrow('MAIL_USER'),
+        pass: this.config.getOrThrow('MAIL_PASS'),
       },
     });
   }
 
-  async sendOtp(toEmail: string, otp: string): Promise<void> {
-    const expiresIn = this.config.get('OTP_EXPIRES_MINUTES') || 10;
+  async sendOtp(toEmail: string, otp: string, type: 'signup' | 'reset'): Promise<void> {
+    const isSignup = type === 'signup';
+
+    const subject = isSignup
+      ? 'Noor Circle — Verify Your Email'
+      : 'Noor Circle — Password Reset OTP';
+
+    const heading = isSignup ? 'Email Verification' : 'Password Reset';
+
+    const description = isSignup
+      ? 'Use the code below to verify your email and complete registration:'
+      : 'Use the code below to reset your password:';
 
     try {
       await this.transporter.sendMail({
-        from: this.config.get('MAIL_FROM'),
+        from: this.config.getOrThrow('MAIL_FROM'),
         to: toEmail,
-        subject: 'Noor Circle — Password Reset OTP',
-        // Simple HTML email
+        subject,
         html: `
-          <div style="font-family: Arial; padding: 24px; max-width: 480px;">
-            <h2>Password Reset OTP</h2>
-            <p>Yeh code use karo apna password reset karne ke liye:</p>
-            <div style="font-size: 36px; font-weight: bold; 
-                        letter-spacing: 8px; padding: 16px;
-                        background: #f4f4f4; border-radius: 8px;
-                        text-align: center;">
+          <div style="font-family:Arial,sans-serif;max-width:480px;padding:32px;
+                      border:1px solid #eee;border-radius:8px;margin:auto">
+            <h2 style="margin-top:0;color:#1a1a1a">${heading}</h2>
+            <p style="color:#444">${description}</p>
+            <div style="font-size:38px;font-weight:bold;letter-spacing:12px;
+                        padding:20px;background:#f5f5f5;border-radius:8px;
+                        text-align:center;margin:24px 0;color:#1a1a1a">
               ${otp}
             </div>
-            <p style="color: #666; margin-top: 16px;">
-              Yeh code <strong>${expiresIn} minutes</strong> mein expire ho jayega.
+            <p style="color:#555">
+              This code expires in <strong>2 minutes</strong>.
             </p>
-            <p style="color: #999; font-size: 12px;">
-              Agar tumne yeh request nahi ki to ignore karo.
+            <p style="color:#999;font-size:12px;margin-bottom:0">
+              If you did not request this, please ignore this email.
             </p>
           </div>
         `,
       });
 
-      this.logger.log(`OTP email bheja gaya: ${toEmail}`);
-    } catch (error) {
-      this.logger.error(`Email bhejne mein error: ${toEmail}`, error);
-      throw error;
+      this.logger.log(`OTP [${type}] sent to: ${toEmail}`);
+    } catch (err) {
+      this.logger.error(`Failed to send OTP to ${toEmail}`, err);
+      throw new InternalServerErrorException('Failed to send email. Please try again.');
     }
   }
 }

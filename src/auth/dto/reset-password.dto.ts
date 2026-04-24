@@ -1,14 +1,11 @@
-import { IsString, MaxLength, MinLength, Matches } from "class-validator";
+// reset-password.dto.ts
+import { IsString, MaxLength, MinLength, Matches } from 'class-validator';
 
 export class ResetPasswordDto {
   @IsString()
-  @MinLength(8, { message: 'Password must be at least 8 characters long.' })
+  @MinLength(8)
   @MaxLength(64)
-  @Matches(/(?=.*[A-Z])/, {
-    message: 'Password must contain at least one uppercase letter.',
-  })
-  @Matches(/(?=.*[0-9])/, {
-    message: 'Password must contain at least one number.',
-  })
+  @Matches(/(?=.*[A-Z])/, { message: 'Must contain at least one uppercase letter.' })
+  @Matches(/(?=.*[0-9])/, { message: 'Must contain at least one number.' })
   newPassword: string;
 }

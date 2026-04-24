@@ -1,26 +1,45 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
+  const logger = new Logger('Bootstrap');
 
-  app.setGlobalPrefix('api/v1'); // sab routes /api/v1 se start honge
+  // ── Security Headers (helmet) ──────────────────────────────────────────────
+  app.use(helmet());
+
+  // ── Global Route Prefix ────────────────────────────────────────────────────
+  app.setGlobalPrefix('api/v1');
+
+  // ── CORS ───────────────────────────────────────────────────────────────────
+  const allowedOrigins = (config.get<string>('FRONTEND_URL') || '')
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
 
   app.enableCors({
-    origin: 'http://localhost:5173', // 👈 frontend URL
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'x-reset-email',      // ✅ yeh add karo — custom header allow karo
-    ],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
-  // Ye line DTO validation ON karta hai
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
-  await app.listen(3000);
-  console.log('Server chal raha hai: http://localhost:3000');
+  // ── Global Validation Pipe ─────────────────────────────────────────────────
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,         // Extra fields automatically strip karo
+      forbidNonWhitelisted: true, // Unknown fields par 400 throw karo
+      transform: true,         // DTO class instances mein auto-convert karo
+    }),
+  );
+
+  const port = config.get<number>('PORT') || 3000;
+  await app.listen(port);
+  logger.log(`Server running on: http://localhost:${port}/api/v1`);
 }
+
 bootstrap();

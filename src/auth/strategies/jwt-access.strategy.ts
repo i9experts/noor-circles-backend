@@ -1,35 +1,32 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { InjectModel } from '@nestjs/mongoose';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { Model } from 'mongoose';
+import { UsersService } from '../../user/user.service';
 
-import { User, UserDocument } from '../../user/user.schema';
-import { JwtPayload } from '../interface/auth.interface';
+interface JwtPayload {
+  sub: string;
+  email: string;
+}
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     config: ConfigService,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly usersService: UsersService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get<string>('JWT_ACCESS_SECRET'),
+      secretOrKey: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
       ignoreExpiration: false,
     });
   }
 
-  async validate(payload: JwtPayload): Promise<UserDocument> {
-    const user = await this.userModel
-      .findById(payload.sub)
-      .select('+password'); // explicitly include if needed downstream
-
-    if (!user) {
-      throw new UnauthorizedException('User no longer exists.');
+  async validate(payload: JwtPayload) {
+    const user = await this.usersService.findById(payload.sub);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Account not found or deactivated.');
     }
-
-    return user;
+    return user; // req.user mein attach hota hai
   }
 }

@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './user.schema';
-// import { AuthDto } from '../auth/dto/auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -10,92 +9,99 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  // ── Find helpers ────────────────────────────────────────────────────────────
+  // ── Finders ─────────────────────────────────────────────────────────────────
 
-  async findByEmail(email: string): Promise<UserDocument | null> {
+  findByEmail(email: string) {
     return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
-  async findById(id: string): Promise<UserDocument | null> {
+  findById(id: string) {
     return this.userModel.findById(id).exec();
   }
 
-  // ── Get Profile ─────────────────────────────────────────────────────────────
+  /** Sensitive fields ke sath — auth service ke liye */
+  findByEmailWithSecrets(email: string) {
+    return this.userModel
+      .findOne({ email: email.toLowerCase() })
+      .select('+password +refreshTokens +otpCode +otpExpiresAt +pendingSignup')
+      .exec();
+  }
+
+  findByIdWithSecrets(id: string) {
+    return this.userModel
+      .findById(id)
+      .select('+refreshTokens +otpCode +otpExpiresAt')
+      .exec();
+  }
+
+  // ── Profile ──────────────────────────────────────────────────────────────────
 
   async getProfile(userId: string): Promise<UserDocument> {
     const user = await this.userModel.findById(userId).select('-password').exec();
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found.');
     return user;
   }
 
-  // ── Update User Data ────────────────────────────────────────────────────────
-
-  async updateUserData(userId: string, updateUserDto: any): Promise<UserDocument> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { $set: updateUserDto },
-      { new: true, runValidators: true }
-    ).select('-password').exec();
-    
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+  async updateUserData(userId: string, data: Partial<User>): Promise<UserDocument> {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { $set: data }, { new: true, runValidators: true })
+      .select('-password')
+      .exec();
+    if (!user) throw new NotFoundException('User not found.');
     return user;
   }
 
-  // ── Create ─────────────────────────────────────────────────────────────────
+  // ── Create ───────────────────────────────────────────────────────────────────
 
-  async create(data: {
-    fullName: string;
-    email: string;
-    password: string; // already hashed
-  }): Promise<UserDocument> {
-    const user = new this.userModel(data);
-    return user.save();
+  async create(data: { fullName: string; email: string; password: string }): Promise<UserDocument> {
+    return this.userModel.create(data);
   }
 
-  // ── OTP ────────────────────────────────────────────────────────────────────
+  // ── OTP ──────────────────────────────────────────────────────────────────────
 
-  async setOtp(
-    userId: string,
-    otpCode: string,
-    otpExpiresAt: Date,
-  ): Promise<void> {
+  async setOtp(userId: string, otpCode: string, otpExpiresAt: Date) {
     await this.userModel.findByIdAndUpdate(userId, { otpCode, otpExpiresAt });
   }
 
-  async clearOtp(userId: string): Promise<void> {
+  async clearOtp(userId: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       otpCode: null,
       otpExpiresAt: null,
     });
   }
 
-  // ── Password ───────────────────────────────────────────────────────────────
+  // ── Password ─────────────────────────────────────────────────────────────────
 
-  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+  async updatePassword(userId: string, hashedPassword: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       password: hashedPassword,
+      refreshTokens: [],
     });
   }
 
-  // ── Refresh tokens ─────────────────────────────────────────────────────────
+  // ── Refresh Tokens ───────────────────────────────────────────────────────────
 
-  async addRefreshToken(userId: string, hashedToken: string): Promise<void> {
+  async addRefreshToken(userId: string, hashedToken: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       $push: { refreshTokens: hashedToken },
     });
   }
 
-  async removeRefreshToken(userId: string, hashedToken: string): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, {
-      $pull: { refreshTokens: hashedToken },
-    });
+  async clearAllRefreshTokens(userId: string) {
+    await this.userModel.findByIdAndUpdate(userId, { refreshTokens: [] });
   }
 
-  async clearAllRefreshTokens(userId: string): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, { refreshTokens: [] });
+  // ── Admin ────────────────────────────────────────────────────────────────────
+
+  async findAll() {
+    return this.userModel.find({ isEmailVerified: true }).select('-password').exec();
+  }
+
+  async deactivateUser(userId: string) {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { isActive: false }, { new: true })
+      .select('-password');
+    if (!user) throw new NotFoundException('User not found.');
+    return user;
   }
 }

@@ -1,422 +1,367 @@
-// auth.secvice.ts
-
-
 import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
-import { User, UserDocument } from '../user/user.schema';
-import { SignUpDto } from './dto/signup.dto';
-import { SignInDto } from './dto/signin.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UsersService } from '../user/user.service';
 import { MailService } from '../mail/mail.service';
+import { SignupRequestOtpDto, SignupVerifyOtpDto } from './dto/signup.dto';
+import { SignInDto } from './dto/signin.dto';
+import { ForgotPasswordDto, VerifyOtpDto, ResetPasswordDto } from './dto/other.dto';
 import { AuthTokens, AuthUser } from './interface/auth.interface';
+import { UserDocument } from '../user/user.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from '../user/user.schema';
+import { Model } from 'mongoose';
+
+const BCRYPT_ROUNDS = 12;
+const OTP_EXPIRY_MS = 2 * 60 * 1000; // 2 minutes
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly BCRYPT_ROUNDS = 12;
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
 
-  // ─────────────────────────────────────────────
-  // PUBLIC METHODS
-  // ─────────────────────────────────────────────
+  // ── SIGNUP: Step 1 — OTP Request ────────────────────────────────────────────
 
-  /**
-   * Register a new user account.
-   */
-  async signup(dto: SignUpDto): Promise<{ message: string; user: AuthUser }> {
-    const exists = await this.userModel.findOne({
-      email: dto.email.toLowerCase().trim(),
+  async signupRequestOtp(dto: SignupRequestOtpDto) {
+    // Check: kya email pehle se registered hai?
+    const existingVerified = await this.userModel.findOne({
+      email: dto.email,
+      isEmailVerified: true,
     });
-
-    if (exists) {
+    if (existingVerified) {
       throw new ConflictException('This email is already registered.');
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, this.BCRYPT_ROUNDS);
+    const otp = this.makeOtp();
+    const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+    const hashedOtp = await bcrypt.hash(otp, BCRYPT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
-    const user = await this.userModel.create({
-      fullName: dto.fullName.trim(),
-      email: dto.email.toLowerCase().trim(),
-      password: hashedPassword,
-    });
+    // Agar pehle se pending record hai to update karo, warna naya banao
+    await this.userModel.findOneAndUpdate(
+      { email: dto.email, isEmailVerified: false },
+      {
+        email: dto.email,
+        fullName: dto.fullName,
+        // Placeholder password (asli pendingSignup mein store hai)
+        password: hashedPassword,
+        isEmailVerified: false,
+        otpCode: hashedOtp,
+        otpExpiresAt,
+        pendingSignup: {
+          fullName: dto.fullName,
+          password: hashedPassword,
+        },
+      },
+      { upsert: true, new: true },
+    );
 
-    this.logger.log(`New user registered: ${user.email}`);
+    await this.mailService.sendOtp(dto.email, otp, 'signup');
 
+    this.logger.log(`Signup OTP sent: ${dto.email}`);
+
+    const isDev = this.config.get('NODE_ENV') !== 'production';
     return {
-      message: 'Account created successfully!',
-      user: this.sanitizeUser(user),
+      message: 'OTP sent to your email. Valid for 2 minutes.',
+      ...(isDev && { otp }), // Postman testing ke liye
     };
   }
 
-  /**
-   * Sign in an existing user and issue access + refresh tokens.
-   */
-  async signin(
-    dto: SignInDto,
-  ): Promise<{ message: string; accessToken: string; refreshToken: string; user: AuthUser }> {
-    const user = await this.userModel.findOne({
-      email: dto.email.toLowerCase().trim(),
-    });
+  // ── SIGNUP: Step 2 — OTP Verify → Account Create ────────────────────────────
+
+  async signupVerifyOtp(dto: SignupVerifyOtpDto) {
+    const user = await this.userModel
+      .findOne({ email: dto.email, isEmailVerified: false })
+      .select('+otpCode +otpExpiresAt +pendingSignup +password');
 
     if (!user) {
+      throw new BadRequestException('No pending signup found. Please start over.');
+    }
+
+    if (!user.otpCode || !user.otpExpiresAt) {
+      throw new BadRequestException('OTP not found. Please request a new one.');
+    }
+
+    if (new Date() > user.otpExpiresAt) {
+      await this.usersService.clearOtp(user._id.toString());
+      throw new BadRequestException('OTP expired. Please request a new one.');
+    }
+
+    if (!(await bcrypt.compare(dto.otp, user.otpCode))) {
+      throw new BadRequestException('Incorrect OTP.');
+    }
+
+    // ✅ OTP sahi hai — account activate karo
+    user.isEmailVerified = true;
+    user.otpCode = null;
+    user.otpExpiresAt = null;
+    user.pendingSignup = null;
+    await user.save();
+
+    const tokens = await this.generateTokens(user._id.toString(), user.email);
+    const hashed = await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS);
+    await this.usersService.addRefreshToken(user._id.toString(), hashed);
+
+    this.logger.log(`New account verified & created: ${user.email}`);
+
+    return {
+      message: 'Account created successfully!',
+      ...tokens,
+      user: this.sanitize(user),
+    };
+  }
+
+  // ── SIGNIN ───────────────────────────────────────────────────────────────────
+
+  async signin(dto: SignInDto) {
+    const user = await this.userModel
+      .findOne({ email: dto.email })
+      .select('+password +refreshTokens');
+
+    if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    const isMatch = await bcrypt.compare(dto.password, user.password);
-    if (!isMatch) {
-      throw new UnauthorizedException('Invalid email or password.');
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Please verify your email before signing in.');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been deactivated.');
     }
 
     const tokens = await this.generateTokens(user._id.toString(), user.email);
-    await this.storeRefreshToken(user._id.toString(), tokens.refreshToken);
+    const hashed = await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS);
+    await this.usersService.addRefreshToken(user._id.toString(), hashed);
 
     this.logger.log(`User signed in: ${user.email}`);
 
     return {
       message: 'Login successful!',
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      user: this.sanitizeUser(user),
+      ...tokens,
+      user: this.sanitize(user),
     };
   }
 
-  /**
-   * Refresh access token using a valid refresh token.
-   */
-  async refreshTokens(
-    userId: string,
-    incomingRefreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const user = await this.userModel.findById(userId);
+  // ── FORGOT PASSWORD: OTP Request ─────────────────────────────────────────────
 
-    if (!user || !user.refreshTokens?.length) {
-      throw new UnauthorizedException('Access denied. Please sign in again.');
-    }
+  async forgotPassword(dto: ForgotPasswordDto) {
+    // Always same message — email enumeration se bachao
+    const genericMsg = 'If this email is registered, an OTP has been sent.';
 
-    // Find a matching hashed refresh token
-    const matchIndex = await this.findMatchingTokenIndex(
-      incomingRefreshToken,
-      user.refreshTokens,
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user || !user.isEmailVerified) return { message: genericMsg };
+
+    const otp = this.makeOtp();
+    const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+
+    await this.usersService.setOtp(
+      user._id.toString(),
+      await bcrypt.hash(otp, BCRYPT_ROUNDS),
+      otpExpiresAt,
     );
 
-    if (matchIndex === -1) {
-      // Potential token reuse — revoke all sessions (security measure)
-      await this.userModel.findByIdAndUpdate(userId, { refreshTokens: [] });
-      this.logger.warn(`Refresh token reuse detected for user: ${user.email}`);
-      throw new UnauthorizedException(
-        'Suspicious activity detected. All sessions have been revoked.',
-      );
+    await this.mailService.sendOtp(user.email, otp, 'reset');
+
+    this.logger.log(`Password reset OTP sent: ${user.email}`);
+
+    const isDev = this.config.get('NODE_ENV') !== 'production';
+    return {
+      message: genericMsg,
+      ...(isDev && { otp }), // Postman testing ke liye
+    };
+  }
+
+  // ── FORGOT PASSWORD: OTP Verify → Reset Token ────────────────────────────────
+
+  async verifyOtp(dto: VerifyOtpDto) {
+    const user = await this.userModel
+      .findOne({ email: dto.email })
+      .select('+otpCode +otpExpiresAt');
+
+    if (!user?.otpCode || !user.otpExpiresAt) {
+      throw new BadRequestException('No OTP found. Please request again.');
     }
 
-    // Rotate: remove old token, issue new pair
-    user.refreshTokens.splice(matchIndex, 1);
-    const tokens = await this.generateTokens(user._id.toString(), user.email);
-    const hashedNew = await bcrypt.hash(tokens.refreshToken, this.BCRYPT_ROUNDS);
-    user.refreshTokens.push(hashedNew);
+    if (new Date() > user.otpExpiresAt) {
+      await this.usersService.clearOtp(user._id.toString());
+      throw new BadRequestException('OTP expired. Please request a new one.');
+    }
+
+    if (!(await bcrypt.compare(dto.otp, user.otpCode))) {
+      throw new BadRequestException('Incorrect OTP.');
+    }
+
+    await this.usersService.clearOtp(user._id.toString());
+
+    const resetToken = this.jwtService.sign(
+      { sub: user._id.toString(), email: user.email, purpose: 'reset' },
+      {
+        secret: this.config.getOrThrow<string>('JWT_RESET_SECRET'),
+        expiresIn: (this.config.get('JWT_RESET_EXPIRES_IN') || '10m') as any,
+      },
+    );
+
+    return { message: 'OTP verified!', resetToken };
+  }
+
+  // ── RESET PASSWORD ────────────────────────────────────────────────────────────
+
+  async resetPassword(resetToken: string, dto: ResetPasswordDto) {
+    if (!resetToken) throw new BadRequestException('Reset token missing.');
+
+    let payload: { sub: string; purpose: string; email: string };
+    try {
+      payload = this.jwtService.verify(resetToken, {
+        secret: this.config.getOrThrow<string>('JWT_RESET_SECRET'),
+      });
+    } catch {
+      throw new BadRequestException('Reset token is invalid or expired.');
+    }
+
+    if (payload.purpose !== 'reset') throw new BadRequestException('Invalid token type.');
+
+    await this.usersService.updatePassword(
+      payload.sub,
+      await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS),
+    );
+
+    this.logger.log(`Password reset: ${payload.email}`);
+    return { message: 'Password updated. Please sign in.' };
+  }
+
+  // ── RESEND OTP ────────────────────────────────────────────────────────────────
+
+  async resendOtp(email: string, type: 'signup' | 'reset') {
+    const genericMsg = 'OTP resent if email is valid.';
+
+    let user: UserDocument | null;
+
+    if (type === 'signup') {
+      user = await this.userModel
+        .findOne({ email, isEmailVerified: false })
+        .select('+otpCode +otpExpiresAt');
+    } else {
+      user = await this.usersService.findByEmail(email);
+    }
+
+    if (!user) return { message: genericMsg };
+
+    const otp = this.makeOtp();
+    const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+
+    await this.usersService.setOtp(
+      user._id.toString(),
+      await bcrypt.hash(otp, BCRYPT_ROUNDS),
+      otpExpiresAt,
+    );
+
+    await this.mailService.sendOtp(user.email, otp, type);
+
+    const isDev = this.config.get('NODE_ENV') !== 'production';
+    return {
+      message: genericMsg,
+      ...(isDev && { otp }), // Postman testing ke liye
+    };
+  }
+
+  // ── REFRESH TOKENS ────────────────────────────────────────────────────────────
+
+  async refreshTokens(userId: string, incomingToken: string) {
+    const user = await this.userModel.findById(userId).select('+refreshTokens');
+
+    if (!user?.refreshTokens?.length) {
+      throw new UnauthorizedException('Please sign in again.');
+    }
+
+    const idx = await this.findTokenIndex(incomingToken, user.refreshTokens);
+
+    if (idx === -1) {
+      await this.usersService.clearAllRefreshTokens(userId);
+      this.logger.warn(`Token reuse detected: ${user.email}`);
+      throw new UnauthorizedException('Suspicious activity. All sessions revoked.');
+    }
+
+    user.refreshTokens.splice(idx, 1);
+    const tokens = await this.generateTokens(userId, user.email);
+    user.refreshTokens.push(await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS));
     await user.save();
 
     return tokens;
   }
 
-  /**
-   * Revoke the provided refresh token (logout from current device).
-   */
-  async logout(userId: string, refreshToken: string): Promise<{ message: string }> {
-    const user = await this.userModel.findById(userId);
+  // ── LOGOUT ────────────────────────────────────────────────────────────────────
 
-    if (!user) {
-      throw new UnauthorizedException('User not found.');
-    }
+  async logout(userId: string, refreshToken: string) {
+    const user = await this.userModel.findById(userId).select('+refreshTokens');
+    if (!user) throw new UnauthorizedException('User not found.');
 
-    const matchIndex = await this.findMatchingTokenIndex(
-      refreshToken,
-      user.refreshTokens,
-    );
-
-    if (matchIndex !== -1) {
-      user.refreshTokens.splice(matchIndex, 1);
+    const idx = await this.findTokenIndex(refreshToken, user.refreshTokens);
+    if (idx !== -1) {
+      user.refreshTokens.splice(idx, 1);
       await user.save();
     }
 
-    this.logger.log(`User logged out: ${user.email}`);
     return { message: 'Logged out successfully.' };
   }
 
-  /**
-   * Logout from all devices by revoking all refresh tokens.
-   */
-  async logoutAll(userId: string): Promise<{ message: string }> {
-    await this.userModel.findByIdAndUpdate(userId, { refreshTokens: [] });
-    this.logger.log(`All sessions revoked for userId: ${userId}`);
+  async logoutAll(userId: string) {
+    await this.usersService.clearAllRefreshTokens(userId);
     return { message: 'Logged out from all devices.' };
   }
 
-  /**
-   * Send a 6-digit OTP to the user's email if the account exists.
-   * Always returns the same message to prevent email enumeration.
-   */
-  async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.userModel.findOne({
-      email: dto.email.toLowerCase().trim()
-    });
-
-    const genericMessage = 'Agar yeh email registered hai to OTP bhej diya.';
-    if (!user) return { message: genericMessage };
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresMinutes = this.config.get<number>('OTP_EXPIRES_MINUTES') || 10;
-    const otpExpiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000);
-
-    const hashedOtp = await bcrypt.hash(otp, 12);
-    await this.userModel.findByIdAndUpdate(user._id, {
-      otpCode: hashedOtp,
-      otpExpiresAt,
-    });
-
-    await this.mailService.sendOtp(user.email, otp);
-
-    // ✅ Development mein OTP response mein bhi do
-    const isDev = this.config.get('NODE_ENV') !== 'production';
-    return {
-      message: genericMessage,
-      ...(isDev && { otp }),  // production mein yeh nahi aayega
-    };
-  }
-
-  /**
-   * Verify OTP and return a short-lived reset token.
-   * Email is passed via a custom header (x-reset-email) — not in the body.
-   */
-  // ✅ UPDATED - email alag parameter nahi, dto se lo
-  async verifyOtp(dto: VerifyOtpDto) {
-    console.log('=== VERIFY OTP DEBUG ===');
-
-    // 🧼 Step 1: Validate input
-    const email = dto.email?.toLowerCase().trim();
-    const otp = dto.otp?.trim();
-
-    console.log('Email received:', email);
-    console.log('OTP received:', otp);
-
-    if (!email || !otp) {
-      throw new BadRequestException('Email aur OTP dono required hain');
-    }
-
-    // 🔍 Step 2: Find user
-    const user = await this.userModel.findOne({ email });
-
-    console.log('User found:', user ? 'YES' : 'NO');
-
-    if (!user) {
-      throw new BadRequestException('User nahi mila');
-    }
-
-    // 📦 Step 3: Check OTP existence
-    if (!user.otpCode || !user.otpExpiresAt) {
-      throw new BadRequestException('OTP invalid hai ya request nahi kiya gaya');
-    }
-
-    console.log('OTP in DB:', user.otpCode);
-    console.log('OTP expiry:', user.otpExpiresAt);
-    console.log('Current time:', new Date());
-
-    // ⏰ Step 4: Check expiry
-    if (new Date() > user.otpExpiresAt) {
-      console.log('OTP EXPIRED ❌');
-
-      await this.userModel.findByIdAndUpdate(user._id, {
-        otpCode: null,
-        otpExpiresAt: null,
-      });
-
-      throw new BadRequestException('OTP expire ho gaya — dobara request karo');
-    }
-
-    // 🔐 Step 5: Compare OTP
-    console.log('Comparing OTP...');
-    const isMatch = await bcrypt.compare(otp, user.otpCode);
-
-    console.log('OTP match:', isMatch ? 'YES ✅' : 'NO ❌');
-
-    if (!isMatch) {
-      throw new BadRequestException('Galat OTP hai');
-    }
-
-    // 🧹 Step 6: Clear OTP after success
-    await this.userModel.findByIdAndUpdate(user._id, {
-      otpCode: null,
-      otpExpiresAt: null,
-    });
-
-    // 🎟️ Step 7: Generate reset token
-    const resetToken = this.jwtService.sign(
-      {
-        sub: user._id.toString(),
-        email: user.email,
-        purpose: 'reset',
-      },
-      {
-        secret: this.config.get<string>('JWT_RESET_SECRET')!,
-        expiresIn: (this.config.get('JWT_RESET_EXPIRES_IN') || '10m') as any, // ✅
-      },
-    );
-    console.log('Reset token created ✅');
-    console.log('=== END DEBUG ===');
-
-    return {
-      message: 'OTP verify ho gaya!',
-      resetToken,
-    };
-  }
-  /**
-   * Reset user password using a valid reset token.
-   * Reset token is passed via Authorization header as: Bearer <token>
-   */
-  async resetPassword(
-    resetToken: string,
-    dto: ResetPasswordDto,
-  ): Promise<{ message: string }> {
-    if (!resetToken) {
-      throw new BadRequestException('Reset token is missing.');
-    }
-
-    let payload: { sub: string; purpose: string; email: string };
-
-    try {
-      payload = this.jwtService.verify(resetToken, {
-        secret: this.config.get<string>('JWT_RESET_SECRET'),
-      });
-    } catch {
-      throw new BadRequestException('Reset token is invalid or has expired.');
-    }
-
-    if (payload.purpose !== 'reset') {
-      throw new BadRequestException('Invalid token type.');
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.newPassword, this.BCRYPT_ROUNDS);
-
-    await this.userModel.findByIdAndUpdate(payload.sub, {
-      password: hashedPassword,
-      refreshTokens: [], // Revoke all active sessions on password change
-    });
-
-    this.logger.log(`Password reset successful for: ${payload.email}`);
-    return {
-      message: 'Password updated successfully. Please sign in with your new password.',
-    };
-  }
-
-  // ─────────────────────────────────────────────
-  // PRIVATE HELPERS
-  // ─────────────────────────────────────────────
+  // ── PRIVATE HELPERS ───────────────────────────────────────────────────────────
 
   private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
-    const payload = { sub: userId, email };
-
-    const accessSecret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
-    const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
-    const accessExpiresIn = this.config.getOrThrow<string>('JWT_ACCESS_EXPIRES_IN');
-    const refreshExpiresIn = this.config.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN');
-
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: accessSecret,
-        expiresIn: accessExpiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: refreshSecret,
-        expiresIn: refreshExpiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
-      }),
+      this.jwtService.signAsync(
+        { sub: userId, email },
+        {
+          secret: this.config.getOrThrow('JWT_ACCESS_SECRET'),
+          expiresIn: this.config.getOrThrow('JWT_ACCESS_EXPIRES_IN'),
+        },
+      ),
+      this.jwtService.signAsync(
+        { sub: userId, email },
+        {
+          secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+          expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRES_IN'),
+        },
+      ),
     ]);
-
     return { accessToken, refreshToken };
   }
 
-  private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
-    const hashed = await bcrypt.hash(refreshToken, this.BCRYPT_ROUNDS);
-    await this.userModel.findByIdAndUpdate(userId, {
-      $push: { refreshTokens: hashed },
-    });
+  private async findTokenIndex(plain: string, hashed: string[]): Promise<number> {
+    const results = await Promise.all(hashed.map((h) => bcrypt.compare(plain, h)));
+    return results.findIndex(Boolean);
   }
 
-  /**
-   * Returns the index of the matching hashed refresh token, or -1.
-   */
-  private async findMatchingTokenIndex(
-    plainToken: string,
-    hashedTokens: string[],
-  ): Promise<number> {
-    const results = await Promise.all(
-      hashedTokens.map((hash) => bcrypt.compare(plainToken, hash)),
-    );
-    return results.findIndex((match) => match === true);
+  private makeOtp(): string {
+    return Math.floor(100_000 + Math.random() * 900_000).toString();
   }
 
-  private async clearOtp(userId: string): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, {
-      otpCode: null,
-      otpExpiresAt: null,
-    });
-  }
-
-  private generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  private sanitizeUser(user: UserDocument): AuthUser {
+  private sanitize(user: UserDocument): AuthUser {
     return {
       id: user._id.toString(),
       fullName: user.fullName,
       email: user.email,
+      role: user.role,
     };
-  }
-
-  // ── RESEND OTP ─────────────────────────────────────────────────
-  async resendOtp(email: string) {
-    const user = await this.userModel.findOne({
-      email: email.toLowerCase().trim()
-    });
-
-    // Same generic message — security ke liye
-    const genericMessage = 'OTP dobara bhej diya.';
-    if (!user) return { message: genericMessage };
-
-    // Naya OTP banao
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresMinutes = this.config.get<number>('OTP_EXPIRES_MINUTES') || 10;
-    const otpExpiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000);
-
-    // Hash karke save karo
-    const hashedOtp = await bcrypt.hash(otp, 12);
-    await this.userModel.findByIdAndUpdate(user._id, {
-      otpCode: hashedOtp,
-      otpExpiresAt,
-    });
-
-    // Email bhejo
-    await this.mailService.sendOtp(user.email, otp);
-
-    return { message: genericMessage };
   }
 }
