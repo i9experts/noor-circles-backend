@@ -1,4 +1,13 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { UsersService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -22,7 +31,7 @@ export class UsersController {
   updateProfile(@CurrentUser() user: UserDocument, @Body() body: any) {
     // Sirf fullName update allow karo — email/role nahi
     const { fullName } = body;
-    return this.usersService.updateUserData(user._id.toString(), { fullName });
+    return this.usersService.updateProfile(user._id.toString(), { fullName });
   }
 
   // ── Admin Only: Sab users dekho ───────────────────────────────────────────

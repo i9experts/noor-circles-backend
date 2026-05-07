@@ -7,13 +7,15 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
+import { AdminModule } from './admin/admin.module';
+import { MurabbiModule } from './murabbi/murabbi.module';
 
 @Module({
   imports: [
-    // ── Config — .env load karo ─────────────────────────────────────────────
+    // ── Config (.env) ──────────────────────────────────────────────────────────
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // ── MongoDB ─────────────────────────────────────────────────────────────
+    // ── MongoDB ────────────────────────────────────────────────────────────────
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -21,17 +23,18 @@ import { MailModule } from './mail/mail.module';
       }),
     }),
 
-    // ── Rate Limiting — brute force attacks se bachao ───────────────────────
-    // 100 requests per 60 seconds per IP
+    // ── Rate Limiting: 100 req / 60 sec / IP ───────────────────────────────────
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
 
-    // ── Feature Modules ─────────────────────────────────────────────────────
+    // ── Feature Modules ────────────────────────────────────────────────────────
     AuthModule,
     UsersModule,
     MailModule,
+    AdminModule,
+    MurabbiModule,
   ],
   providers: [
-    // Global rate limit guard — har route par apply hoga
+    // Apply rate limiting globally
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

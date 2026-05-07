@@ -1,11 +1,25 @@
 import {
-  Body, Controller, Get, Headers,
-  HttpCode, HttpStatus, Post, Query, Request, UseGuards,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignupRequestOtpDto, SignupVerifyOtpDto } from './dto/signup.dto';
-import { SignInDto } from './dto/signin.dto';
-import { ForgotPasswordDto, VerifyOtpDto, ResetPasswordDto, ResendOtpDto } from './dto/other.dto';
+import {
+  SignupRequestOtpDto,
+  SignupVerifyOtpDto,
+  SignInDto,
+  ForgotPasswordDto,
+  VerifyOtpDto,
+  ResetPasswordDto,
+  ResendOtpDto,
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -15,44 +29,68 @@ import { UserDocument } from '../user/user.schema';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // ── Signup: 2-step ──────────────────────────────────────────────────────────
+  // ─── PUBLIC ──────────────────────────────────────────────────────────────────
 
-  /** Step 1: fullName + email + password bhejo → OTP aata hai */
+  /**
+   * POST /auth/signup/request-otp
+   * Body: { fullName, email, password }
+   * → Sends OTP to email (2 min expiry)
+   */
   @Post('signup/request-otp')
   @HttpCode(HttpStatus.OK)
   signupRequestOtp(@Body() dto: SignupRequestOtpDto) {
     return this.authService.signupRequestOtp(dto);
   }
 
-  /** Step 2: email + otp bhejo → account banta hai + tokens milte hain */
+  /**
+   * POST /auth/signup/verify-otp
+   * Body: { email, otp }
+   * → Verifies OTP, creates account, returns tokens + user
+   */
   @Post('signup/verify-otp')
   @HttpCode(HttpStatus.CREATED)
   signupVerifyOtp(@Body() dto: SignupVerifyOtpDto) {
     return this.authService.signupVerifyOtp(dto);
   }
 
-  // ── Signin ──────────────────────────────────────────────────────────────────
-
+  /**
+   * POST /auth/signin
+   * Body: { email, password }
+   * → Returns accessToken + refreshToken + user (with role)
+   */
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   signin(@Body() dto: SignInDto) {
     return this.authService.signin(dto);
   }
 
-  // ── Forgot Password ─────────────────────────────────────────────────────────
-
+  /**
+   * POST /auth/forgot-password
+   * Body: { email }
+   * → Sends password-reset OTP (2 min expiry)
+   */
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
 
+  /**
+   * POST /auth/verify-otp
+   * Body: { email, otp }
+   * → Returns short-lived resetToken (10 min)
+   */
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
   verifyOtp(@Body() dto: VerifyOtpDto) {
     return this.authService.verifyOtp(dto);
   }
 
+  /**
+   * POST /auth/reset-password
+   * Header: Authorization: Bearer <resetToken>
+   * Body:   { newPassword }
+   */
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   resetPassword(
@@ -65,10 +103,10 @@ export class AuthController {
     return this.authService.resetPassword(token, dto);
   }
 
-  // ── Resend OTP ──────────────────────────────────────────────────────────────
-  /** 
-   * type query param: 'signup' ya 'reset'
-   * e.g. POST /auth/resend-otp?type=signup
+  /**
+   * POST /auth/resend-otp?type=signup   ← signup flow
+   * POST /auth/resend-otp?type=reset    ← forgot-password flow
+   * Body: { email }
    */
   @Post('resend-otp')
   @HttpCode(HttpStatus.OK)
@@ -79,15 +117,28 @@ export class AuthController {
     return this.authService.resendOtp(dto.email, type);
   }
 
-  // ── Protected ───────────────────────────────────────────────────────────────
+  // ─── PROTECTED ───────────────────────────────────────────────────────────────
 
+  /**
+   * POST /auth/refresh
+   * Header: Authorization: Bearer <refreshToken>
+   * → Returns new accessToken + refreshToken (rotation)
+   */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtRefreshGuard)
   refresh(@Request() req) {
-    return this.authService.refreshTokens(req.user.userId, req.user.refreshToken);
+    return this.authService.refreshTokens(
+      req.user.userId,
+      req.user.refreshToken,
+    );
   }
 
+  /**
+   * GET /auth/me
+   * Header: Authorization: Bearer <accessToken>
+   * → Returns current user info (id, fullName, email, role)
+   */
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getMe(@CurrentUser() user: UserDocument) {
@@ -96,9 +147,15 @@ export class AuthController {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
+      isActive: user.isActive,
     };
   }
 
+  /**
+   * POST /auth/logout
+   * Header: Authorization: Bearer <refreshToken>
+   * → Revokes current device session
+   */
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtRefreshGuard)
@@ -106,6 +163,11 @@ export class AuthController {
     return this.authService.logout(req.user.userId, req.user.refreshToken);
   }
 
+  /**
+   * POST /auth/logout-all
+   * Header: Authorization: Bearer <accessToken>
+   * → Revokes all sessions (all devices)
+   */
   @Post('logout-all')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)

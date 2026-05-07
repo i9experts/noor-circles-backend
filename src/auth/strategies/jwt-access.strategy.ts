@@ -3,11 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../user/user.service';
-
-interface JwtPayload {
-  sub: string;
-  email: string;
-}
+import { JwtPayload } from '../interface/auth.interface';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -24,9 +20,23 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(payload: JwtPayload) {
     const user = await this.usersService.findById(payload.sub);
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('Account not found or deactivated.');
+
+    if (!user) {
+      throw new UnauthorizedException(
+        'Account not found. Please sign in again.',
+      );
     }
-    return user; // req.user mein attach hota hai
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException(
+        'Email not verified. Please verify your email.',
+      );
+    }
+    if (!user.isActive) {
+      throw new UnauthorizedException(
+        'Your account has been deactivated. Contact admin.',
+      );
+    }
+
+    return user; // → attached to req.user
   }
 }

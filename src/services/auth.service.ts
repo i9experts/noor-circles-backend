@@ -22,7 +22,11 @@ export const signupRequestOtp = (body: {
   fullName: string;
   email: string;
   password: string;
-}) => request('/auth/signup/request-otp', { method: 'POST', body: JSON.stringify(body) });
+}) =>
+  request('/auth/signup/request-otp', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 
 export const signupVerifyOtp = (body: { email: string; otp: string }) =>
   request<{ accessToken: string; refreshToken: string; user: AuthUser }>(

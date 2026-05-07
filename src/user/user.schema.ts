@@ -22,10 +22,7 @@ export class User {
   @Prop({ type: String, enum: UserRole, default: UserRole.MURABBI })
   role: UserRole;
 
-  /** 
-   * true = OTP verify pending (account abhi active nahi)
-   * false = verified account
-   */
+  /** false = OTP pending  |  true = active account */
   @Prop({ type: Boolean, default: false })
   isEmailVerified: boolean;
 
@@ -35,19 +32,21 @@ export class User {
   @Prop({ type: [String], default: [], select: false })
   refreshTokens: string[];
 
+  /** OTP stored as PLAIN STRING (not hashed) */
   @Prop({ type: String, default: null, select: false })
   otpCode: string | null;
 
   @Prop({ type: Date, default: null, select: false })
   otpExpiresAt: Date | null;
 
-  /** Signup ke waqt temporarily store karta hai data jab tak OTP verify na ho */
+  /** Temp data before email verified */
   @Prop({ type: Object, default: null, select: false })
   pendingSignup: { fullName: string; password: string } | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
+// Never leak sensitive fields in API responses
 UserSchema.set('toJSON', {
   transform: (_doc, ret) => {
     delete ret.password;

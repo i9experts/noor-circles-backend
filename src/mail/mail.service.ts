@@ -1,4 +1,8 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
@@ -19,18 +23,19 @@ export class MailService {
     });
   }
 
-  async sendOtp(toEmail: string, otp: string, type: 'signup' | 'reset'): Promise<void> {
+  async sendOtp(
+    toEmail: string,
+    otp: string,
+    type: 'signup' | 'reset',
+  ): Promise<void> {
     const isSignup = type === 'signup';
-
     const subject = isSignup
       ? 'Noor Circle — Verify Your Email'
       : 'Noor Circle — Password Reset OTP';
-
     const heading = isSignup ? 'Email Verification' : 'Password Reset';
-
-    const description = isSignup
-      ? 'Use the code below to verify your email and complete registration:'
-      : 'Use the code below to reset your password:';
+    const bodyText = isSignup
+      ? 'Use the code below to verify your email and complete your registration.'
+      : 'Use the code below to reset your password.';
 
     try {
       await this.transporter.sendMail({
@@ -39,28 +44,31 @@ export class MailService {
         subject,
         html: `
           <div style="font-family:Arial,sans-serif;max-width:480px;padding:32px;
-                      border:1px solid #eee;border-radius:8px;margin:auto">
-            <h2 style="margin-top:0;color:#1a1a1a">${heading}</h2>
-            <p style="color:#444">${description}</p>
-            <div style="font-size:38px;font-weight:bold;letter-spacing:12px;
-                        padding:20px;background:#f5f5f5;border-radius:8px;
-                        text-align:center;margin:24px 0;color:#1a1a1a">
+                      border:1px solid #e5e7eb;border-radius:12px;margin:auto">
+            <h2 style="margin-top:0;color:#111827;font-size:22px">${heading}</h2>
+            <p style="color:#4b5563;font-size:14px">${bodyText}</p>
+
+            <div style="font-size:40px;font-weight:700;letter-spacing:14px;
+                        padding:20px 24px;background:#f9fafb;border:1px solid #e5e7eb;
+                        border-radius:10px;text-align:center;margin:24px 0;
+                        color:#111827;font-family:monospace">
               ${otp}
             </div>
-            <p style="color:#555">
-              This code expires in <strong>2 minutes</strong>.
-            </p>
-            <p style="color:#999;font-size:12px;margin-bottom:0">
-              If you did not request this, please ignore this email.
-            </p>
-          </div>
-        `,
-      });
 
-      this.logger.log(`OTP [${type}] sent to: ${toEmail}`);
+            <p style="color:#6b7280;font-size:13px">
+              This code will expire in <strong>2 minutes</strong>.
+            </p>
+            <p style="color:#9ca3af;font-size:12px;margin-bottom:0">
+              If you did not request this, you can safely ignore this email.
+            </p>
+          </div>`,
+      });
+      this.logger.log(`OTP [${type}] → ${toEmail}`);
     } catch (err) {
       this.logger.error(`Failed to send OTP to ${toEmail}`, err);
-      throw new InternalServerErrorException('Failed to send email. Please try again.');
+      throw new InternalServerErrorException(
+        'Failed to send verification email. Please try again.',
+      );
     }
   }
 }

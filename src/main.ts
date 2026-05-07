@@ -1,45 +1,44 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory }    from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import { AppModule } from './app.module';
+import { ConfigService }  from '@nestjs/config';
+import helmet             from 'helmet';
+import { AppModule }      from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app    = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
-  // ── Security Headers (helmet) ──────────────────────────────────────────────
+  // ── Security headers ───────────────────────────────────────────────────────
   app.use(helmet());
 
-  // ── Global Route Prefix ────────────────────────────────────────────────────
+  // ── Global prefix ──────────────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');
 
   // ── CORS ───────────────────────────────────────────────────────────────────
-  const allowedOrigins = (config.get<string>('FRONTEND_URL') || '')
+  const origins = (config.get<string>('FRONTEND_URL') || 'http://localhost:5173')
     .split(',')
-    .map((url) => url.trim())
-    .filter(Boolean);
+    .map((u) => u.trim());
 
   app.enableCors({
-    origin: allowedOrigins,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin     : origins,
+    methods    : 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // ── Global Validation Pipe ─────────────────────────────────────────────────
+  // ── Global validation pipe ─────────────────────────────────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,         // Extra fields automatically strip karo
-      forbidNonWhitelisted: true, // Unknown fields par 400 throw karo
-      transform: true,         // DTO class instances mein auto-convert karo
+      whitelist           : true,   // strip unknown fields
+      forbidNonWhitelisted: true,   // 400 on extra fields
+      transform           : true,   // auto-convert to DTO class
     }),
   );
 
   const port = config.get<number>('PORT') || 3000;
   await app.listen(port);
-  logger.log(`Server running on: http://localhost:${port}/api/v1`);
+  logger.log(`Server running → http://localhost:${port}/api/v1`);
 }
 
 bootstrap();

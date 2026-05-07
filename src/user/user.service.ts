@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from './user.schema';
+import { User, UserDocument, UserRole } from './user.schema';
 
 @Injectable()
 export class UsersService {
@@ -9,7 +9,7 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  // ── Finders ─────────────────────────────────────────────────────────────────
+  // ── Finders ──────────────────────────────────────────────────────────────────
 
   findByEmail(email: string) {
     return this.userModel.findOne({ email: email.toLowerCase() }).exec();
@@ -19,45 +19,34 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
-  /** Sensitive fields ke sath — auth service ke liye */
-  findByEmailWithSecrets(email: string) {
-    return this.userModel
-      .findOne({ email: email.toLowerCase() })
-      .select('+password +refreshTokens +otpCode +otpExpiresAt +pendingSignup')
-      .exec();
-  }
-
-  findByIdWithSecrets(id: string) {
-    return this.userModel
-      .findById(id)
-      .select('+refreshTokens +otpCode +otpExpiresAt')
-      .exec();
-  }
-
-  // ── Profile ──────────────────────────────────────────────────────────────────
+  // ── Profile ───────────────────────────────────────────────────────────────────
 
   async getProfile(userId: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(userId).select('-password').exec();
-    if (!user) throw new NotFoundException('User not found.');
-    return user;
-  }
-
-  async updateUserData(userId: string, data: Partial<User>): Promise<UserDocument> {
     const user = await this.userModel
-      .findByIdAndUpdate(userId, { $set: data }, { new: true, runValidators: true })
+      .findById(userId)
       .select('-password')
       .exec();
     if (!user) throw new NotFoundException('User not found.');
     return user;
   }
 
-  // ── Create ───────────────────────────────────────────────────────────────────
-
-  async create(data: { fullName: string; email: string; password: string }): Promise<UserDocument> {
-    return this.userModel.create(data);
+  async updateProfile(
+    userId: string,
+    data: { fullName?: string },
+  ): Promise<UserDocument> {
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: data },
+        { new: true, runValidators: true },
+      )
+      .select('-password')
+      .exec();
+    if (!user) throw new NotFoundException('User not found.');
+    return user;
   }
 
-  // ── OTP ──────────────────────────────────────────────────────────────────────
+  // ── OTP ───────────────────────────────────────────────────────────────────────
 
   async setOtp(userId: string, otpCode: string, otpExpiresAt: Date) {
     await this.userModel.findByIdAndUpdate(userId, { otpCode, otpExpiresAt });
@@ -70,16 +59,16 @@ export class UsersService {
     });
   }
 
-  // ── Password ─────────────────────────────────────────────────────────────────
+  // ── Password ──────────────────────────────────────────────────────────────────
 
   async updatePassword(userId: string, hashedPassword: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       password: hashedPassword,
-      refreshTokens: [],
+      refreshTokens: [], // Revoke all sessions on password change
     });
   }
 
-  // ── Refresh Tokens ───────────────────────────────────────────────────────────
+  // ── Refresh Tokens ────────────────────────────────────────────────────────────
 
   async addRefreshToken(userId: string, hashedToken: string) {
     await this.userModel.findByIdAndUpdate(userId, {
@@ -91,17 +80,53 @@ export class UsersService {
     await this.userModel.findByIdAndUpdate(userId, { refreshTokens: [] });
   }
 
-  // ── Admin ────────────────────────────────────────────────────────────────────
+  // ── Admin Helpers ─────────────────────────────────────────────────────────────
 
-  async findAll() {
-    return this.userModel.find({ isEmailVerified: true }).select('-password').exec();
+  async findAll(role?: UserRole) {
+    const filter: Record<string, unknown> = { isEmailVerified: true };
+    if (role) filter.role = role;
+    return this.userModel
+      .find(filter)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async findAllMurabbis() {
+    return this.userModel
+      .find({ role: UserRole.MURABBI, isEmailVerified: true })
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async deactivateUser(userId: string) {
     const user = await this.userModel
-      .findByIdAndUpdate(userId, { isActive: false }, { new: true })
+      .findByIdAndUpdate(
+        userId,
+        { isActive: false, refreshTokens: [] },
+        { new: true },
+      )
       .select('-password');
     if (!user) throw new NotFoundException('User not found.');
     return user;
+  }
+
+  async activateUser(userId: string) {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { isActive: true }, { new: true })
+      .select('-password');
+    if (!user) throw new NotFoundException('User not found.');
+    return user;
+  }
+
+  async deleteMurabbi(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found.');
+    if (user.role === UserRole.ADMIN) {
+      throw new NotFoundException('Admin accounts cannot be deleted.');
+    }
+    await this.userModel.findByIdAndDelete(userId);
+    return { message: 'Murabbi deleted successfully.' };
   }
 }
