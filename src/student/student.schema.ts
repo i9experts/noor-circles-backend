@@ -23,11 +23,14 @@ export class Student {
   @Prop({ trim: true, maxlength: 200, default: null })
   address: string | null;
 
-  @Prop({ type: Types.ObjectId, ref: 'Circle', required: true })
-  circle: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Circle', default: null })
+  circle: Types.ObjectId | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Neighbourhood', required: true })
   neighbourhood: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  murabbi: Types.ObjectId | null;
 
   @Prop({ type: Date, default: Date.now })
   enrollmentDate: Date;

@@ -18,6 +18,7 @@ import {
   CreateNeighbourhoodDto,
   EnrollStudentDto,
   UpdateCircleDto,
+  UpdateMurabbiDto,
   UpdateNeighbourhoodDto,
   UpdateStudentDto,
 } from './admin.dto';
@@ -71,6 +72,12 @@ export class AdminController {
   @Patch('murabbis/:id/activate')
   activateMurabbi(@Param('id') id: string) {
     return this.adminService.activateMurabbi(id);
+  }
+
+  /** PATCH /admin/murabbis/:id */
+  @Patch('murabbis/:id')
+  updateMurabbi(@Param('id') id: string, @Body() dto: UpdateMurabbiDto) {
+    return this.adminService.updateMurabbi(id, dto);
   }
 
   /** DELETE /admin/murabbis/:id */

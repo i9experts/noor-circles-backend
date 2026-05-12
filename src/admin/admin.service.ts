@@ -105,6 +105,16 @@ export class AdminService {
   activateMurabbi(userId: string)   { return this.usersService.activateUser(userId); }
   deleteMurabbi(userId: string)     { return this.usersService.deleteMurabbi(userId); }
 
+  async updateMurabbi(userId: string, dto: { fullName?: string }) {
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { ...(dto.fullName && { fullName: dto.fullName }) },
+      { new: true },
+    ).select('-password -refreshTokens');
+    if (!user) throw new NotFoundException('Murabbi not found.');
+    return user;
+  }
+
   // ── Neighbourhoods ────────────────────────────────────────────────────────────
 
   getAllNeighbourhoods() {
@@ -225,15 +235,13 @@ export class AdminService {
   }
 
   async deleteCircle(id: string) {
-    const studentsCount = await this.studentModel.countDocuments({ circle: new Types.ObjectId(id) });
-    if (studentsCount > 0) {
-      throw new BadRequestException(
-        `Cannot delete: ${studentsCount} student(s) are enrolled in this circle. Reassign or remove them first.`,
-      );
-    }
-
     const circle = await this.circleModel.findByIdAndDelete(id).lean();
     if (!circle) throw new NotFoundException('Circle not found.');
+    // Unassign students from deleted circle
+    await this.studentModel.updateMany(
+      { circle: new Types.ObjectId(id) },
+      { $set: { circle: null } },
+    );
     return { message: 'Circle deleted successfully.' };
   }
 
@@ -244,6 +252,7 @@ export class AdminService {
       .find()
       .populate('circle', 'name capacity')
       .populate('neighbourhood', 'name city')
+      .populate('murabbi', 'fullName email')
       .sort({ createdAt: -1 })
       .lean();
   }
@@ -288,6 +297,7 @@ export class AdminService {
       address       : dto.address ?? null,
       circle        : new Types.ObjectId(dto.circleId),
       neighbourhood : new Types.ObjectId(dto.neighbourhoodId),
+      murabbi       : circle.murabbi ? new Types.ObjectId(circle.murabbi.toString()) : null,
       enrollmentDate: new Date(),
     });
 
@@ -330,7 +340,12 @@ export class AdminService {
     const student = await this.studentModel
       .findByIdAndUpdate(
         id,
-        { $set: { circle: new Types.ObjectId(dto.circleId) } },
+        {
+          $set: {
+            circle : new Types.ObjectId(dto.circleId),
+            murabbi: circle.murabbi ? new Types.ObjectId(circle.murabbi.toString()) : null,
+          },
+        },
         { new: true },
       )
       .populate('circle', 'name capacity')

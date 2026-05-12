@@ -190,3 +190,14 @@ export class AssignCircleDto {
   @IsMongoId({ message: 'Invalid circle ID.' })
   circleId: string;
 }
+
+// ── Update Murabbi ─────────────────────────────────────────────────────────────
+
+export class UpdateMurabbiDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty({ message: 'Full name cannot be empty.' })
+  @MaxLength(60, { message: 'Full name must be at most 60 characters.' })
+  @Transform(({ value }) => value?.trim())
+  fullName?: string;
+}
