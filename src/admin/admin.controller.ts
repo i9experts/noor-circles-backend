@@ -1,90 +1,192 @@
 import {
-  Body, Controller, Delete, Get,
-  HttpCode, HttpStatus, Param, Patch, Post, UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateMurabbiDto } from './admin.dto';
+import {
+  AssignCircleDto,
+  CreateCircleDto,
+  CreateMurabbiDto,
+  CreateNeighbourhoodDto,
+  EnrollStudentDto,
+  UpdateCircleDto,
+  UpdateNeighbourhoodDto,
+  UpdateStudentDto,
+} from './admin.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
 import { UserRole }     from '../user/user.schema';
 
-/**
- * ALL routes here require:
- *   1. Valid JWT access token  (JwtAuthGuard)
- *   2. Role = admin            (RolesGuard + @Roles)
- */
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  /**
-   * GET /admin/stats
-   * → { totalMurabbis, activeMurabbis, inactiveMurabbis }
-   */
+  // ── Dashboard ─────────────────────────────────────────────────────────────────
+
+  /** GET /admin/stats */
   @Get('stats')
   getStats() {
     return this.adminService.getDashboardStats();
   }
 
-  /**
-   * GET /admin/users
-   * → All verified users (all roles)
-   */
+  // ── Users / Murabbis ──────────────────────────────────────────────────────────
+
+  /** GET /admin/users */
   @Get('users')
   getAllUsers() {
     return this.adminService.getAllUsers();
   }
 
-  /**
-   * GET /admin/murabbis
-   * → All murabbis list
-   */
+  /** GET /admin/murabbis */
   @Get('murabbis')
   getAllMurabbis() {
     return this.adminService.getAllMurabbis();
   }
 
-  /**
-   * POST /admin/murabbis
-   * Body: { fullName, email, password }
-   * → Creates a Murabbi account directly (no OTP)
-   */
+  /** POST /admin/murabbis */
   @Post('murabbis')
   @HttpCode(HttpStatus.CREATED)
   createMurabbi(@Body() dto: CreateMurabbiDto) {
     return this.adminService.createMurabbi(dto);
   }
 
-  /**
-   * PATCH /admin/murabbis/:id/deactivate
-   * → Deactivates murabbi (revokes sessions too)
-   */
+  /** PATCH /admin/murabbis/:id/deactivate */
   @Patch('murabbis/:id/deactivate')
-  @HttpCode(HttpStatus.OK)
-  deactivate(@Param('id') id: string) {
+  deactivateMurabbi(@Param('id') id: string) {
     return this.adminService.deactivateMurabbi(id);
   }
 
-  /**
-   * PATCH /admin/murabbis/:id/activate
-   * → Re-activates a deactivated murabbi
-   */
+  /** PATCH /admin/murabbis/:id/activate */
   @Patch('murabbis/:id/activate')
-  @HttpCode(HttpStatus.OK)
-  activate(@Param('id') id: string) {
+  activateMurabbi(@Param('id') id: string) {
     return this.adminService.activateMurabbi(id);
   }
 
-  /**
-   * DELETE /admin/murabbis/:id
-   * → Permanently deletes a murabbi account
-   */
+  /** DELETE /admin/murabbis/:id */
   @Delete('murabbis/:id')
-  @HttpCode(HttpStatus.OK)
-  delete(@Param('id') id: string) {
+  deleteMurabbi(@Param('id') id: string) {
     return this.adminService.deleteMurabbi(id);
+  }
+
+  // ── Neighbourhoods ────────────────────────────────────────────────────────────
+
+  /** GET /admin/neighbourhoods */
+  @Get('neighbourhoods')
+  getAllNeighbourhoods() {
+    return this.adminService.getAllNeighbourhoods();
+  }
+
+  /** POST /admin/neighbourhoods */
+  @Post('neighbourhoods')
+  @HttpCode(HttpStatus.CREATED)
+  createNeighbourhood(@Body() dto: CreateNeighbourhoodDto) {
+    return this.adminService.createNeighbourhood(dto);
+  }
+
+  /** PATCH /admin/neighbourhoods/:id */
+  @Patch('neighbourhoods/:id')
+  updateNeighbourhood(@Param('id') id: string, @Body() dto: UpdateNeighbourhoodDto) {
+    return this.adminService.updateNeighbourhood(id, dto);
+  }
+
+  /** DELETE /admin/neighbourhoods/:id */
+  @Delete('neighbourhoods/:id')
+  deleteNeighbourhood(@Param('id') id: string) {
+    return this.adminService.deleteNeighbourhood(id);
+  }
+
+  // ── Circles ───────────────────────────────────────────────────────────────────
+
+  /** GET /admin/circles */
+  @Get('circles')
+  getAllCircles() {
+    return this.adminService.getAllCircles();
+  }
+
+  /** GET /admin/circles/:id */
+  @Get('circles/:id')
+  getCircleById(@Param('id') id: string) {
+    return this.adminService.getCircleById(id);
+  }
+
+  /** POST /admin/circles */
+  @Post('circles')
+  @HttpCode(HttpStatus.CREATED)
+  createCircle(@Body() dto: CreateCircleDto) {
+    return this.adminService.createCircle(dto);
+  }
+
+  /** PATCH /admin/circles/:id */
+  @Patch('circles/:id')
+  updateCircle(@Param('id') id: string, @Body() dto: UpdateCircleDto) {
+    return this.adminService.updateCircle(id, dto);
+  }
+
+  /** DELETE /admin/circles/:id */
+  @Delete('circles/:id')
+  deleteCircle(@Param('id') id: string) {
+    return this.adminService.deleteCircle(id);
+  }
+
+  // ── Students ──────────────────────────────────────────────────────────────────
+
+  /** GET /admin/students */
+  @Get('students')
+  getAllStudents() {
+    return this.adminService.getAllStudents();
+  }
+
+  /** GET /admin/students/:id */
+  @Get('students/:id')
+  getStudentById(@Param('id') id: string) {
+    return this.adminService.getStudentById(id);
+  }
+
+  /** POST /admin/students/enroll */
+  @Post('students/enroll')
+  @HttpCode(HttpStatus.CREATED)
+  enrollStudent(@Body() dto: EnrollStudentDto) {
+    return this.adminService.enrollStudent(dto);
+  }
+
+  /** PATCH /admin/students/:id */
+  @Patch('students/:id')
+  updateStudent(@Param('id') id: string, @Body() dto: UpdateStudentDto) {
+    return this.adminService.updateStudent(id, dto);
+  }
+
+  /** PATCH /admin/students/:id/circle */
+  @Patch('students/:id/circle')
+  assignStudentCircle(@Param('id') id: string, @Body() dto: AssignCircleDto) {
+    return this.adminService.assignStudentCircle(id, dto);
+  }
+
+  /** PATCH /admin/students/:id/deactivate */
+  @Patch('students/:id/deactivate')
+  deactivateStudent(@Param('id') id: string) {
+    return this.adminService.deactivateStudent(id);
+  }
+
+  /** PATCH /admin/students/:id/activate */
+  @Patch('students/:id/activate')
+  activateStudent(@Param('id') id: string) {
+    return this.adminService.activateStudent(id);
+  }
+
+  /** DELETE /admin/students/:id */
+  @Delete('students/:id')
+  deleteStudent(@Param('id') id: string) {
+    return this.adminService.deleteStudent(id);
   }
 }

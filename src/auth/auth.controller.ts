@@ -29,68 +29,48 @@ import { UserDocument } from '../user/user.schema';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // ─── PUBLIC ──────────────────────────────────────────────────────────────────
+  // ─── SIGNUP (2-step OTP flow) ─────────────────────────────────────────────
 
-  /**
-   * POST /auth/signup/request-otp
-   * Body: { fullName, email, password }
-   * → Sends OTP to email (2 min expiry)
-   */
+  /** POST /api/v1/auth/signup/request-otp */
   @Post('signup/request-otp')
   @HttpCode(HttpStatus.OK)
   signupRequestOtp(@Body() dto: SignupRequestOtpDto) {
     return this.authService.signupRequestOtp(dto);
   }
 
-  /**
-   * POST /auth/signup/verify-otp
-   * Body: { email, otp }
-   * → Verifies OTP, creates account, returns tokens + user
-   */
+  /** POST /api/v1/auth/signup/verify-otp */
   @Post('signup/verify-otp')
   @HttpCode(HttpStatus.CREATED)
   signupVerifyOtp(@Body() dto: SignupVerifyOtpDto) {
     return this.authService.signupVerifyOtp(dto);
   }
 
-  /**
-   * POST /auth/signin
-   * Body: { email, password }
-   * → Returns accessToken + refreshToken + user (with role)
-   */
+  // ─── SIGNIN ───────────────────────────────────────────────────────────────
+
+  /** POST /api/v1/auth/signin */
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   signin(@Body() dto: SignInDto) {
     return this.authService.signin(dto);
   }
 
-  /**
-   * POST /auth/forgot-password
-   * Body: { email }
-   * → Sends password-reset OTP (2 min expiry)
-   */
+  // ─── FORGOT PASSWORD ──────────────────────────────────────────────────────
+
+  /** POST /api/v1/auth/forgot-password */
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
 
-  /**
-   * POST /auth/verify-otp
-   * Body: { email, otp }
-   * → Returns short-lived resetToken (10 min)
-   */
+  /** POST /api/v1/auth/verify-otp  (password-reset OTP check → returns resetToken) */
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
   verifyOtp(@Body() dto: VerifyOtpDto) {
     return this.authService.verifyOtp(dto);
   }
 
-  /**
-   * POST /auth/reset-password
-   * Header: Authorization: Bearer <resetToken>
-   * Body:   { newPassword }
-   */
+  /** POST /api/v1/auth/reset-password  (Authorization: Bearer <resetToken>) */
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   resetPassword(
@@ -103,10 +83,11 @@ export class AuthController {
     return this.authService.resetPassword(token, dto);
   }
 
+  // ─── RESEND OTP ───────────────────────────────────────────────────────────
+
   /**
-   * POST /auth/resend-otp?type=signup   ← signup flow
-   * POST /auth/resend-otp?type=reset    ← forgot-password flow
-   * Body: { email }
+   * POST /api/v1/auth/resend-otp?type=signup
+   * POST /api/v1/auth/resend-otp?type=reset
    */
   @Post('resend-otp')
   @HttpCode(HttpStatus.OK)
@@ -117,12 +98,11 @@ export class AuthController {
     return this.authService.resendOtp(dto.email, type);
   }
 
-  // ─── PROTECTED ───────────────────────────────────────────────────────────────
+  // ─── TOKEN MANAGEMENT ─────────────────────────────────────────────────────
 
   /**
-   * POST /auth/refresh
-   * Header: Authorization: Bearer <refreshToken>
-   * → Returns new accessToken + refreshToken (rotation)
+   * POST /api/v1/auth/refresh
+   * Authorization: Bearer <refreshToken>
    */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -134,28 +114,25 @@ export class AuthController {
     );
   }
 
-  /**
-   * GET /auth/me
-   * Header: Authorization: Bearer <accessToken>
-   * → Returns current user info (id, fullName, email, role)
-   */
+  // ─── PROTECTED ────────────────────────────────────────────────────────────
+
+  /** GET /api/v1/auth/me  (Authorization: Bearer <accessToken>) */
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getMe(@CurrentUser() user: UserDocument) {
     return {
-      id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      isActive: user.isActive,
+      message: 'User fetched successfully.',
+      user: {
+        id      : user._id,
+        fullName: user.fullName,
+        email   : user.email,
+        role    : user.role,
+        isActive: user.isActive,
+      },
     };
   }
 
-  /**
-   * POST /auth/logout
-   * Header: Authorization: Bearer <refreshToken>
-   * → Revokes current device session
-   */
+  /** POST /api/v1/auth/logout  (Authorization: Bearer <refreshToken>) */
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtRefreshGuard)
@@ -163,11 +140,7 @@ export class AuthController {
     return this.authService.logout(req.user.userId, req.user.refreshToken);
   }
 
-  /**
-   * POST /auth/logout-all
-   * Header: Authorization: Bearer <accessToken>
-   * → Revokes all sessions (all devices)
-   */
+  /** POST /api/v1/auth/logout-all  (Authorization: Bearer <accessToken>) */
   @Post('logout-all')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)

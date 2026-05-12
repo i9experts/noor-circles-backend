@@ -43,9 +43,7 @@ export class AuthService {
   // SIGNUP  (2 steps)
   // ═══════════════════════════════════════════════════════════════
 
-  /** Step 1 — validate data, save temp record, send OTP */
   async signupRequestOtp(dto: SignupRequestOtpDto) {
-    // Already a fully verified account with this email?
     const verified = await this.userModel.findOne({
       email: dto.email,
       isEmailVerified: true,
@@ -58,17 +56,16 @@ export class AuthService {
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
     const hashedPwd = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
-    // Upsert pending record (so resend also updates the OTP)
     await this.userModel.findOneAndUpdate(
       { email: dto.email, isEmailVerified: false },
       {
-        fullName: dto.fullName,
-        email: dto.email,
-        password: hashedPwd,
+        fullName       : dto.fullName,
+        email          : dto.email,
+        password       : hashedPwd,
         isEmailVerified: false,
-        otpCode: otp, // ✅ plain string in DB
+        otpCode        : otp,
         otpExpiresAt,
-        pendingSignup: { fullName: dto.fullName, password: hashedPwd },
+        pendingSignup  : { fullName: dto.fullName, password: hashedPwd },
       },
       { upsert: true, new: true },
     );
@@ -79,11 +76,10 @@ export class AuthService {
     const isDev = this.config.get('NODE_ENV') !== 'production';
     return {
       message: 'OTP sent to your email. It is valid for 2 minutes.',
-      ...(isDev && { otp }), // visible in Postman (dev only)
+      ...(isDev && { otp }),
     };
   }
 
-  /** Step 2 — verify OTP → create account → return tokens */
   async signupVerifyOtp(dto: SignupVerifyOtpDto) {
     const user = await this.userModel
       .findOne({ email: dto.email, isEmailVerified: false })
@@ -99,20 +95,16 @@ export class AuthService {
     }
     if (new Date() > user.otpExpiresAt) {
       await this.usersService.clearOtp(user._id.toString());
-      throw new BadRequestException(
-        'OTP has expired. Please request a new one.',
-      );
+      throw new BadRequestException('OTP has expired. Please request a new one.');
     }
     if (dto.otp !== user.otpCode) {
-      // ✅ plain comparison
       throw new BadRequestException('Incorrect OTP. Please try again.');
     }
 
-    // Activate the account
     user.isEmailVerified = true;
-    user.otpCode = null;
-    user.otpExpiresAt = null;
-    user.pendingSignup = null;
+    user.otpCode         = null;
+    user.otpExpiresAt    = null;
+    user.pendingSignup   = null;
     await user.save();
 
     const tokens = await this.generateTokens(user._id.toString(), user.email);
@@ -124,7 +116,8 @@ export class AuthService {
     this.logger.log(`Account created → ${user.email}`);
     return {
       message: 'Account created successfully!',
-      ...tokens,
+      accessToken : tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: this.sanitize(user),
     };
   }
@@ -160,9 +153,10 @@ export class AuthService {
 
     this.logger.log(`Signed in → ${user.email} [${user.role}]`);
     return {
-      message: 'Signed in successfully!',
-      ...tokens,
-      user: this.sanitize(user),
+      message     : 'Signed in successfully!',
+      accessToken : tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user        : this.sanitize(user),
     };
   }
 
@@ -179,7 +173,7 @@ export class AuthService {
     const otp = this.makeOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
 
-    await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt); // ✅ plain
+    await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt);
     await this.mailService.sendOtp(user.email, otp, 'reset');
 
     this.logger.log(`Reset OTP sent → ${user.email}`);
@@ -187,7 +181,6 @@ export class AuthService {
     return { message: GENERIC, ...(isDev && { otp }) };
   }
 
-  /** Verify OTP (password reset flow) → return short-lived reset token */
   async verifyOtp(dto: VerifyOtpDto) {
     const user = await this.userModel
       .findOne({ email: dto.email })
@@ -198,12 +191,9 @@ export class AuthService {
     }
     if (new Date() > user.otpExpiresAt) {
       await this.usersService.clearOtp(user._id.toString());
-      throw new BadRequestException(
-        'OTP has expired. Please request a new one.',
-      );
+      throw new BadRequestException('OTP has expired. Please request a new one.');
     }
     if (dto.otp !== user.otpCode) {
-      // ✅ plain comparison
       throw new BadRequestException('Incorrect OTP. Please try again.');
     }
 
@@ -212,8 +202,8 @@ export class AuthService {
     const resetToken = this.jwtService.sign(
       { sub: user._id.toString(), email: user.email, purpose: 'reset' },
       {
-        secret: this.config.getOrThrow<string>('JWT_RESET_SECRET'),
-        expiresIn: this.config.get('JWT_RESET_EXPIRES_IN') || '10m',
+        secret    : this.config.getOrThrow<string>('JWT_RESET_SECRET'),
+        expiresIn : this.config.get('JWT_RESET_EXPIRES_IN') || '10m',
       },
     );
 
@@ -243,8 +233,7 @@ export class AuthService {
 
     this.logger.log(`Password reset → ${payload.email}`);
     return {
-      message:
-        'Password updated successfully. Please sign in with your new password.',
+      message: 'Password updated successfully. Please sign in with your new password.',
     };
   }
 
@@ -266,7 +255,7 @@ export class AuthService {
     const otp = this.makeOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
 
-    await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt); // ✅ plain
+    await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt);
     await this.mailService.sendOtp(user.email, otp, type);
 
     const isDev = this.config.get('NODE_ENV') !== 'production';
@@ -284,12 +273,8 @@ export class AuthService {
       throw new UnauthorizedException('Session expired. Please sign in again.');
     }
 
-    const idx = await this.findTokenIndex(
-      incomingRefreshToken,
-      user.refreshTokens,
-    );
+    const idx = await this.findTokenIndex(incomingRefreshToken, user.refreshTokens);
     if (idx === -1) {
-      // Token reuse detected → wipe all sessions (security)
       await this.usersService.clearAllRefreshTokens(userId);
       this.logger.warn(`Token reuse detected → ${user.email}`);
       throw new UnauthorizedException(
@@ -297,15 +282,16 @@ export class AuthService {
       );
     }
 
-    // Rotate: remove old, generate new pair
     user.refreshTokens.splice(idx, 1);
     const tokens = await this.generateTokens(userId, user.email);
-    user.refreshTokens.push(
-      await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS),
-    );
+    user.refreshTokens.push(await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS));
     await user.save();
 
-    return tokens;
+    return {
+      message     : 'Tokens refreshed successfully.',
+      accessToken : tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
   async logout(userId: string, refreshToken: string) {
@@ -330,22 +316,19 @@ export class AuthService {
   // PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════
 
-  private async generateTokens(
-    userId: string,
-    email: string,
-  ): Promise<AuthTokens> {
+  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         { sub: userId, email },
         {
-          secret: this.config.getOrThrow('JWT_ACCESS_SECRET'),
+          secret   : this.config.getOrThrow('JWT_ACCESS_SECRET'),
           expiresIn: this.config.getOrThrow('JWT_ACCESS_EXPIRES_IN'),
         },
       ),
       this.jwtService.signAsync(
         { sub: userId, email },
         {
-          secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+          secret   : this.config.getOrThrow('JWT_REFRESH_SECRET'),
           expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRES_IN'),
         },
       ),
@@ -353,13 +336,8 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async findTokenIndex(
-    plain: string,
-    hashed: string[],
-  ): Promise<number> {
-    const results = await Promise.all(
-      hashed.map((h) => bcrypt.compare(plain, h)),
-    );
+  private async findTokenIndex(plain: string, hashed: string[]): Promise<number> {
+    const results = await Promise.all(hashed.map((h) => bcrypt.compare(plain, h)));
     return results.findIndex(Boolean);
   }
 
@@ -369,10 +347,10 @@ export class AuthService {
 
   private sanitize(user: UserDocument): AuthUser {
     return {
-      id: user._id.toString(),
+      id      : user._id.toString(),
       fullName: user.fullName,
-      email: user.email,
-      role: user.role,
+      email   : user.email,
+      role    : user.role,
     };
   }
 }

@@ -9,6 +9,10 @@ import { UsersModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
 import { AdminModule } from './admin/admin.module';
 import { MurabbiModule } from './murabbi/murabbi.module';
+import { AttendanceModule } from './attendance/attendance.module';
+import { TrainingNestModule } from './training/training.module';
+import { LessonModule } from './lesson/lesson.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -32,6 +36,10 @@ import { MurabbiModule } from './murabbi/murabbi.module';
     MailModule,
     AdminModule,
     MurabbiModule,
+    AttendanceModule,
+    TrainingNestModule,
+    LessonModule,
+    ReportModule,
   ],
   providers: [
     // Apply rate limiting globally

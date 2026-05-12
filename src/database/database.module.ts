@@ -1,21 +1,9 @@
-/* eslint-disable prettier/prettier */
-import { Global, Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
-import * as schema from './schema';
-import { DatabaseService } from './databaseservice'
+/**
+ * This module is kept for reference only.
+ * MongoDB connection is configured in AppModule via MongooseModule.forRootAsync.
+ * Individual feature modules import MongooseModule.forFeature directly.
+ */
+import { Module } from '@nestjs/common';
 
-@Global()
-@Module({
-  imports: [
-    ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGODB_URI),
-    MongooseModule.forFeature([
-      { name: schema.User.name, schema: schema.UserSchema },
-
-    ]),
-  ],
-  exports: [MongooseModule, DatabaseService],
-  providers: [DatabaseService],
-})
+@Module({})
 export class DatabaseModule {}

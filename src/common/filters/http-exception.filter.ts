@@ -13,11 +13,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
+    const ctx      = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request  = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status  = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: unknown = undefined;
 
@@ -29,10 +29,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = res;
       } else if (typeof res === 'object' && res !== null) {
         const resObj = res as Record<string, unknown>;
-        // class-validator sends { message: string[] }
         if (Array.isArray(resObj['message'])) {
           message = 'Validation failed';
-          errors = resObj['message'];
+          errors  = resObj['message'];
         } else {
           message = (resObj['message'] as string) || message;
         }
@@ -42,11 +41,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     response.status(status).json({
-      success: false,
+      success   : false,
       statusCode: status,
       message,
       ...(errors ? { errors } : {}),
-      path: request.url,
+      path     : request.url,
       timestamp: new Date().toISOString(),
     });
   }
