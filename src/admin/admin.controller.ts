@@ -25,7 +25,8 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
-import { UserRole }     from '../user/user.schema';
+import { CurrentUser }  from '../auth/decorators/current-user.decorator';
+import { UserDocument, UserRole } from '../user/user.schema';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -39,6 +40,12 @@ export class AdminController {
   @Get('stats')
   getStats() {
     return this.adminService.getDashboardStats();
+  }
+
+  /** GET /admin/dashboard/extended */
+  @Get('dashboard/extended')
+  getDashboardExtended() {
+    return this.adminService.getDashboardExtended();
   }
 
   // ── Users / Murabbis ──────────────────────────────────────────────────────────
@@ -130,14 +137,14 @@ export class AdminController {
   /** POST /admin/circles */
   @Post('circles')
   @HttpCode(HttpStatus.CREATED)
-  createCircle(@Body() dto: CreateCircleDto) {
-    return this.adminService.createCircle(dto);
+  createCircle(@CurrentUser() user: UserDocument, @Body() dto: CreateCircleDto) {
+    return this.adminService.createCircle(dto, user._id.toString());
   }
 
   /** PATCH /admin/circles/:id */
   @Patch('circles/:id')
-  updateCircle(@Param('id') id: string, @Body() dto: UpdateCircleDto) {
-    return this.adminService.updateCircle(id, dto);
+  updateCircle(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: UpdateCircleDto) {
+    return this.adminService.updateCircle(id, dto, user._id.toString());
   }
 
   /** DELETE /admin/circles/:id */
@@ -163,8 +170,8 @@ export class AdminController {
   /** POST /admin/students/enroll */
   @Post('students/enroll')
   @HttpCode(HttpStatus.CREATED)
-  enrollStudent(@Body() dto: EnrollStudentDto) {
-    return this.adminService.enrollStudent(dto);
+  enrollStudent(@CurrentUser() user: UserDocument, @Body() dto: EnrollStudentDto) {
+    return this.adminService.enrollStudent(dto, user._id.toString());
   }
 
   /** PATCH /admin/students/:id */
@@ -175,8 +182,8 @@ export class AdminController {
 
   /** PATCH /admin/students/:id/circle */
   @Patch('students/:id/circle')
-  assignStudentCircle(@Param('id') id: string, @Body() dto: AssignCircleDto) {
-    return this.adminService.assignStudentCircle(id, dto);
+  assignStudentCircle(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: AssignCircleDto) {
+    return this.adminService.assignStudentCircle(id, dto, user._id.toString());
   }
 
   /** PATCH /admin/students/:id/deactivate */

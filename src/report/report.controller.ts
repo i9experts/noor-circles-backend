@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
@@ -25,12 +25,30 @@ export class ReportController {
     return this.reportService.getAdminReport();
   }
 
-  /** GET /reports/attendance-trend */
+  /** GET /reports/attendance-circles */
+  @Get('attendance-circles')
+  @Roles(UserRole.ADMIN)
+  getAttendanceTrendPerCircle() {
+    return this.reportService.getAttendanceTrendPerCircle();
+  }
+
+  /** GET /reports/circle/:id/detail */
+  @Get('circle/:id/detail')
+  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  getCircleDetail(@Param('id') id: string) {
+    return this.reportService.getCircleDetail(id);
+  }
+
+  /** GET /reports/attendance-trend?circleId=xxx */
   @Get('attendance-trend')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
-  getAttendanceTrend(@CurrentUser() user: UserDocument) {
-    return this.reportService.getAttendanceTrend(
-      user.role === UserRole.MURABBI ? user._id.toString() : undefined,
-    );
+  getAttendanceTrend(
+    @CurrentUser() user: UserDocument,
+    @Query('circleId') circleId?: string,
+  ) {
+    if (user.role === UserRole.MURABBI) {
+      return this.reportService.getAttendanceTrend(circleId, user._id.toString());
+    }
+    return this.reportService.getAttendanceTrend(circleId);
   }
 }

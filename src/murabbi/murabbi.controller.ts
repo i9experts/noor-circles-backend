@@ -86,4 +86,13 @@ export class MurabbiController {
   ) {
     return this.murabbiService.updateStudent(user._id.toString(), studentId, dto);
   }
+
+  /**
+   * POST /murabbi/request-delete/student/:id
+   * → Murabbi sends a delete request to admin (does NOT delete directly)
+   */
+  @Post('request-delete/student/:id')
+  requestDeleteStudent(@CurrentUser() user: UserDocument, @Param('id') studentId: string) {
+    return this.murabbiService.requestDeleteStudent(user._id.toString(), studentId);
+  }
 }

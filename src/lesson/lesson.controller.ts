@@ -4,8 +4,8 @@ import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
 import { UserRole }     from '../user/user.schema';
 import { LessonService } from './lesson.service';
-import { IsOptional, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 class CreateLessonDto {
   @IsString() @Transform(({ value }) => value?.trim()) title: string;
@@ -16,6 +16,10 @@ class CreateLessonDto {
   @IsOptional() @IsString() status?: string;
   @IsOptional() @IsString() pdfUrl?: string;
   @IsOptional() @IsString() videoUrl?: string;
+  @IsOptional() @IsNumber() @Type(() => Number) order?: number;
+  @IsOptional() @IsNumber() @Type(() => Number) sessionNumber?: number;
+  @IsOptional() @IsArray() @IsString({ each: true }) objectives?: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) keyTopics?: string[];
 }
 
 @Controller('lessons')

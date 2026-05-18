@@ -6,8 +6,10 @@ import {
   IsOptional, IsString, Matches, MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { Circle, CircleDocument } from '../circle/circle.schema';
-import { Student, StudentDocument } from '../student/student.schema';
+import { Circle, CircleDocument }   from '../circle/circle.schema';
+import { Student, StudentDocument }  from '../student/student.schema';
+import { NotificationService }       from '../notification/notification.service';
+import { NotificationType }          from '../notification/notification.schema';
 
 export class MurabbiEnrollStudentDto {
   @IsString()
@@ -33,8 +35,8 @@ export class MurabbiEnrollStudentDto {
   email?: string;
 
   @IsOptional()
-  @IsDateString({}, { message: 'Date of birth must be a valid ISO date.' })
-  dateOfBirth?: string;
+  @IsDateString({}, { message: 'Enrollment date must be a valid ISO date.' })
+  enrollmentDate?: string;
 
   @IsOptional()
   @IsString()
@@ -90,6 +92,7 @@ export class MurabbiService {
   constructor(
     @InjectModel(Circle.name)  private readonly circleModel:  Model<CircleDocument>,
     @InjectModel(Student.name) private readonly studentModel: Model<StudentDocument>,
+    private readonly notifService: NotificationService,
   ) {}
 
   private async myCircleIds(murabbiId: string): Promise<Types.ObjectId[]> {
@@ -152,7 +155,37 @@ export class MurabbiService {
       .populate('neighbourhood', 'name city')
       .lean();
 
+    this.notifService.createForAdmins({
+      sender : murabbiId,
+      type   : NotificationType.MURABBI_ACTION,
+      title  : 'Student Info Updated',
+      message: `Murabbi updated information for student "${student?.fullName}".`,
+      payload: { studentId: studentId, studentName: student?.fullName },
+    }).catch(() => {});
+
     return { message: 'Student updated successfully.', student };
+  }
+
+  async requestDeleteStudent(murabbiId: string, studentId: string) {
+    const murabbiOid = new Types.ObjectId(murabbiId);
+    const circleIds  = await this.myCircleIds(murabbiId);
+
+    const student = await this.studentModel.findOne({
+      _id: new Types.ObjectId(studentId),
+      ...this.myStudentFilter(murabbiOid, circleIds),
+    }).lean();
+    if (!student) throw new NotFoundException('Student not found in your circles.');
+
+    await this.notifService.createForAdmins({
+      sender          : murabbiId,
+      type            : NotificationType.DELETE_REQUEST,
+      title           : `Delete Request: ${student.fullName}`,
+      message         : `Murabbi is requesting to delete student "${student.fullName}" from circle. Please review and approve or reject.`,
+      requiresApproval: true,
+      payload         : { targetId: studentId, targetName: student.fullName, targetModel: 'Student' },
+    });
+
+    return { message: 'Delete request sent to admin for approval.' };
   }
 
   async enrollStudent(murabbiId: string, dto: MurabbiEnrollStudentDto) {
@@ -176,13 +209,21 @@ export class MurabbiService {
       fatherName    : dto.fatherName,
       phone         : dto.phone,
       email         : dto.email ?? null,
-      dateOfBirth   : dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
+      dateOfBirth   : null,
       address       : dto.address ?? null,
       circle        : new Types.ObjectId(dto.circleId),
       neighbourhood : new Types.ObjectId(dto.neighbourhoodId),
       murabbi       : new Types.ObjectId(murabbiId),
-      enrollmentDate: new Date(),
+      enrollmentDate: dto.enrollmentDate ? new Date(dto.enrollmentDate) : new Date(),
     });
+
+    this.notifService.createForAdmins({
+      sender : murabbiId,
+      type   : NotificationType.MURABBI_ACTION,
+      title  : 'New Student Enrolled',
+      message: `Murabbi enrolled new student "${student.fullName}" in circle "${circle.name}".`,
+      payload: { studentId: student._id?.toString(), studentName: student.fullName, circleName: circle.name },
+    }).catch(() => {});
 
     return { message: 'Student enrolled successfully.', student };
   }

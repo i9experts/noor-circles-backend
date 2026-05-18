@@ -31,6 +31,15 @@ export class Lesson {
 
   @Prop({ type: Number, default: 0 })
   order: number;
+
+  @Prop({ type: Number, default: null })
+  sessionNumber: number | null;
+
+  @Prop({ type: [String], default: [] })
+  objectives: string[];
+
+  @Prop({ type: [String], default: [] })
+  keyTopics: string[];
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);

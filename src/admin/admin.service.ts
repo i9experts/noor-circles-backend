@@ -14,6 +14,11 @@ import { UsersService } from '../user/user.service';
 import { Neighbourhood, NeighbourhoodDocument } from '../neighbourhood/neighbourhood.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Student, StudentDocument } from '../student/student.schema';
+import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
+import { Parent, ParentDocument }         from '../parent/parent.schema';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType }    from '../notification/notification.schema';
+import { AnnouncementService } from '../announcement/announcement.service';
 import {
   AssignCircleDto,
   CreateCircleDto,
@@ -32,11 +37,15 @@ export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
   constructor(
-    @InjectModel(User.name)         private readonly userModel:         Model<UserDocument>,
+    @InjectModel(User.name)          private readonly userModel:          Model<UserDocument>,
     @InjectModel(Neighbourhood.name) private readonly neighbourhoodModel: Model<NeighbourhoodDocument>,
-    @InjectModel(Circle.name)       private readonly circleModel:       Model<CircleDocument>,
-    @InjectModel(Student.name)      private readonly studentModel:      Model<StudentDocument>,
-    private readonly usersService: UsersService,
+    @InjectModel(Circle.name)        private readonly circleModel:        Model<CircleDocument>,
+    @InjectModel(Student.name)       private readonly studentModel:       Model<StudentDocument>,
+    @InjectModel(Attendance.name)    private readonly attendanceModel:    Model<AttendanceDocument>,
+    @InjectModel(Parent.name)        private readonly parentModel:        Model<ParentDocument>,
+    private readonly usersService:        UsersService,
+    private readonly notifService:        NotificationService,
+    private readonly announcementService: AnnouncementService,
   ) {}
 
   // ── Dashboard Stats ───────────────────────────────────────────────────────────
@@ -47,6 +56,8 @@ export class AdminService {
       totalStudents, activeStudents,
       totalCircles, activeCircles,
       totalNeighbourhoods,
+      sessionsCompleted, attendanceSessions,
+      totalParents, engagedParents,
     ] = await Promise.all([
       this.userModel.countDocuments({ role: UserRole.MURABBI, isEmailVerified: true }),
       this.userModel.countDocuments({ role: UserRole.MURABBI, isEmailVerified: true, isActive: true }),
@@ -56,7 +67,21 @@ export class AdminService {
       this.circleModel.countDocuments(),
       this.circleModel.countDocuments({ isActive: true }),
       this.neighbourhoodModel.countDocuments(),
+      this.attendanceModel.countDocuments(),
+      this.attendanceModel.find().select('records').lean(),
+      this.parentModel.countDocuments(),
+      this.parentModel.countDocuments({ 'feedback.0': { $exists: true } }),
     ]);
+
+    let totalPresent = 0;
+    let totalRecords = 0;
+    for (const session of attendanceSessions) {
+      for (const rec of session.records) {
+        totalRecords++;
+        if (rec.status === 'present') totalPresent++;
+      }
+    }
+    const avgAttendanceRate = totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0;
 
     return {
       totalMurabbis,
@@ -67,6 +92,9 @@ export class AdminService {
       totalCircles,
       activeCircles,
       totalNeighbourhoods,
+      sessionsCompleted,
+      avgAttendanceRate,
+      parentEngagement: totalParents > 0 ? Math.round((engagedParents / totalParents) * 100) : 0,
     };
   }
 
@@ -186,7 +214,7 @@ export class AdminService {
     return circle;
   }
 
-  async createCircle(dto: CreateCircleDto) {
+  async createCircle(dto: CreateCircleDto, adminId?: string) {
     const [neighbourhood, murabbi] = await Promise.all([
       this.neighbourhoodModel.findById(dto.neighbourhoodId).lean(),
       this.userModel.findOne({ _id: dto.murabbiId, role: UserRole.MURABBI, isEmailVerified: true }).lean(),
@@ -203,10 +231,22 @@ export class AdminService {
     });
 
     this.logger.log(`Admin created circle → ${circle.name}`);
+
+    if (adminId) {
+      this.notifService.create({
+        recipient: dto.murabbiId,
+        sender   : adminId,
+        type     : NotificationType.CIRCLE_ASSIGNED,
+        title    : 'New Circle Assigned',
+        message  : `You have been assigned as the Murabbi for "${circle.name}" in ${neighbourhood.name}.`,
+        payload  : { circleId: circle._id?.toString(), circleName: circle.name, neighbourhoodName: neighbourhood.name },
+      }).catch(() => {});
+    }
+
     return { message: 'Circle created successfully.', circle };
   }
 
-  async updateCircle(id: string, dto: UpdateCircleDto) {
+  async updateCircle(id: string, dto: UpdateCircleDto, adminId?: string) {
     if (dto.neighbourhoodId) {
       const neighbourhood = await this.neighbourhoodModel.findById(dto.neighbourhoodId).lean();
       if (!neighbourhood) throw new NotFoundException('Neighbourhood not found.');
@@ -231,6 +271,18 @@ export class AdminService {
       .lean();
 
     if (!circle) throw new NotFoundException('Circle not found.');
+
+    if (adminId && dto.murabbiId) {
+      this.notifService.create({
+        recipient: dto.murabbiId,
+        sender   : adminId,
+        type     : NotificationType.CIRCLE_ASSIGNED,
+        title    : 'Circle Assigned to You',
+        message  : `You have been assigned as the Murabbi for circle "${circle.name}".`,
+        payload  : { circleId: id, circleName: circle.name },
+      }).catch(() => {});
+    }
+
     return { message: 'Circle updated successfully.', circle };
   }
 
@@ -267,7 +319,7 @@ export class AdminService {
     return student;
   }
 
-  async enrollStudent(dto: EnrollStudentDto) {
+  async enrollStudent(dto: EnrollStudentDto, adminId?: string) {
     const [circle, neighbourhood] = await Promise.all([
       this.circleModel.findById(dto.circleId).lean(),
       this.neighbourhoodModel.findById(dto.neighbourhoodId).lean(),
@@ -293,15 +345,27 @@ export class AdminService {
       fatherName    : dto.fatherName,
       phone         : dto.phone,
       email         : dto.email ?? null,
-      dateOfBirth   : dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
+      dateOfBirth   : null,
       address       : dto.address ?? null,
       circle        : new Types.ObjectId(dto.circleId),
       neighbourhood : new Types.ObjectId(dto.neighbourhoodId),
       murabbi       : circle.murabbi ? new Types.ObjectId(circle.murabbi.toString()) : null,
-      enrollmentDate: new Date(),
+      enrollmentDate: dto.enrollmentDate ? new Date(dto.enrollmentDate) : new Date(),
     });
 
     this.logger.log(`Admin enrolled student → ${student.fullName}`);
+
+    if (adminId && circle.murabbi) {
+      this.notifService.create({
+        recipient: circle.murabbi.toString(),
+        sender   : adminId,
+        type     : NotificationType.STUDENT_ASSIGNED,
+        title    : 'New Student Enrolled in Your Circle',
+        message  : `${student.fullName} has been enrolled in your circle "${circle.name}" by the admin.`,
+        payload  : { studentId: student._id?.toString(), studentName: student.fullName, circleName: circle.name },
+      }).catch(() => {});
+    }
+
     return { message: 'Student enrolled successfully.', student };
   }
 
@@ -324,7 +388,7 @@ export class AdminService {
     return { message: 'Student updated successfully.', student };
   }
 
-  async assignStudentCircle(id: string, dto: AssignCircleDto) {
+  async assignStudentCircle(id: string, dto: AssignCircleDto, adminId?: string) {
     const circle = await this.circleModel.findById(dto.circleId).lean();
     if (!circle) throw new NotFoundException('Circle not found.');
     if (!circle.isActive) throw new BadRequestException('Cannot assign to an inactive circle.');
@@ -353,6 +417,18 @@ export class AdminService {
       .lean();
 
     if (!student) throw new NotFoundException('Student not found.');
+
+    if (adminId && circle.murabbi) {
+      this.notifService.create({
+        recipient: circle.murabbi.toString(),
+        sender   : adminId,
+        type     : NotificationType.STUDENT_ASSIGNED,
+        title    : 'Student Assigned to Your Circle',
+        message  : `${student.fullName} has been assigned to your circle "${circle.name}" by the admin.`,
+        payload  : { studentId: id, studentName: student.fullName, circleName: circle.name },
+      }).catch(() => {});
+    }
+
     return { message: 'Student reassigned to new circle successfully.', student };
   }
 
@@ -376,5 +452,33 @@ export class AdminService {
     const student = await this.studentModel.findByIdAndDelete(id).lean();
     if (!student) throw new NotFoundException('Student not found.');
     return { message: 'Student record deleted successfully.' };
+  }
+
+  // ── Extended Dashboard ────────────────────────────────────────────────────────
+
+  async getDashboardExtended() {
+    const activeCircles = await this.circleModel
+      .find({ isActive: true })
+      .populate('neighbourhood', 'name city')
+      .populate('murabbi', 'fullName')
+      .sort({ name: 1 })
+      .lean();
+
+    const circlesWithCounts = await Promise.all(
+      activeCircles.map(async (c) => {
+        const enrolledCount = await this.studentModel.countDocuments({
+          circle  : c._id,
+          isActive: true,
+        });
+        return { ...c, enrolledCount };
+      }),
+    );
+
+    const [recentActivity, announcements] = await Promise.all([
+      this.notifService.getActivityFeed(10),
+      this.announcementService.getLatest(5),
+    ]);
+
+    return { activeCircles: circlesWithCounts, recentActivity, announcements };
   }
 }

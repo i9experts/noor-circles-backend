@@ -134,8 +134,8 @@ export class EnrollStudentDto {
   email?: string;
 
   @IsOptional()
-  @IsDateString({}, { message: 'Date of birth must be a valid ISO date.' })
-  dateOfBirth?: string;
+  @IsDateString({}, { message: 'Enrollment date must be a valid ISO date.' })
+  enrollmentDate?: string;
 
   @IsOptional()
   @IsString()

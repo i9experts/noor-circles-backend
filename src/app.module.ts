@@ -12,7 +12,14 @@ import { MurabbiModule } from './murabbi/murabbi.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { TrainingNestModule } from './training/training.module';
 import { LessonModule } from './lesson/lesson.module';
-import { ReportModule } from './report/report.module';
+import { ReportModule }      from './report/report.module';
+import { IncentiveModule }   from './incentive/incentive.module';
+import { PerformanceModule } from './performance/performance.module';
+import { SessionsModule }    from './sessions/sessions.module';
+import { ParentModule }        from './parent/parent.module';
+import { NotificationModule }  from './notification/notification.module';
+import { AnnouncementModule }  from './announcement/announcement.module';
+import { LiveSessionModule }   from './live-session/live-session.module';
 
 @Module({
   imports: [
@@ -40,6 +47,13 @@ import { ReportModule } from './report/report.module';
     TrainingNestModule,
     LessonModule,
     ReportModule,
+    IncentiveModule,
+    PerformanceModule,
+    SessionsModule,
+    ParentModule,
+    NotificationModule,
+    AnnouncementModule,
+    LiveSessionModule,
   ],
   providers: [
     // Apply rate limiting globally
