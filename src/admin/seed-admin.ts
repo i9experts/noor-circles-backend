@@ -9,11 +9,15 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const ADMIN = {
-  fullName: 'Admin',
-  email   : process.env.ADMIN_EMAIL    || 'ahad.aptech1@gmail.com',
-  password: process.env.ADMIN_PASSWORD || 'Admin@123',
-};
+const email    = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
+
+if (!email || !password) {
+  console.error('❌  ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env');
+  process.exit(1);
+}
+
+const ADMIN = { fullName: 'Admin', email, password };
 
 const UserSchema = new mongoose.Schema(
   {

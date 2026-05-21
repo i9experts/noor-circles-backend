@@ -29,6 +29,12 @@ export class User {
   @Prop({ type: Boolean, default: true })
   isActive: boolean;
 
+  @Prop({ type: String, default: null, trim: true })
+  phone: string | null;
+
+  @Prop({ type: String, default: null, maxlength: 500 })
+  bio: string | null;
+
   @Prop({ type: [String], default: [], select: false })
   refreshTokens: string[];
 

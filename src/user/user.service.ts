@@ -19,6 +19,10 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
+  findByIdWithPassword(id: string) {
+    return this.userModel.findById(id).select('+password').exec();
+  }
+
   // ── Profile ───────────────────────────────────────────────────────────────────
 
   async getProfile(userId: string): Promise<UserDocument> {
@@ -32,7 +36,7 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    data: { fullName?: string },
+    data: { fullName?: string; phone?: string; bio?: string },
   ): Promise<UserDocument> {
     const user = await this.userModel
       .findByIdAndUpdate(
