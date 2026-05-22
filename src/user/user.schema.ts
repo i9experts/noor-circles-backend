@@ -32,6 +32,12 @@ export class User {
   @Prop({ type: String, default: null, trim: true })
   phone: string | null;
 
+  @Prop({ type: String, default: null, maxlength: 200, trim: true })
+  address: string | null;
+
+  @Prop({ type: String, default: null, trim: true })
+  image: string | null;
+
   @Prop({ type: String, default: null, maxlength: 500 })
   bio: string | null;
 

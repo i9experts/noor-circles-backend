@@ -32,6 +32,23 @@ export class CreateMurabbiDto {
   @Matches(/(?=.*[A-Z])/, { message: 'Password must contain at least one uppercase letter.' })
   @Matches(/(?=.*[0-9])/, { message: 'Password must contain at least one number.' })
   password: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^[+]?[\d\s\-()٠-٩]{7,20}$/, { message: 'Invalid phone number format.' })
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200, { message: 'Address must be at most 200 characters.' })
+  @Transform(({ value }) => value?.trim())
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500, { message: 'Image URL too long.' })
+  @Transform(({ value }) => value?.trim())
+  image?: string;
 }
 
 // ── Neighbourhood ─────────────────────────────────────────────────────────────
@@ -200,4 +217,21 @@ export class UpdateMurabbiDto {
   @MaxLength(60, { message: 'Full name must be at most 60 characters.' })
   @Transform(({ value }) => value?.trim())
   fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^[+]?[\d\s\-()٠-٩]{7,20}$/, { message: 'Invalid phone number format.' })
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200, { message: 'Address must be at most 200 characters.' })
+  @Transform(({ value }) => value?.trim())
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500, { message: 'Image URL too long.' })
+  @Transform(({ value }) => value?.trim())
+  image?: string;
 }

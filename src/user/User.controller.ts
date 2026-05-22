@@ -33,8 +33,8 @@ export class UsersController {
 
   @Patch('profile')
   updateProfile(@CurrentUser() user: UserDocument, @Body() body: any) {
-    const { fullName, phone, bio } = body;
-    return this.usersService.updateProfile(user._id.toString(), { fullName, phone, bio });
+    const { fullName, phone, bio, image } = body;
+    return this.usersService.updateProfile(user._id.toString(), { fullName, phone, bio, image });
   }
 
   @Post('change-password')

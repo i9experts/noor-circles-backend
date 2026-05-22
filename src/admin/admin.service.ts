@@ -120,6 +120,9 @@ export class AdminService {
       role           : UserRole.MURABBI,
       isEmailVerified: true,
       isActive       : true,
+      phone          : dto.phone   ?? null,
+      address        : dto.address ?? null,
+      image          : dto.image   ?? null,
     });
 
     this.logger.log(`Admin created murabbi → ${murabbi.email}`);
@@ -133,10 +136,16 @@ export class AdminService {
   activateMurabbi(userId: string)   { return this.usersService.activateUser(userId); }
   deleteMurabbi(userId: string)     { return this.usersService.deleteMurabbi(userId); }
 
-  async updateMurabbi(userId: string, dto: { fullName?: string }) {
+  async updateMurabbi(userId: string, dto: { fullName?: string; phone?: string; address?: string; image?: string }) {
+    const update: Record<string, unknown> = {};
+    if (dto.fullName !== undefined) update['fullName'] = dto.fullName;
+    if (dto.phone    !== undefined) update['phone']    = dto.phone    || null;
+    if (dto.address  !== undefined) update['address']  = dto.address  || null;
+    if (dto.image    !== undefined) update['image']    = dto.image    || null;
+
     const user = await this.userModel.findByIdAndUpdate(
       userId,
-      { ...(dto.fullName && { fullName: dto.fullName }) },
+      { $set: update },
       { new: true },
     ).select('-password -refreshTokens');
     if (!user) throw new NotFoundException('Murabbi not found.');
@@ -147,6 +156,12 @@ export class AdminService {
 
   getAllNeighbourhoods() {
     return this.neighbourhoodModel.find().sort({ createdAt: -1 }).lean();
+  }
+
+  async getOneNeighbourhood(id: string) {
+    const doc = await this.neighbourhoodModel.findById(id).lean();
+    if (!doc) throw new NotFoundException('Neighbourhood not found.');
+    return doc;
   }
 
   async createNeighbourhood(dto: CreateNeighbourhoodDto) {

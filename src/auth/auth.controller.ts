@@ -128,6 +128,7 @@ export class AuthController {
         email   : user.email,
         role    : user.role,
         isActive: user.isActive,
+        image   : user.image ?? null,
       },
     };
   }

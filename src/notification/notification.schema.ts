@@ -9,6 +9,7 @@ export enum NotificationType {
   MURABBI_ACTION      = 'murabbi_action',       // murabbi → admin (info)
   DELETE_REQUEST      = 'delete_request',       // murabbi → admin (requires approval)
   PERFORMANCE_REVIEW  = 'performance_review',   // admin → murabbi (review submitted)
+  MATERIAL_REQUEST    = 'material_request',     // murabbi → admin (lesson material request)
 }
 
 export enum NotificationStatus {

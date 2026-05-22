@@ -36,7 +36,7 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    data: { fullName?: string; phone?: string; bio?: string },
+    data: { fullName?: string; phone?: string; bio?: string; image?: string },
   ): Promise<UserDocument> {
     const user = await this.userModel
       .findByIdAndUpdate(

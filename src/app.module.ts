@@ -20,6 +20,7 @@ import { ParentModule }        from './parent/parent.module';
 import { NotificationModule }  from './notification/notification.module';
 import { AnnouncementModule }  from './announcement/announcement.module';
 import { LiveSessionModule }   from './live-session/live-session.module';
+import { UploadModule }        from './upload/upload.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { LiveSessionModule }   from './live-session/live-session.module';
     NotificationModule,
     AnnouncementModule,
     LiveSessionModule,
+    UploadModule,
   ],
   providers: [
     // Apply rate limiting globally

@@ -101,6 +101,12 @@ export class AdminController {
     return this.adminService.getAllNeighbourhoods();
   }
 
+  /** GET /admin/neighbourhoods/:id */
+  @Get('neighbourhoods/:id')
+  getOneNeighbourhood(@Param('id') id: string) {
+    return this.adminService.getOneNeighbourhood(id);
+  }
+
   /** POST /admin/neighbourhoods */
   @Post('neighbourhoods')
   @HttpCode(HttpStatus.CREATED)

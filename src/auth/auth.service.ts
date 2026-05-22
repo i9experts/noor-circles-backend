@@ -351,6 +351,7 @@ export class AuthService {
       fullName: user.fullName,
       email   : user.email,
       role    : user.role,
+      image   : user.image ?? null,
     };
   }
 }

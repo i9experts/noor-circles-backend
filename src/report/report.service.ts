@@ -5,6 +5,7 @@ import { Attendance, AttendanceDocument } from '../attendance/attendance.schema'
 import { Student, StudentDocument } from '../student/student.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
+import { Parent, ParentDocument } from '../parent/parent.schema';
 
 @Injectable()
 export class ReportService {
@@ -13,6 +14,7 @@ export class ReportService {
     @InjectModel(Student.name)    private readonly studentModel:    Model<StudentDocument>,
     @InjectModel(Circle.name)     private readonly circleModel:     Model<CircleDocument>,
     @InjectModel(Incentive.name)  private readonly incentiveModel:  Model<IncentiveDocument>,
+    @InjectModel(Parent.name)     private readonly parentModel:     Model<ParentDocument>,
   ) {}
 
   async getMurabbiReport(murabbiId: string) {
@@ -41,33 +43,62 @@ export class ReportService {
     }
     const avgAttendanceRate = totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0;
 
+    // Curriculum completion — sessions done out of 12-session standard curriculum
+    const curriculumCompletion = Math.min(Math.round((sessionsCompleted / 12) * 100), 100);
+
+    // Total incentive points awarded to students in this murabbi's circles
+    const studentIds = circleIds.length
+      ? (await this.studentModel.find({ circle: { $in: circleIds } }).select('_id').lean()).map((s) => s._id)
+      : [];
+
+    const incentiveAgg = studentIds.length
+      ? await this.incentiveModel.aggregate([
+          { $match: { student: { $in: studentIds } } },
+          { $group: { _id: null, total: { $sum: '$points' } } },
+        ])
+      : [];
+    const totalPointsAwarded = incentiveAgg[0]?.total ?? 0;
+
+    // Parent feedback score — average stars from parents linked to this murabbi's students
+    let totalStars = 0, feedbackCount = 0;
+    if (studentIds.length) {
+      const parents = await this.parentModel
+        .find({ students: { $in: studentIds } })
+        .select('feedback')
+        .lean();
+      for (const p of parents) {
+        for (const f of p.feedback ?? []) {
+          if (f.stars) { totalStars += f.stars; feedbackCount++; }
+        }
+      }
+    }
+    const parentFeedbackScore = feedbackCount > 0 ? (totalStars / feedbackCount).toFixed(1) : '0.0';
+
     // Build recent reports list (one entry per circle)
     const reports = circles.map((c) => {
       const circleSessions = sessions.filter((s) => s.circle.toString() === c._id.toString());
       return {
-        id  : c._id,
-        name: `${c.name} — Session Report`,
-        date: new Date().toLocaleDateString('en-PK'),
-        type: 'Attendance',
+        id    : c._id,
+        name  : `${c.name} — Session Report`,
+        date  : new Date().toLocaleDateString('en-PK'),
+        type  : 'Attendance',
         status: circleSessions.length > 0 ? 'Generated' : 'Pending',
       };
     });
-
-    const visualInsights = {
-      studentEngagement : avgAttendanceRate,
-      curriculumCompletion: 0,
-      parentFeedbackScore : '0.0',
-    };
 
     return {
       summary: {
         totalStudents,
         sessionsCompleted,
         avgAttendanceRate,
-        totalPointsAwarded: 0,
+        totalPointsAwarded,
       },
       reports,
-      visualInsights,
+      visualInsights: {
+        studentEngagement  : avgAttendanceRate,
+        curriculumCompletion,
+        parentFeedbackScore,
+      },
     };
   }
 

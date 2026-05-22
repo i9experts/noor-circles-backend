@@ -1,29 +1,24 @@
-import {
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { BadRequestException, Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UploadService } from './upload.service';
-import { createMulterOptions } from './multer.config';
-import { ConfigService } from '@nestjs/config';
-
-// Create a factory function that returns the interceptor
-const createFileInterceptor = (configService: ConfigService) => {
-  return FileInterceptor('file', createMulterOptions(configService));
-};
 
 @Controller('upload')
+@UseGuards(JwtAuthGuard)
 export class UploadController {
-  constructor(
-    private readonly uploadService: UploadService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly uploadService: UploadService) {}
 
   @Post('image')
-  @UseInterceptors(createFileInterceptor(new ConfigService()))
-  async uploadImage(@UploadedFile() file: any) {
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits : { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    fileFilter: (_req, file, cb) => {
+      if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+      else cb(new BadRequestException('Only JPG, PNG, or WebP images are allowed.'), false);
+    },
+  }))
+  uploadImage(@UploadedFile() file: Express.Multer.File) {
     return this.uploadService.uploadFile(file);
   }
 }

@@ -4,10 +4,11 @@ export interface AuthTokens {
 }
 
 export interface AuthUser {
-  id: string;
+  id      : string;
   fullName: string;
-  email: string;
-  role: string;
+  email   : string;
+  role    : string;
+  image  ?: string | null;
 }
 
 export interface JwtPayload {

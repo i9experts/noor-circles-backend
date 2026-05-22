@@ -135,11 +135,15 @@ export class AttendanceController {
     return this.attendanceService.getById(id);
   }
 
-  /** PATCH /attendance/:id — Admin edits a session */
+  /** PATCH /attendance/:id — Admin or the submitting murabbi edits a session */
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
-  update(@Param('id') id: string, @Body() dto: UpdateAttendanceDto) {
-    return this.attendanceService.update(id, dto);
+  @Roles(UserRole.ADMIN, UserRole.MURABBI)
+  update(
+    @CurrentUser() user: UserDocument,
+    @Param('id') id: string,
+    @Body() dto: UpdateAttendanceDto,
+  ) {
+    return this.attendanceService.update(id, dto, user._id.toString(), user.role);
   }
 
   /** DELETE /attendance/:id — Admin deletes a session */

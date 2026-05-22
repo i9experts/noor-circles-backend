@@ -1,10 +1,18 @@
-import { Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
 import { CurrentUser }  from '../auth/decorators/current-user.decorator';
 import { UserDocument, UserRole } from '../user/user.schema';
 import { NotificationService } from './notification.service';
+import { NotificationType } from './notification.schema';
+import { IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+class RequestMaterialDto {
+  @IsOptional() @IsString() @Transform(({ value }) => value?.trim())
+  note?: string;
+}
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
@@ -49,5 +57,27 @@ export class NotificationController {
   @Roles(UserRole.ADMIN)
   reject(@Param('id') id: string) {
     return this.notifService.rejectRequest(id);
+  }
+
+  /** POST /notifications/request-material — murabbi requests lesson material from admin */
+  @Post('request-material')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.MURABBI)
+  async requestMaterial(
+    @CurrentUser() user: UserDocument,
+    @Body() dto: RequestMaterialDto,
+  ) {
+    const murabbiName = user.fullName || 'A murabbi';
+    const note = dto.note?.trim();
+    await this.notifService.createForAdmins({
+      sender : user._id.toString(),
+      type   : NotificationType.MATERIAL_REQUEST,
+      title  : 'Lesson Material Request',
+      message: note
+        ? `${murabbiName} requested custom materials: "${note}"`
+        : `${murabbiName} has requested custom lesson materials.`,
+      payload: { murabbiName, note: note || '' },
+    });
+    return { message: 'Request sent to admin.' };
   }
 }
