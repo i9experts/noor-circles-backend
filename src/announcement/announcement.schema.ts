@@ -26,3 +26,5 @@ export class Announcement {
 }
 
 export const AnnouncementSchema = SchemaFactory.createForClass(Announcement);
+
+AnnouncementSchema.index({ createdAt: -1 });

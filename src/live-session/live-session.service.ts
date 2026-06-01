@@ -33,8 +33,13 @@ export class LiveSessionService {
     private readonly model: Model<LiveSessionDocument>,
   ) {}
 
-  async create(data: Partial<LiveSession>, createdBy: string) {
-    return this.model.create({ ...data, createdBy: new Types.ObjectId(createdBy) });
+  async create(data: Record<string, unknown>, createdBy: string) {
+    const payload = {
+      ...data,
+      ...(data.scheduledAt && { scheduledAt: new Date(data.scheduledAt as string) }),
+      createdBy: new Types.ObjectId(createdBy),
+    };
+    return this.model.create(payload);
   }
 
   async getAll() {
@@ -49,7 +54,8 @@ export class LiveSessionService {
     return enriched.slice(0, 5);
   }
 
-  async update(id: string, data: Partial<LiveSession>) {
+  async update(id: string, data: Record<string, unknown>) {
+    if (data.scheduledAt) data.scheduledAt = new Date(data.scheduledAt as string);
     const s = await this.model.findByIdAndUpdate(id, data, { new: true }).lean();
     if (!s) throw new NotFoundException('Session not found.');
     return s;

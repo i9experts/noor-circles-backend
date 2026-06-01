@@ -41,3 +41,7 @@ export class Attendance {
 }
 
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);
+
+AttendanceSchema.index({ circle: 1, sessionDate: -1 });
+AttendanceSchema.index({ submittedBy: 1 });
+AttendanceSchema.index({ 'records.student': 1 });

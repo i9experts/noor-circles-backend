@@ -48,3 +48,6 @@ export class Parent {
 }
 
 export const ParentSchema = SchemaFactory.createForClass(Parent);
+
+ParentSchema.index({ isEngaged: 1 });
+ParentSchema.index({ phone: 1 });

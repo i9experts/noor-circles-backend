@@ -55,6 +55,7 @@ export class AuthService {
     const otp = this.makeOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
     const hashedPwd = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+    const hashedOtp = await bcrypt.hash(otp, 10);
 
     await this.userModel.findOneAndUpdate(
       { email: dto.email, isEmailVerified: false },
@@ -63,7 +64,7 @@ export class AuthService {
         email          : dto.email,
         password       : hashedPwd,
         isEmailVerified: false,
-        otpCode        : otp,
+        otpCode        : hashedOtp,
         otpExpiresAt,
         pendingSignup  : { fullName: dto.fullName, password: hashedPwd },
       },
@@ -97,7 +98,7 @@ export class AuthService {
       await this.usersService.clearOtp(user._id.toString());
       throw new BadRequestException('OTP has expired. Please request a new one.');
     }
-    if (dto.otp !== user.otpCode) {
+    if (!(await bcrypt.compare(dto.otp, user.otpCode))) {
       throw new BadRequestException('Incorrect OTP. Please try again.');
     }
 
@@ -193,7 +194,7 @@ export class AuthService {
       await this.usersService.clearOtp(user._id.toString());
       throw new BadRequestException('OTP has expired. Please request a new one.');
     }
-    if (dto.otp !== user.otpCode) {
+    if (!(await bcrypt.compare(dto.otp, user.otpCode))) {
       throw new BadRequestException('Incorrect OTP. Please try again.');
     }
 

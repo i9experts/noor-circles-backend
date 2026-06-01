@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import { User, UserDocument, UserRole } from './user.schema';
 
 @Injectable()
@@ -53,7 +54,8 @@ export class UsersService {
   // ── OTP ───────────────────────────────────────────────────────────────────────
 
   async setOtp(userId: string, otpCode: string, otpExpiresAt: Date) {
-    await this.userModel.findByIdAndUpdate(userId, { otpCode, otpExpiresAt });
+    const hashedOtp = await bcrypt.hash(otpCode, 10);
+    await this.userModel.findByIdAndUpdate(userId, { otpCode: hashedOtp, otpExpiresAt });
   }
 
   async clearOtp(userId: string) {

@@ -40,3 +40,8 @@ export class Student {
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student);
+
+StudentSchema.index({ circle: 1 });
+StudentSchema.index({ neighbourhood: 1 });
+StudentSchema.index({ murabbi: 1 });
+StudentSchema.index({ isActive: 1 });

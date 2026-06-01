@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -161,10 +162,10 @@ export class AdminController {
 
   // ── Students ──────────────────────────────────────────────────────────────────
 
-  /** GET /admin/students */
+  /** GET /admin/students?murabbiId=... */
   @Get('students')
-  getAllStudents() {
-    return this.adminService.getAllStudents();
+  getAllStudents(@Query('murabbiId') murabbiId?: string) {
+    return this.adminService.getAllStudents(murabbiId);
   }
 
   /** GET /admin/students/:id */

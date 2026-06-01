@@ -43,3 +43,7 @@ export class Lesson {
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);
+
+LessonSchema.index({ order: 1 });
+LessonSchema.index({ status: 1 });
+LessonSchema.index({ sessionNumber: 1 });

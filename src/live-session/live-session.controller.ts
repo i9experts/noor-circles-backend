@@ -5,6 +5,7 @@ import { Roles }        from '../auth/decorators/roles.decorator';
 import { CurrentUser }  from '../auth/decorators/current-user.decorator';
 import { UserDocument, UserRole } from '../user/user.schema';
 import { LiveSessionService } from './live-session.service';
+import { CreateLiveSessionDto, UpdateLiveSessionDto } from './live-session.dto';
 
 @Controller('live-sessions')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,8 +14,8 @@ export class LiveSessionController {
 
   @Post()
   @Roles(UserRole.ADMIN)
-  create(@CurrentUser() user: UserDocument, @Body() body: any) {
-    return this.service.create(body, user._id.toString());
+  create(@CurrentUser() user: UserDocument, @Body() dto: CreateLiveSessionDto) {
+    return this.service.create(dto as unknown as Record<string, unknown>, user._id.toString());
   }
 
   @Get()
@@ -31,8 +32,8 @@ export class LiveSessionController {
 
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.service.update(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdateLiveSessionDto) {
+    return this.service.update(id, dto as unknown as Record<string, unknown>);
   }
 
   @Delete(':id')

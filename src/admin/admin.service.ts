@@ -314,9 +314,10 @@ export class AdminService {
 
   // ── Students ──────────────────────────────────────────────────────────────────
 
-  getAllStudents() {
+  getAllStudents(murabbiId?: string) {
+    const filter = murabbiId ? { murabbi: new Types.ObjectId(murabbiId) } : {};
     return this.studentModel
-      .find()
+      .find(filter)
       .populate('circle', 'name capacity')
       .populate('neighbourhood', 'name city')
       .populate('murabbi', 'fullName email')

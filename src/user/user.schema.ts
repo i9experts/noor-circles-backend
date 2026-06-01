@@ -58,6 +58,9 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
+UserSchema.index({ role: 1 });
+UserSchema.index({ isEmailVerified: 1, isActive: 1 });
+
 // Never leak sensitive fields in API responses
 UserSchema.set('toJSON', {
   transform: (_doc, ret) => {

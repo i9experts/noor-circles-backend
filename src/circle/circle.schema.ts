@@ -22,3 +22,7 @@ export class Circle {
 }
 
 export const CircleSchema = SchemaFactory.createForClass(Circle);
+
+CircleSchema.index({ neighbourhood: 1 });
+CircleSchema.index({ murabbi: 1 });
+CircleSchema.index({ isActive: 1 });

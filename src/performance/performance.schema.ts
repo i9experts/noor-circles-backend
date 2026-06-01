@@ -43,3 +43,6 @@ export class Performance {
 }
 
 export const PerformanceSchema = SchemaFactory.createForClass(Performance);
+
+PerformanceSchema.index({ murabbi: 1, createdAt: -1 });
+PerformanceSchema.index({ circle: 1 });

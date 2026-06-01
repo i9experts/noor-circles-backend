@@ -43,3 +43,7 @@ export class Incentive {
 }
 
 export const IncentiveSchema = SchemaFactory.createForClass(Incentive);
+
+IncentiveSchema.index({ student: 1 });
+IncentiveSchema.index({ awardedBy: 1 });
+IncentiveSchema.index({ createdAt: -1 });
