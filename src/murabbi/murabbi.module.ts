@@ -4,16 +4,18 @@ import { MurabbiController } from './murabbi.controller';
 import { MurabbiService }    from './murabbi.service';
 import { UsersModule }          from '../user/user.module';
 import { NotificationModule }   from '../notification/notification.module';
-import { Circle, CircleSchema }   from '../circle/circle.schema';
-import { Student, StudentSchema } from '../student/student.schema';
+import { Circle, CircleSchema }       from '../circle/circle.schema';
+import { Student, StudentSchema }     from '../student/student.schema';
+import { Attendance, AttendanceSchema } from '../attendance/attendance.schema';
 
 @Module({
   imports: [
     UsersModule,
     NotificationModule,
     MongooseModule.forFeature([
-      { name: Circle.name,  schema: CircleSchema  },
-      { name: Student.name, schema: StudentSchema },
+      { name: Circle.name,     schema: CircleSchema     },
+      { name: Student.name,    schema: StudentSchema    },
+      { name: Attendance.name, schema: AttendanceSchema },
     ]),
   ],
   controllers: [MurabbiController],

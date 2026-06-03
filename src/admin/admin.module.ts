@@ -5,7 +5,7 @@ import { AdminService }    from './admin.service';
 import { UsersModule }          from '../user/user.module';
 import { NotificationModule }   from '../notification/notification.module';
 import { AnnouncementModule }   from '../announcement/announcement.module';
-import { Neighbourhood, NeighbourhoodSchema } from '../neighbourhood/neighbourhood.schema';
+import { Neighbourhood, NeighbourhoodSchema, NeighbourhoodPipeline, NeighbourhoodPipelineSchema } from '../neighbourhood/neighbourhood.schema';
 import { Circle, CircleSchema }               from '../circle/circle.schema';
 import { Student, StudentSchema }             from '../student/student.schema';
 import { Attendance, AttendanceSchema }       from '../attendance/attendance.schema';
@@ -17,7 +17,8 @@ import { Parent, ParentSchema }               from '../parent/parent.schema';
     NotificationModule,
     AnnouncementModule,
     MongooseModule.forFeature([
-      { name: Neighbourhood.name, schema: NeighbourhoodSchema },
+      { name: Neighbourhood.name,         schema: NeighbourhoodSchema         },
+      { name: NeighbourhoodPipeline.name, schema: NeighbourhoodPipelineSchema },
       { name: Circle.name,        schema: CircleSchema        },
       { name: Student.name,       schema: StudentSchema       },
       { name: Attendance.name,    schema: AttendanceSchema    },

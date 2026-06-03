@@ -25,6 +25,13 @@ export class IncentiveController {
     return this.incentiveService.getAll();
   }
 
+  /** GET /incentives/page-data — full page: leaderboard + murabbi of month + breakdown */
+  @Get('page-data')
+  @Roles(UserRole.ADMIN, UserRole.MURABBI)
+  getPageData() {
+    return this.incentiveService.getPageData();
+  }
+
   /** GET /incentives/leaderboard */
   @Get('leaderboard')
   @Roles(UserRole.ADMIN, UserRole.MURABBI)

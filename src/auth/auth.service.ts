@@ -108,7 +108,7 @@ export class AuthService {
     user.pendingSignup   = null;
     await user.save();
 
-    const tokens = await this.generateTokens(user._id.toString(), user.email);
+    const tokens = await this.generateTokens(user._id.toString(), user.email, user.role);
     await this.usersService.addRefreshToken(
       user._id.toString(),
       await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS),
@@ -146,7 +146,7 @@ export class AuthService {
       );
     }
 
-    const tokens = await this.generateTokens(user._id.toString(), user.email);
+    const tokens = await this.generateTokens(user._id.toString(), user.email, user.role);
     await this.usersService.addRefreshToken(
       user._id.toString(),
       await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS),
@@ -284,7 +284,7 @@ export class AuthService {
     }
 
     user.refreshTokens.splice(idx, 1);
-    const tokens = await this.generateTokens(userId, user.email);
+    const tokens = await this.generateTokens(userId, user.email, user.role);
     user.refreshTokens.push(await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS));
     await user.save();
 
@@ -317,17 +317,17 @@ export class AuthService {
   // PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════
 
-  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
+  private async generateTokens(userId: string, email: string, role?: string): Promise<AuthTokens> {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: userId, email },
+        { sub: userId, email, role: role ?? 'murabbi' },
         {
           secret   : this.config.getOrThrow('JWT_ACCESS_SECRET'),
           expiresIn: this.config.getOrThrow('JWT_ACCESS_EXPIRES_IN'),
         },
       ),
       this.jwtService.signAsync(
-        { sub: userId, email },
+        { sub: userId, email, role: role ?? 'murabbi' },
         {
           secret   : this.config.getOrThrow('JWT_REFRESH_SECRET'),
           expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRES_IN'),

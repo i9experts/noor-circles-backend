@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   Matches,
+  Max,
   MaxLength,
   Min,
   MinLength,
@@ -54,32 +55,66 @@ export class CreateMurabbiDto {
 // ── Neighbourhood ─────────────────────────────────────────────────────────────
 
 export class CreateNeighbourhoodDto {
-  @IsString()
-  @IsNotEmpty({ message: 'Neighbourhood name is required.' })
-  @MaxLength(100, { message: 'Name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @IsString() @IsNotEmpty() @MaxLength(100) @Transform(({ value }) => value?.trim())
   name: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(100, { message: 'City must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
   city?: string;
+
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  area?: string;
+
+  @IsOptional() @IsString() @MaxLength(300) @Transform(({ value }) => value?.trim())
+  mosques?: string;
+
+  @IsOptional() @IsString()
+  status?: 'active' | 'review' | 'inactive';
 }
 
 export class UpdateNeighbourhoodDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty({ message: 'Name cannot be empty.' })
-  @MaxLength(100, { message: 'Name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(100) @Transform(({ value }) => value?.trim())
   name?: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(100, { message: 'City must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
   city?: string;
+
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  area?: string;
+
+  @IsOptional() @IsString() @MaxLength(300) @Transform(({ value }) => value?.trim())
+  mosques?: string;
+
+  @IsOptional() @IsString()
+  status?: 'active' | 'review' | 'inactive';
+}
+
+export class CreatePipelineDto {
+  @IsString() @IsNotEmpty() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  name: string;
+
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  area?: string;
+
+  @IsOptional() @IsString() @MaxLength(200) @Transform(({ value }) => value?.trim())
+  mosqueContact?: string;
+
+  @IsOptional() @IsNumber() @Min(1)
+  targetCircles?: number;
+
+  @IsOptional() @IsNumber() @Min(0) @Max(100)
+  interestLevel?: number;
+
+  @IsOptional() @IsString()
+  status?: 'prospecting' | 'in-talks' | 'ready-to-launch';
+}
+
+export class UpdatePipelineDto {
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim()) name?: string;
+  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim()) area?: string;
+  @IsOptional() @IsString() @MaxLength(200) @Transform(({ value }) => value?.trim()) mosqueContact?: string;
+  @IsOptional() @IsNumber() @Min(1) targetCircles?: number;
+  @IsOptional() @IsNumber() @Min(0) @Max(100) interestLevel?: number;
+  @IsOptional() @IsString() status?: 'prospecting' | 'in-talks' | 'ready-to-launch';
 }
 
 // ── Circle ────────────────────────────────────────────────────────────────────

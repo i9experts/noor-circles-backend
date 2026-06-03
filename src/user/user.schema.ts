@@ -41,6 +41,9 @@ export class User {
   @Prop({ type: String, default: null, maxlength: 500 })
   bio: string | null;
 
+  @Prop({ type: Number, enum: [1, 2, 3], default: 1 })
+  tier: number;
+
   @Prop({ type: [String], default: [], select: false })
   refreshTokens: string[];
 

@@ -6,8 +6,9 @@ import {
   IsOptional, IsString, Matches, MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { Circle, CircleDocument }   from '../circle/circle.schema';
-import { Student, StudentDocument }  from '../student/student.schema';
+import { Circle, CircleDocument }       from '../circle/circle.schema';
+import { Student, StudentDocument }      from '../student/student.schema';
+import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { NotificationService }       from '../notification/notification.service';
 import { NotificationType }          from '../notification/notification.schema';
 
@@ -90,8 +91,9 @@ export class MurabbiUpdateStudentDto {
 @Injectable()
 export class MurabbiService {
   constructor(
-    @InjectModel(Circle.name)  private readonly circleModel:  Model<CircleDocument>,
-    @InjectModel(Student.name) private readonly studentModel: Model<StudentDocument>,
+    @InjectModel(Circle.name)      private readonly circleModel:      Model<CircleDocument>,
+    @InjectModel(Student.name)     private readonly studentModel:     Model<StudentDocument>,
+    @InjectModel(Attendance.name)  private readonly attendanceModel:  Model<AttendanceDocument>,
     private readonly notifService: NotificationService,
   ) {}
 
@@ -113,11 +115,50 @@ export class MurabbiService {
   }
 
   async getMyCircles(murabbiId: string) {
-    return this.circleModel
+    const circles = await this.circleModel
       .find({ murabbi: new Types.ObjectId(murabbiId) })
-      .populate('neighbourhood', 'name city')
+      .populate('neighbourhood', 'name city area mosques status')
       .sort({ createdAt: -1 })
       .lean();
+
+    const circleIds = circles.map((c) => c._id);
+
+    const [studentAgg, attendanceDocs] = await Promise.all([
+      this.studentModel.aggregate([
+        { $match: { circle: { $in: circleIds }, isActive: true } },
+        { $group: { _id: '$circle', count: { $sum: 1 } } },
+      ]),
+      this.attendanceModel
+        .find({ circle: { $in: circleIds } })
+        .select('circle sessionNumber records')
+        .lean(),
+    ]);
+
+    const studentMap = new Map<string, number>(
+      studentAgg.map((r: any) => [r._id.toString(), r.count]),
+    );
+    const sessionMap = new Map<string, number>();
+    const attMap     = new Map<string, { present: number; total: number }>();
+
+    for (const sess of attendanceDocs) {
+      const cid = sess.circle?.toString();
+      if (!cid) continue;
+      const prev = sessionMap.get(cid) || 0;
+      if (sess.sessionNumber > prev) sessionMap.set(cid, sess.sessionNumber);
+      if (!attMap.has(cid)) attMap.set(cid, { present: 0, total: 0 });
+      const acc = attMap.get(cid)!;
+      for (const rec of sess.records) {
+        acc.total++;
+        if (rec.status === 'present') acc.present++;
+      }
+    }
+
+    return circles.map((c) => {
+      const cid     = c._id.toString();
+      const att     = attMap.get(cid);
+      const attRate = att && att.total > 0 ? Math.round((att.present / att.total) * 100) : 0;
+      return { ...c, studentCount: studentMap.get(cid) || 0, sessionsCompleted: sessionMap.get(cid) || 0, attendanceRate: attRate };
+    });
   }
 
   async getMyStudents(murabbiId: string) {

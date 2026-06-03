@@ -11,7 +11,7 @@ import * as bcrypt from 'bcrypt';
 
 import { User, UserDocument, UserRole } from '../user/user.schema';
 import { UsersService } from '../user/user.service';
-import { Neighbourhood, NeighbourhoodDocument } from '../neighbourhood/neighbourhood.schema';
+import { Neighbourhood, NeighbourhoodDocument, NeighbourhoodPipeline, NeighbourhoodPipelineDocument } from '../neighbourhood/neighbourhood.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
@@ -24,9 +24,11 @@ import {
   CreateCircleDto,
   CreateMurabbiDto,
   CreateNeighbourhoodDto,
+  CreatePipelineDto,
   EnrollStudentDto,
   UpdateCircleDto,
   UpdateNeighbourhoodDto,
+  UpdatePipelineDto,
   UpdateStudentDto,
 } from './admin.dto';
 
@@ -38,7 +40,8 @@ export class AdminService {
 
   constructor(
     @InjectModel(User.name)          private readonly userModel:          Model<UserDocument>,
-    @InjectModel(Neighbourhood.name) private readonly neighbourhoodModel: Model<NeighbourhoodDocument>,
+    @InjectModel(Neighbourhood.name)         private readonly neighbourhoodModel:  Model<NeighbourhoodDocument>,
+    @InjectModel(NeighbourhoodPipeline.name) private readonly pipelineModel:       Model<NeighbourhoodPipelineDocument>,
     @InjectModel(Circle.name)        private readonly circleModel:        Model<CircleDocument>,
     @InjectModel(Student.name)       private readonly studentModel:       Model<StudentDocument>,
     @InjectModel(Attendance.name)    private readonly attendanceModel:    Model<AttendanceDocument>,
@@ -108,6 +111,84 @@ export class AdminService {
     return this.usersService.findAllMurabbis();
   }
 
+  async getMurabbisWithStats() {
+    const murabbis = await this.userModel
+      .find({ role: UserRole.MURABBI, isEmailVerified: true })
+      .select('-password -refreshTokens -otpCode -otpExpiresAt -pendingSignup')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Fetch all circles & attendance in parallel
+    const [allCircles, allAttendance] = await Promise.all([
+      this.circleModel.find().populate('neighbourhood', 'name').lean(),
+      this.attendanceModel.find().select('circle submittedBy records').lean(),
+    ]);
+
+    // Build per-murabbi lookup maps
+    const circlesByMurabbi = new Map<string, typeof allCircles>();
+    for (const c of allCircles) {
+      const mid = c.murabbi?.toString();
+      if (!mid) continue;
+      if (!circlesByMurabbi.has(mid)) circlesByMurabbi.set(mid, []);
+      circlesByMurabbi.get(mid)!.push(c);
+    }
+
+    const attendanceByMurabbi = new Map<string, { present: number; total: number }>();
+    for (const sess of allAttendance) {
+      const mid = sess.submittedBy?.toString();
+      if (!mid) continue;
+      if (!attendanceByMurabbi.has(mid)) attendanceByMurabbi.set(mid, { present: 0, total: 0 });
+      const acc = attendanceByMurabbi.get(mid)!;
+      for (const rec of sess.records) {
+        acc.total++;
+        if (rec.status === 'present') acc.present++;
+      }
+    }
+
+    // Count students per murabbi (via their circles)
+    const circleIds = allCircles.map((c) => c._id);
+    const studentCounts = await this.studentModel.aggregate([
+      { $match: { circle: { $in: circleIds }, isActive: true } },
+      { $group: { _id: '$circle', count: { $sum: 1 } } },
+    ]);
+    const studentsByCircle = new Map<string, number>();
+    for (const row of studentCounts) studentsByCircle.set(row._id.toString(), row.count);
+
+    // Enrich murabbis
+    const enriched = murabbis.map((m) => {
+      const mid          = m._id.toString();
+      const circles      = circlesByMurabbi.get(mid) || [];
+      const att          = attendanceByMurabbi.get(mid);
+      const attRate      = att && att.total > 0 ? Math.round((att.present / att.total) * 100) : null;
+      const studentCount = circles.reduce((sum, c) => sum + (studentsByCircle.get(c._id.toString()) || 0), 0);
+      const badge        = attRate === null ? 'new'
+                         : attRate >= 90 ? 'excellent'
+                         : attRate >= 75 ? 'good'
+                         : 'needs-work';
+      return { ...m, tier: (m as any).tier ?? 1, circles, studentCount, attendanceRate: attRate, badge };
+    });
+
+    // Overall stats — use ?? 1 because existing docs may not have tier field yet
+    const totalMurabbis   = murabbis.length;
+    const activeMurabbis  = murabbis.filter((m) => m.isActive).length;
+    const tier2Candidates = murabbis.filter((m) => ((m as any).tier ?? 1) >= 2).length;
+
+    // avgCircleHealth = average of all murabbi attendance rates (ignore nulls)
+    const rates = enriched.map((m) => m.attendanceRate).filter((r) => r !== null) as number[];
+    const avgCircleHealth = rates.length > 0 ? Math.round(rates.reduce((a, b) => a + b, 0) / rates.length) : 0;
+
+    // Tier counts — default to tier 1 if field missing in old documents
+    const tier1Count = murabbis.filter((m) => ((m as any).tier ?? 1) === 1).length;
+    const tier2Count = murabbis.filter((m) => ((m as any).tier ?? 1) === 2).length;
+    const tier3Count = murabbis.filter((m) => ((m as any).tier ?? 1) === 3).length;
+
+    return {
+      murabbis     : enriched,
+      stats        : { total: totalMurabbis, active: activeMurabbis, tier2Candidates, avgCircleHealth },
+      tiers        : { tier1: tier1Count, tier2: tier2Count, tier3: tier3Count },
+    };
+  }
+
   async createMurabbi(dto: CreateMurabbiDto) {
     const exists = await this.usersService.findByEmail(dto.email);
     if (exists) throw new ConflictException('A user with this email already exists.');
@@ -136,12 +217,23 @@ export class AdminService {
   activateMurabbi(userId: string)   { return this.usersService.activateUser(userId); }
   deleteMurabbi(userId: string)     { return this.usersService.deleteMurabbi(userId); }
 
-  async updateMurabbi(userId: string, dto: { fullName?: string; phone?: string; address?: string; image?: string }) {
+  async updateMurabbiTier(userId: string, tier: 1 | 2 | 3) {
+    if (![1, 2, 3].includes(tier)) throw new BadRequestException('Tier must be 1, 2, or 3.');
+    const user = await this.userModel.findByIdAndUpdate(
+      userId, { tier }, { new: true },
+    ).select('-password -refreshTokens');
+    if (!user) throw new NotFoundException('Murabbi not found.');
+    this.logger.log(`Admin updated tier → ${user.email} → Tier ${tier}`);
+    return { message: `Tier updated to ${tier}.`, tier };
+  }
+
+  async updateMurabbi(userId: string, dto: { fullName?: string; phone?: string; address?: string; image?: string; tier?: number }) {
     const update: Record<string, unknown> = {};
     if (dto.fullName !== undefined) update['fullName'] = dto.fullName;
     if (dto.phone    !== undefined) update['phone']    = dto.phone    || null;
     if (dto.address  !== undefined) update['address']  = dto.address  || null;
     if (dto.image    !== undefined) update['image']    = dto.image    || null;
+    if (dto.tier     !== undefined) update['tier']     = dto.tier;
 
     const user = await this.userModel.findByIdAndUpdate(
       userId,
@@ -156,6 +248,101 @@ export class AdminService {
 
   getAllNeighbourhoods() {
     return this.neighbourhoodModel.find().sort({ createdAt: -1 }).lean();
+  }
+
+  async getNeighbourhoodsPageData() {
+    const [nbhs, allCircles, pipeline] = await Promise.all([
+      this.neighbourhoodModel.find().sort({ createdAt: -1 }).lean(),
+      this.circleModel.find().lean(),
+      this.pipelineModel.find().sort({ createdAt: -1 }).lean(),
+    ]);
+
+    // Per-neighbourhood: circles, students, murabbis, capacity
+    const nbhIds = nbhs.map((n) => n._id);
+
+    const [studentAgg, murabbiAgg] = await Promise.all([
+      this.studentModel.aggregate([
+        { $match: { neighbourhood: { $in: nbhIds }, isActive: true } },
+        { $group: { _id: '$neighbourhood', count: { $sum: 1 } } },
+      ]),
+      this.circleModel.aggregate([
+        { $match: { neighbourhood: { $in: nbhIds } } },
+        { $group: { _id: '$neighbourhood', murabbis: { $addToSet: '$murabbi' }, totalCapacity: { $sum: '$capacity' } } },
+      ]),
+    ]);
+
+    const studentMap  = new Map(studentAgg.map((r: any) => [r._id.toString(), r.count]));
+    const murabbiMap  = new Map(murabbiAgg.map((r: any) => [r._id.toString(), { count: r.murabbis.length, cap: r.totalCapacity }]));
+    const circleCount = new Map<string, number>();
+    for (const c of allCircles) {
+      const nid = c.neighbourhood?.toString();
+      if (nid) circleCount.set(nid, (circleCount.get(nid) || 0) + 1);
+    }
+
+    const neighbourhoods = nbhs.map((n) => {
+      const nid          = n._id.toString();
+      const mm           = murabbiMap.get(nid) || { count: 0, cap: 0 };
+      return {
+        ...n,
+        circleCount   : circleCount.get(nid) || 0,
+        studentCount  : studentMap.get(nid)  || 0,
+        murabbiCount  : mm.count,
+        totalCapacity : mm.cap,
+      };
+    });
+
+    const activeCount = nbhs.filter((n) => n.status === 'active' || n.isActive).length;
+    const city        = nbhs[0]?.city || null;
+
+    return { neighbourhoods, pipeline, stats: { total: nbhs.length, active: activeCount, city } };
+  }
+
+  // ── Pipeline CRUD ─────────────────────────────────────────────────────────────
+
+  getPipeline() {
+    return this.pipelineModel.find().sort({ createdAt: -1 }).lean();
+  }
+
+  async createPipelineEntry(dto: CreatePipelineDto) {
+    return this.pipelineModel.create({
+      name         : dto.name,
+      area         : dto.area         ?? '',
+      mosqueContact: dto.mosqueContact ?? null,
+      targetCircles: dto.targetCircles ?? 1,
+      interestLevel: dto.interestLevel ?? 50,
+      status       : dto.status       ?? 'prospecting',
+    });
+  }
+
+  async updatePipelineEntry(id: string, dto: UpdatePipelineDto) {
+    const entry = await this.pipelineModel.findByIdAndUpdate(id, { $set: dto }, { new: true }).lean();
+    if (!entry) throw new NotFoundException('Pipeline entry not found.');
+    return entry;
+  }
+
+  async deletePipelineEntry(id: string) {
+    const entry = await this.pipelineModel.findByIdAndDelete(id).lean();
+    if (!entry) throw new NotFoundException('Pipeline entry not found.');
+    return { message: 'Pipeline entry deleted.' };
+  }
+
+  async launchPipelineEntry(id: string) {
+    const entry = await this.pipelineModel.findById(id).lean();
+    if (!entry) throw new NotFoundException('Pipeline entry not found.');
+
+    const exists = await this.neighbourhoodModel.findOne({ name: { $regex: `^${entry.name}$`, $options: 'i' } });
+    if (exists) throw new ConflictException('A neighbourhood with this name already exists.');
+
+    const nbh = await this.neighbourhoodModel.create({
+      name  : entry.name,
+      city  : null,
+      area  : entry.area  || null,
+      status: 'active',
+    });
+
+    await this.pipelineModel.findByIdAndDelete(id);
+    this.logger.log(`Pipeline → launched as neighbourhood: ${nbh.name}`);
+    return { message: `"${nbh.name}" launched as active neighbourhood.`, neighbourhood: nbh };
   }
 
   async getOneNeighbourhood(id: string) {
@@ -213,10 +400,68 @@ export class AdminService {
   getAllCircles() {
     return this.circleModel
       .find()
-      .populate('neighbourhood', 'name city')
+      .populate('neighbourhood', 'name city area status')
       .populate('murabbi', 'fullName email')
       .sort({ createdAt: -1 })
       .lean();
+  }
+
+  async getCirclesPageData() {
+    const [circles, allAttendance, studentAgg] = await Promise.all([
+      this.circleModel
+        .find()
+        .populate('neighbourhood', 'name city area status')
+        .populate('murabbi', 'fullName')
+        .sort({ createdAt: -1 })
+        .lean(),
+      this.attendanceModel
+        .find()
+        .select('circle sessionNumber records')
+        .lean(),
+      this.studentModel.aggregate([
+        { $match: { isActive: true } },
+        { $group: { _id: '$circle', count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const circleIds = circles.map((c) => c._id.toString());
+
+    // Per-circle: student count
+    const studentMap = new Map<string, number>(
+      studentAgg.map((r: any) => [r._id?.toString(), r.count]),
+    );
+
+    // Per-circle: max session number (sessions completed) + attendance rate
+    const sessionMap   = new Map<string, number>();   // max sessionNumber
+    const attMap       = new Map<string, { present: number; total: number }>();
+
+    for (const sess of allAttendance) {
+      const cid = sess.circle?.toString();
+      if (!cid || !circleIds.includes(cid)) continue;
+
+      const prev = sessionMap.get(cid) || 0;
+      if (sess.sessionNumber > prev) sessionMap.set(cid, sess.sessionNumber);
+
+      if (!attMap.has(cid)) attMap.set(cid, { present: 0, total: 0 });
+      const acc = attMap.get(cid)!;
+      for (const rec of sess.records) {
+        acc.total++;
+        if (rec.status === 'present') acc.present++;
+      }
+    }
+
+    const enriched = circles.map((c) => {
+      const cid         = c._id.toString();
+      const sessCount   = sessionMap.get(cid) || 0;
+      const att         = attMap.get(cid);
+      const attRate     = att && att.total > 0 ? Math.round((att.present / att.total) * 100) : 0;
+      return { ...c, studentCount: studentMap.get(cid) || 0, sessionsCompleted: sessCount, attendanceRate: attRate };
+    });
+
+    const activeCount = circles.filter((c) => c.isActive).length;
+    const nbhSet      = new Set(circles.map((c) => (c.neighbourhood as any)?._id?.toString()).filter(Boolean));
+
+    return { circles: enriched, stats: { total: circles.length, active: activeCount, neighbourhoods: nbhSet.size } };
   }
 
   async getCircleById(id: string) {

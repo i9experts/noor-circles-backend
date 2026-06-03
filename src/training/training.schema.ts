@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export type TrainingModuleDocument = TrainingModule & Document;
+export type TrainingModuleDocument  = TrainingModule  & Document;
 export type TrainingProgressDocument = TrainingProgress & Document;
+export type TrainingBatchDocument   = TrainingBatch   & Document;
 
 @Schema({ timestamps: true })
 export class TrainingModule {
@@ -26,9 +27,19 @@ export class TrainingModule {
 
   @Prop({ type: Number, default: 0 })
   order: number;
+
+  /** Which day of the training (1 or 2) */
+  @Prop({ type: Number, enum: [1, 2], default: 1 })
+  daySlot: number;
+
+  /** Display time, e.g. "9:20–10:30 AM" */
+  @Prop({ type: String, default: '' })
+  timeSlot: string;
 }
 
 export const TrainingModuleSchema = SchemaFactory.createForClass(TrainingModule);
+
+// ── TrainingProgress ──────────────────────────────────────────────────────────
 
 @Schema({ timestamps: true })
 export class TrainingProgress {
@@ -47,3 +58,39 @@ export class TrainingProgress {
 
 export const TrainingProgressSchema = SchemaFactory.createForClass(TrainingProgress);
 TrainingProgressSchema.index({ user: 1, module: 1 }, { unique: true });
+
+// ── TrainingBatch ─────────────────────────────────────────────────────────────
+
+@Schema({ timestamps: true })
+export class TrainingBatch {
+  @Prop({ type: Number, required: true })
+  batchNumber: number;
+
+  @Prop({ type: String, enum: ['upcoming', 'active', 'completed'], default: 'upcoming' })
+  status: string;
+
+  @Prop({ type: Date, default: null })
+  day1Date: Date | null;
+
+  @Prop({ type: Date, default: null })
+  day2Date: Date | null;
+
+  @Prop({ type: String, default: 'Foundation & Identity', trim: true })
+  day1Title: string;
+
+  @Prop({ type: String, default: 'Skill, Safety & The Year', trim: true })
+  day2Title: string;
+
+  @Prop({ type: String, default: '9:00 AM – 3:00 PM · Modules 1, 2 & 3 · 5 hours', trim: true })
+  day1Meta: string;
+
+  @Prop({ type: String, default: '8:45 AM – 3:00 PM · Modules 4, 5 & 6 · 5 hours', trim: true })
+  day2Meta: string;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  candidates: Types.ObjectId[];
+}
+
+export const TrainingBatchSchema = SchemaFactory.createForClass(TrainingBatch);
+TrainingBatchSchema.index({ batchNumber: 1 }, { unique: true });
+TrainingBatchSchema.index({ status: 1 });

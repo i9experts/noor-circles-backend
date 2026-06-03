@@ -17,10 +17,12 @@ import {
   CreateCircleDto,
   CreateMurabbiDto,
   CreateNeighbourhoodDto,
+  CreatePipelineDto,
   EnrollStudentDto,
   UpdateCircleDto,
   UpdateMurabbiDto,
   UpdateNeighbourhoodDto,
+  UpdatePipelineDto,
   UpdateStudentDto,
 } from './admin.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -63,11 +65,23 @@ export class AdminController {
     return this.adminService.getAllMurabbis();
   }
 
+  /** GET /admin/murabbis/with-stats — enriched list with circles, attendance, badge */
+  @Get('murabbis/with-stats')
+  getMurabbisWithStats() {
+    return this.adminService.getMurabbisWithStats();
+  }
+
   /** POST /admin/murabbis */
   @Post('murabbis')
   @HttpCode(HttpStatus.CREATED)
   createMurabbi(@Body() dto: CreateMurabbiDto) {
     return this.adminService.createMurabbi(dto);
+  }
+
+  /** PATCH /admin/murabbis/:id/tier */
+  @Patch('murabbis/:id/tier')
+  updateMurabbiTier(@Param('id') id: string, @Body('tier') tier: 1 | 2 | 3) {
+    return this.adminService.updateMurabbiTier(id, tier);
   }
 
   /** PATCH /admin/murabbis/:id/deactivate */
@@ -95,6 +109,12 @@ export class AdminController {
   }
 
   // ── Neighbourhoods ────────────────────────────────────────────────────────────
+
+  /** GET /admin/neighbourhoods/page-data */
+  @Get('neighbourhoods/page-data')
+  getNeighbourhoodsPageData() {
+    return this.adminService.getNeighbourhoodsPageData();
+  }
 
   /** GET /admin/neighbourhoods */
   @Get('neighbourhoods')
@@ -127,7 +147,39 @@ export class AdminController {
     return this.adminService.deleteNeighbourhood(id);
   }
 
+  // ── Neighbourhood Pipeline ────────────────────────────────────────────────────
+
+  @Get('neighbourhoods/pipeline')
+  getPipeline() { return this.adminService.getPipeline(); }
+
+  @Post('neighbourhoods/pipeline')
+  @HttpCode(HttpStatus.CREATED)
+  createPipelineEntry(@Body() dto: CreatePipelineDto) {
+    return this.adminService.createPipelineEntry(dto);
+  }
+
+  @Patch('neighbourhoods/pipeline/:id')
+  updatePipelineEntry(@Param('id') id: string, @Body() dto: UpdatePipelineDto) {
+    return this.adminService.updatePipelineEntry(id, dto);
+  }
+
+  @Delete('neighbourhoods/pipeline/:id')
+  deletePipelineEntry(@Param('id') id: string) {
+    return this.adminService.deletePipelineEntry(id);
+  }
+
+  @Post('neighbourhoods/pipeline/:id/launch')
+  launchPipelineEntry(@Param('id') id: string) {
+    return this.adminService.launchPipelineEntry(id);
+  }
+
   // ── Circles ───────────────────────────────────────────────────────────────────
+
+  /** GET /admin/circles/page-data — enriched with student/session/attendance stats */
+  @Get('circles/page-data')
+  getCirclesPageData() {
+    return this.adminService.getCirclesPageData();
+  }
 
   /** GET /admin/circles */
   @Get('circles')
