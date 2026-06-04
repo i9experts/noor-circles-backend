@@ -1,0 +1,473 @@
+{
+  "info": {
+    "name": "Noor Circle API — Production",
+    "description": "Complete API collection for Noor Circle backend. Base URL: {{baseUrl}}\n\n**Setup:**\n1. Set `baseUrl` = `http://localhost:3000/api/v1`\n2. Run **Auth > Sign In** → `accessToken` is auto-saved\n3. All protected routes use `Bearer {{accessToken}}` automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",      "value": "http://localhost:3000/api/v1", "type": "string" },
+    { "key": "accessToken",  "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "01 · Auth",
+      "item": [
+        {
+          "name": "Request Signup OTP",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/signup/request-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Test@1234\"\n}" }
+          }
+        },
+        {
+          "name": "Verify Signup OTP",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/signup/verify-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\"\n}" }
+          }
+        },
+        {
+          "name": "Sign In",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const r = pm.response.json();",
+            "if (r.data?.accessToken) {",
+            "  pm.collectionVariables.set('accessToken', r.data.accessToken);",
+            "  pm.collectionVariables.set('refreshToken', r.data.refreshToken);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/signin",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"ahad.aptech1@gmail.com\",\n  \"password\": \"Admin@123\"\n}" }
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" }
+        },
+        {
+          "name": "Refresh Tokens",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const r = pm.response.json();",
+            "if (r.data?.accessToken) {",
+            "  pm.collectionVariables.set('accessToken', r.data.accessToken);",
+            "  pm.collectionVariables.set('refreshToken', r.data.refreshToken);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Forgot Password (send OTP)",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/forgot-password",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        {
+          "name": "Verify Reset OTP",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/verify-otp",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/reset-password",
+            "body": { "mode": "raw", "raw": "{\n  \"resetToken\": \"<jwt_reset_token>\",\n  \"newPassword\": \"NewPass@123\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/resend-otp",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"type\": \"signup\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout",
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        {
+          "name": "Logout All Devices",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout-all" }
+        }
+      ]
+    },
+
+    {
+      "name": "02 · Admin — Dashboard",
+      "item": [
+        { "name": "Get Stats", "request": { "method": "GET", "url": "{{baseUrl}}/admin/stats" } },
+        { "name": "Get Dashboard Extended", "request": { "method": "GET", "url": "{{baseUrl}}/admin/dashboard/extended" } },
+        { "name": "Get All Users", "request": { "method": "GET", "url": "{{baseUrl}}/admin/users" } }
+      ]
+    },
+
+    {
+      "name": "03 · Admin — Murabbis",
+      "item": [
+        { "name": "Get All Murabbis", "request": { "method": "GET", "url": "{{baseUrl}}/admin/murabbis" } },
+        { "name": "Get Murabbis With Stats", "request": { "method": "GET", "url": "{{baseUrl}}/admin/murabbis/with-stats" } },
+        {
+          "name": "Create Murabbi",
+          "request": { "method": "POST", "url": "{{baseUrl}}/admin/murabbis",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Sr. Fatima\",\n  \"email\": \"fatima@example.com\",\n  \"password\": \"Pass@1234\",\n  \"phone\": \"03001234567\",\n  \"address\": \"Karachi, Pakistan\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Murabbi", "request": { "method": "PATCH", "url": "{{baseUrl}}/admin/murabbis/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Sr. Fatima Updated\",\n  \"phone\": \"03009876543\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Murabbi Tier", "request": { "method": "PATCH", "url": "{{baseUrl}}/admin/murabbis/:id/tier",
+            "body": { "mode": "raw", "raw": "{\n  \"tier\": 2\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Activate Murabbi",   "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/murabbis/:id/activate" } },
+        { "name": "Deactivate Murabbi", "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/murabbis/:id/deactivate" } },
+        { "name": "Delete Murabbi",     "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/murabbis/:id" } }
+      ]
+    },
+
+    {
+      "name": "04 · Admin — Neighbourhoods",
+      "item": [
+        { "name": "Get Page Data",          "request": { "method": "GET",    "url": "{{baseUrl}}/admin/neighbourhoods/page-data" } },
+        { "name": "Get All Neighbourhoods", "request": { "method": "GET",    "url": "{{baseUrl}}/admin/neighbourhoods" } },
+        { "name": "Get One Neighbourhood",  "request": { "method": "GET",    "url": "{{baseUrl}}/admin/neighbourhoods/:id" } },
+        { "name": "Create Neighbourhood",   "request": { "method": "POST",   "url": "{{baseUrl}}/admin/neighbourhoods",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Gulshan-e-Iqbal\",\n  \"city\": \"Karachi\",\n  \"area\": \"East Karachi\",\n  \"mosques\": \"Masjid Bilal, Masjid Umar\",\n  \"status\": \"active\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Neighbourhood",   "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/neighbourhoods/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"review\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Neighbourhood",   "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/neighbourhoods/:id" } },
+        { "name": "Get Pipeline",           "request": { "method": "GET",    "url": "{{baseUrl}}/admin/neighbourhoods/pipeline" } },
+        { "name": "Create Pipeline Entry",  "request": { "method": "POST",   "url": "{{baseUrl}}/admin/neighbourhoods/pipeline",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Korangi\",\n  \"area\": \"East Karachi\",\n  \"mosqueContact\": \"Masjid Al-Noor\",\n  \"targetCircles\": 2,\n  \"interestLevel\": 60,\n  \"status\": \"in-talks\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Pipeline Entry",  "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/neighbourhoods/pipeline/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"ready-to-launch\",\n  \"interestLevel\": 90\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Pipeline Entry",  "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/neighbourhoods/pipeline/:id" } },
+        { "name": "Launch Pipeline → Neighbourhood", "request": { "method": "POST", "url": "{{baseUrl}}/admin/neighbourhoods/pipeline/:id/launch" } }
+      ]
+    },
+
+    {
+      "name": "05 · Admin — Circles",
+      "item": [
+        { "name": "Get Circles Page Data", "request": { "method": "GET",    "url": "{{baseUrl}}/admin/circles/page-data" } },
+        { "name": "Get All Circles",       "request": { "method": "GET",    "url": "{{baseUrl}}/admin/circles" } },
+        { "name": "Get Circle By ID",      "request": { "method": "GET",    "url": "{{baseUrl}}/admin/circles/:id" } },
+        { "name": "Create Circle",         "request": { "method": "POST",   "url": "{{baseUrl}}/admin/circles",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Gulshan Circle 1\",\n  \"neighbourhoodId\": \"<neighbourhood_id>\",\n  \"murabbiId\": \"<murabbi_id>\",\n  \"capacity\": 15\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Circle",         "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/circles/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Gulshan Circle 1 Updated\",\n  \"capacity\": 20\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Circle",         "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/circles/:id" } }
+      ]
+    },
+
+    {
+      "name": "06 · Admin — Students",
+      "item": [
+        { "name": "Get All Students",            "request": { "method": "GET",    "url": { "raw": "{{baseUrl}}/admin/students?murabbiId=", "query": [{ "key": "murabbiId", "value": "", "description": "Optional — filter by murabbi" }] } } },
+        { "name": "Get Student By ID",           "request": { "method": "GET",    "url": "{{baseUrl}}/admin/students/:id" } },
+        { "name": "Enroll Student",              "request": { "method": "POST",   "url": "{{baseUrl}}/admin/students/enroll",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Ahmed Ali\",\n  \"fatherName\": \"Muhammad Ali\",\n  \"phone\": \"03001234567\",\n  \"email\": \"ahmed@example.com\",\n  \"circleId\": \"<circle_id>\",\n  \"neighbourhoodId\": \"<neighbourhood_id>\",\n  \"enrollmentDate\": \"2026-01-01\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Student",              "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/students/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Ahmed Ali Updated\",\n  \"phone\": \"03009876543\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Assign Student to Circle",    "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/students/:id/circle",
+            "body": { "mode": "raw", "raw": "{\n  \"circleId\": \"<new_circle_id>\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Activate Student",            "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/students/:id/activate" } },
+        { "name": "Deactivate Student",          "request": { "method": "PATCH",  "url": "{{baseUrl}}/admin/students/:id/deactivate" } },
+        { "name": "Delete Student Permanently",  "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/students/:id" } }
+      ]
+    },
+
+    {
+      "name": "07 · Murabbi Portal",
+      "item": [
+        { "name": "Get My Profile",    "request": { "method": "GET",   "url": "{{baseUrl}}/murabbi/profile" } },
+        { "name": "Update Profile",    "request": { "method": "PATCH", "url": "{{baseUrl}}/murabbi/profile",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Get Dashboard",     "request": { "method": "GET",   "url": "{{baseUrl}}/murabbi/dashboard" } },
+        { "name": "Get My Circles",    "request": { "method": "GET",   "url": "{{baseUrl}}/murabbi/my-circles" } },
+        { "name": "Get My Students",   "request": { "method": "GET",   "url": "{{baseUrl}}/murabbi/my-students" } },
+        { "name": "Enroll Student",    "request": { "method": "POST",  "url": "{{baseUrl}}/murabbi/enroll-student",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Zaid Ahmad\",\n  \"fatherName\": \"Ahmad Khan\",\n  \"phone\": \"03001111111\",\n  \"circleId\": \"<circle_id>\",\n  \"neighbourhoodId\": \"<neighbourhood_id>\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Student Info", "request": { "method": "PATCH", "url": "{{baseUrl}}/murabbi/students/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"03002222222\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Request Delete Student", "request": { "method": "POST", "url": "{{baseUrl}}/murabbi/request-delete/student/:id" } }
+      ]
+    },
+
+    {
+      "name": "08 · Attendance",
+      "item": [
+        { "name": "Submit Attendance",        "request": { "method": "POST",   "url": "{{baseUrl}}/attendance",
+            "body": { "mode": "raw", "raw": "{\n  \"circle\": \"<circle_id>\",\n  \"sessionNumber\": 1,\n  \"sessionDate\": \"2026-06-01\",\n  \"topic\": \"Introduction to Tarbiyah\",\n  \"records\": [\n    { \"student\": \"<student_id>\", \"status\": \"present\", \"note\": \"\" },\n    { \"student\": \"<student_id2>\", \"status\": \"absent\", \"note\": \"Sick\" }\n  ]\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Get All Attendance",       "request": { "method": "GET",    "url": "{{baseUrl}}/attendance" } },
+        { "name": "Get By Circle",            "request": { "method": "GET",    "url": "{{baseUrl}}/attendance/circle/:id" } },
+        { "name": "Get By Murabbi",           "request": { "method": "GET",    "url": "{{baseUrl}}/attendance/by-murabbi/:id" } },
+        { "name": "Get By Student",           "request": { "method": "GET",    "url": "{{baseUrl}}/attendance/by-student/:id" } },
+        { "name": "Get Student Rate",         "request": { "method": "GET",    "url": "{{baseUrl}}/attendance/student/:id/rate" } },
+        { "name": "Get Attendance By ID",     "request": { "method": "GET",    "url": "{{baseUrl}}/attendance/:id" } },
+        { "name": "Update Attendance",        "request": { "method": "PATCH",  "url": "{{baseUrl}}/attendance/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"topic\": \"Updated Topic\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Attendance",        "request": { "method": "DELETE", "url": "{{baseUrl}}/attendance/:id" } }
+      ]
+    },
+
+    {
+      "name": "09 · Incentives",
+      "item": [
+        { "name": "Get Page Data",   "request": { "method": "GET",  "url": "{{baseUrl}}/incentives/page-data" } },
+        { "name": "Get All",         "request": { "method": "GET",  "url": "{{baseUrl}}/incentives" } },
+        { "name": "Get Leaderboard", "request": { "method": "GET",  "url": "{{baseUrl}}/incentives/leaderboard" } },
+        { "name": "Get By Student",  "request": { "method": "GET",  "url": "{{baseUrl}}/incentives/student/:id" } },
+        { "name": "Award Points",    "request": { "method": "POST", "url": "{{baseUrl}}/incentives",
+            "body": { "mode": "raw", "raw": "{\n  \"studentId\": \"<student_id>\",\n  \"awardType\": \"noor-star\",\n  \"note\": \"Excellent session participation\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "10 · Performance Reviews",
+      "item": [
+        { "name": "Submit Review",       "request": { "method": "POST",   "url": "{{baseUrl}}/performance/reviews",
+            "body": { "mode": "raw", "raw": "{\n  \"murabbiId\": \"<murabbi_id>\",\n  \"circleId\": \"<circle_id>\",\n  \"sessionNumber\": 5,\n  \"reviewText\": \"Excellent session management.\",\n  \"stars\": 5,\n  \"requiresFollowUp\": false,\n  \"honestyScore\": 90,\n  \"gratitudeScore\": 85,\n  \"empathyScore\": 88,\n  \"identityScore\": 92,\n  \"familyScore\": 80,\n  \"consistencyScore\": 87\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Get All Reviews",     "request": { "method": "GET",    "url": { "raw": "{{baseUrl}}/performance/reviews?murabbiId=&circleId=", "query": [{ "key": "murabbiId", "value": "" }, { "key": "circleId", "value": "" }] } } },
+        { "name": "Get My Reviews",      "request": { "method": "GET",    "url": "{{baseUrl}}/performance/my-reviews" } },
+        { "name": "Get Indicators",      "request": { "method": "GET",    "url": "{{baseUrl}}/performance/indicators" } },
+        { "name": "Get Summary",         "request": { "method": "GET",    "url": "{{baseUrl}}/performance/summary" } },
+        { "name": "Resolve Follow-Up",   "request": { "method": "PATCH",  "url": "{{baseUrl}}/performance/reviews/:id/resolve" } },
+        { "name": "Delete Review",       "request": { "method": "DELETE", "url": "{{baseUrl}}/performance/reviews/:id" } }
+      ]
+    },
+
+    {
+      "name": "11 · Parents",
+      "item": [
+        { "name": "Get Page Data",       "request": { "method": "GET",    "url": "{{baseUrl}}/parents/page-data" } },
+        { "name": "Get Stats",           "request": { "method": "GET",    "url": "{{baseUrl}}/parents/stats" } },
+        { "name": "Get All Parents",     "request": { "method": "GET",    "url": "{{baseUrl}}/parents" } },
+        { "name": "Get Parent By ID",    "request": { "method": "GET",    "url": "{{baseUrl}}/parents/:id" } },
+        { "name": "Register Parent",     "request": { "method": "POST",   "url": "{{baseUrl}}/parents",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Umm Ahmed\",\n  \"phone\": \"03001234567\",\n  \"email\": \"parent@example.com\",\n  \"whatsappNumber\": \"03001234567\",\n  \"studentIds\": [\"<student_id>\"],\n  \"notes\": \"Very engaged parent\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Parent",       "request": { "method": "PATCH",  "url": "{{baseUrl}}/parents/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"03009999999\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Parent",       "request": { "method": "DELETE", "url": "{{baseUrl}}/parents/:id" } },
+        { "name": "Add Feedback",        "request": { "method": "POST",   "url": "{{baseUrl}}/parents/:id/feedback",
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"My child loves the sessions!\",\n  \"stars\": 5,\n  \"sessionNumber\": 10\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "── Engagement ──",    "request": { "method": "GET", "url": "{{baseUrl}}/parents" } },
+        { "name": "Get Engagement Config",     "request": { "method": "GET",   "url": "{{baseUrl}}/parents/engagement" } },
+        { "name": "Toggle Weekly Card",        "request": { "method": "PATCH", "url": "{{baseUrl}}/parents/engagement/weekly-card",
+            "body": { "mode": "raw", "raw": "{\n  \"active\": true\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Toggle WhatsApp",           "request": { "method": "PATCH", "url": "{{baseUrl}}/parents/engagement/whatsapp",
+            "body": { "mode": "raw", "raw": "{\n  \"enabled\": true\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Schedule Parent Evening",   "request": { "method": "POST",  "url": "{{baseUrl}}/parents/engagement/schedule-evening",
+            "body": { "mode": "raw", "raw": "{\n  \"month\": 6\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Record Evening Held",       "request": { "method": "POST",  "url": "{{baseUrl}}/parents/engagement/record-evening" } },
+        { "name": "Send WhatsApp Broadcast",   "request": { "method": "POST",  "url": "{{baseUrl}}/parents/engagement/send-whatsapp",
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Assalam-o-Alaikum! Session reminder for tomorrow.\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Test WhatsApp Connection",  "request": { "method": "GET",   "url": { "raw": "{{baseUrl}}/parents/engagement/test-whatsapp?number=03001234567", "query": [{ "key": "number", "value": "03001234567" }] } } }
+      ]
+    },
+
+    {
+      "name": "12 · Training",
+      "item": [
+        { "name": "Get Page Data (Admin)",   "request": { "method": "GET",    "url": "{{baseUrl}}/training/page-data" } },
+        { "name": "Get Active Batch",        "request": { "method": "GET",    "url": "{{baseUrl}}/training/active-batch", "description": "Returns batch only if caller is a candidate" } },
+        { "name": "Get All Batches",         "request": { "method": "GET",    "url": "{{baseUrl}}/training/batches" } },
+        { "name": "Create Batch",            "request": { "method": "POST",   "url": "{{baseUrl}}/training/batches",
+            "body": { "mode": "raw", "raw": "{\n  \"batchNumber\": 3,\n  \"status\": \"active\",\n  \"day1Date\": \"2026-06-20\",\n  \"day2Date\": \"2026-06-27\",\n  \"day1Title\": \"Foundation & Identity\",\n  \"day2Title\": \"Skill, Safety & The Year\",\n  \"day1Meta\": \"9:00 AM – 3:00 PM · Modules 1, 2 & 3 · 5 hours\",\n  \"day2Meta\": \"8:45 AM – 3:00 PM · Modules 4, 5 & 6 · 5 hours\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Batch",            "request": { "method": "PATCH",  "url": "{{baseUrl}}/training/batches/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"completed\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Add Candidates to Batch", "request": { "method": "POST",   "url": "{{baseUrl}}/training/batches/:id/candidates",
+            "body": { "mode": "raw", "raw": "{\n  \"userIds\": [\"<murabbi_id_1>\", \"<murabbi_id_2>\"]\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Remove Candidate",        "request": { "method": "DELETE", "url": "{{baseUrl}}/training/batches/:id/candidates/:userId" } },
+        { "name": "Get Modules",             "request": { "method": "GET",    "url": "{{baseUrl}}/training/modules" } },
+        { "name": "Create Module",           "request": { "method": "POST",   "url": "{{baseUrl}}/training/modules",
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Foundations of Tarbiyah\",\n  \"description\": \"Tarbiyah philosophy and fitrah framework.\",\n  \"type\": \"Mixed\",\n  \"status\": \"Available\",\n  \"durationMinutes\": 70,\n  \"order\": 1,\n  \"daySlot\": 1,\n  \"timeSlot\": \"9:20–10:30 AM\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Module",           "request": { "method": "PATCH",  "url": "{{baseUrl}}/training/modules/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"Upcoming\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Module",           "request": { "method": "DELETE", "url": "{{baseUrl}}/training/modules/:id" } },
+        { "name": "Get Progress Summary",    "request": { "method": "GET",    "url": "{{baseUrl}}/training/progress/summary" } },
+        { "name": "Update Progress",         "request": { "method": "PATCH",  "url": "{{baseUrl}}/training/progress/:moduleId",
+            "body": { "mode": "raw", "raw": "{\n  \"progressPercent\": 75\n}", "options": { "raw": { "language": "json" } } }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "13 · Sessions & Curriculum",
+      "item": [
+        { "name": "Get All Sessions",  "request": { "method": "GET", "url": "{{baseUrl}}/sessions" } },
+        { "name": "Get Curriculum",    "request": { "method": "GET", "url": "{{baseUrl}}/sessions/curriculum" } },
+        { "name": "Get Stats",         "request": { "method": "GET", "url": "{{baseUrl}}/sessions/stats" } },
+        { "name": "Get Session List",  "request": { "method": "GET", "url": "{{baseUrl}}/sessions/list" } }
+      ]
+    },
+
+    {
+      "name": "14 · Lesson Plans",
+      "item": [
+        { "name": "Get All Lessons",   "request": { "method": "GET",    "url": "{{baseUrl}}/lessons" } },
+        { "name": "Get Lesson By ID",  "request": { "method": "GET",    "url": "{{baseUrl}}/lessons/:id" } },
+        { "name": "Create Lesson",     "request": { "method": "POST",   "url": "{{baseUrl}}/lessons",
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Understanding Muslim Identity\",\n  \"description\": \"Exploring what it means to be Muslim.\",\n  \"module\": \"Identity\",\n  \"level\": \"Beginner\",\n  \"duration\": \"45 mins\",\n  \"status\": \"Available\",\n  \"order\": 1,\n  \"sessionNumber\": 3,\n  \"objectives\": [\"Understand identity\", \"Explore fitrah\"],\n  \"keyTopics\": [\"Fitrah\", \"Tawheed\"]\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update Lesson",     "request": { "method": "PATCH",  "url": "{{baseUrl}}/lessons/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"Upcoming\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Lesson",     "request": { "method": "DELETE", "url": "{{baseUrl}}/lessons/:id" } }
+      ]
+    },
+
+    {
+      "name": "15 · Notifications",
+      "item": [
+        { "name": "Get All Notifications",   "request": { "method": "GET",   "url": "{{baseUrl}}/notifications" } },
+        { "name": "Get Unread Count",        "request": { "method": "GET",   "url": "{{baseUrl}}/notifications/unread-count" } },
+        { "name": "Mark All Read",           "request": { "method": "PATCH", "url": "{{baseUrl}}/notifications/read-all" } },
+        { "name": "Mark One Read",           "request": { "method": "PATCH", "url": "{{baseUrl}}/notifications/:id/read" } },
+        { "name": "Accept (Approve)",        "request": { "method": "PATCH", "url": "{{baseUrl}}/notifications/:id/accept" } },
+        { "name": "Reject",                  "request": { "method": "PATCH", "url": "{{baseUrl}}/notifications/:id/reject" } },
+        { "name": "Request Material",        "request": { "method": "POST",  "url": "{{baseUrl}}/notifications/request-material",
+            "body": { "mode": "raw", "raw": "{\n  \"note\": \"Need lesson resources for Month 4\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "16 · Announcements",
+      "item": [
+        { "name": "Get All Announcements", "request": { "method": "GET",    "url": "{{baseUrl}}/announcements" } },
+        { "name": "Create Announcement",   "request": { "method": "POST",   "url": "{{baseUrl}}/announcements",
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Session Reminder\",\n  \"body\": \"This week's session is on Thursday at 4 PM.\",\n  \"icon\": \"session\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete Announcement",   "request": { "method": "DELETE", "url": "{{baseUrl}}/announcements/:id" } }
+      ]
+    },
+
+    {
+      "name": "17 · Live Sessions (Zoom)",
+      "item": [
+        { "name": "Get All",      "request": { "method": "GET",    "url": "{{baseUrl}}/live-sessions" } },
+        { "name": "Get Upcoming", "request": { "method": "GET",    "url": "{{baseUrl}}/live-sessions/upcoming" } },
+        { "name": "Create",       "request": { "method": "POST",   "url": "{{baseUrl}}/live-sessions",
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Monthly Murabbi Webinar\",\n  \"zoomLink\": \"https://zoom.us/j/123456789\",\n  \"isRecurring\": true,\n  \"recurringDay\": 3,\n  \"recurringTime\": \"17:00\",\n  \"durationMinutes\": 60,\n  \"description\": \"Monthly training session\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Update",       "request": { "method": "PATCH",  "url": "{{baseUrl}}/live-sessions/:id",
+            "body": { "mode": "raw", "raw": "{\n  \"recurringTime\": \"18:00\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Delete",       "request": { "method": "DELETE", "url": "{{baseUrl}}/live-sessions/:id" } }
+      ]
+    },
+
+    {
+      "name": "18 · Reports",
+      "item": [
+        { "name": "Admin Report",            "request": { "method": "GET", "url": "{{baseUrl}}/reports/admin" } },
+        { "name": "Murabbi Report",          "request": { "method": "GET", "url": "{{baseUrl}}/reports/murabbi" } },
+        { "name": "Attendance Circles",      "request": { "method": "GET", "url": "{{baseUrl}}/reports/attendance-circles" } },
+        { "name": "Circle Detail Report",    "request": { "method": "GET", "url": "{{baseUrl}}/reports/circle/:id/detail" } },
+        { "name": "Attendance Trend",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/reports/attendance-trend?circleId=", "query": [{ "key": "circleId", "value": "", "description": "Optional" }] } } }
+      ]
+    },
+
+    {
+      "name": "19 · Users (Profile)",
+      "item": [
+        { "name": "Get My Profile",     "request": { "method": "GET",   "url": "{{baseUrl}}/users/profile" } },
+        { "name": "Update My Profile",  "request": { "method": "PATCH", "url": "{{baseUrl}}/users/profile",
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"phone\": \"03001234567\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        },
+        { "name": "Change Password",    "request": { "method": "POST",  "url": "{{baseUrl}}/users/change-password",
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"OldPass@123\",\n  \"newPassword\": \"NewPass@123\"\n}", "options": { "raw": { "language": "json" } } }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "20 · Upload",
+      "item": [
+        {
+          "name": "Upload Image (Cloudinary)",
+          "request": { "method": "POST", "url": "{{baseUrl}}/upload/image",
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "", "description": "Select an image file (jpg/png/webp)" }] }
+          }
+        }
+      ]
+    }
+
+  ]
+}

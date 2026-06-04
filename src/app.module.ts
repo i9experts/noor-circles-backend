@@ -21,6 +21,7 @@ import { NotificationModule }  from './notification/notification.module';
 import { AnnouncementModule }  from './announcement/announcement.module';
 import { LiveSessionModule }   from './live-session/live-session.module';
 import { UploadModule }        from './upload/upload.module';
+import { HealthModule }        from './health/health.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { UploadModule }        from './upload/upload.module';
     AnnouncementModule,
     LiveSessionModule,
     UploadModule,
+    HealthModule,
   ],
   providers: [
     // Apply rate limiting globally
