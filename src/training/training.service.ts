@@ -176,11 +176,15 @@ export class TrainingService {
 
   // ── Active batch (murabbi view) ──────────────────────────────────────────────
 
-  async getActiveBatch() {
+  async getActiveBatch(murabbiId: string) {
+    // Only return batch + modules if this murabbi is in the candidates list
     const batch = await this.batchModel
-      .findOne({ status: 'active' })
+      .findOne({ status: 'active', candidates: new Types.ObjectId(murabbiId) })
       .select('-candidates')
       .lean();
+
+    if (!batch) return { batch: null, modules: [] };
+
     const modules = await this.moduleModel.find().sort({ order: 1 }).lean();
     return { batch, modules };
   }

@@ -40,10 +40,12 @@ export class TrainingController {
   @Roles(UserRole.ADMIN)
   getPageData() { return this.trainingService.getPageData(); }
 
-  /** GET /training/active-batch — murabbi & admin: active batch schedule */
+  /** GET /training/active-batch — returns batch only if caller is a candidate */
   @Get('active-batch')
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  getActiveBatch() { return this.trainingService.getActiveBatch(); }
+  getActiveBatch(@CurrentUser() user: UserDocument) {
+    return this.trainingService.getActiveBatch(user._id.toString());
+  }
 
   // ── Modules ──────────────────────────────────────────────────────────────────
 
