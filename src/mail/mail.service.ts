@@ -16,10 +16,6 @@ export class MailService {
       host: this.config.getOrThrow('MAIL_HOST'),
       port: Number(this.config.getOrThrow('MAIL_PORT')),
       secure: this.config.get('MAIL_SECURE') === 'true',
-      // Force IPv4: Railway (and many container platforms) advertise a route
-      // to smtp.gmail.com's AAAA (IPv6) record that isn't actually reachable,
-      // causing ENETUNREACH. Pinning family to 4 avoids the bad IPv6 attempt.
-      family: 4,
       auth: {
         user: this.config.getOrThrow('MAIL_USER'),
         pass: this.config.getOrThrow('MAIL_PASS'),
