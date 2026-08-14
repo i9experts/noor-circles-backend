@@ -6,9 +6,17 @@ import helmet from 'helmet';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const compression = require('compression');
 import morgan = require('morgan');
+import * as dns from 'dns';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+
+// Prefer IPv4 for outbound DNS resolution. Some container platforms (e.g.
+// Railway) advertise IPv6 routes for third-party hosts (Gmail SMTP, etc.)
+// that aren't actually reachable, causing ENETUNREACH on the AAAA record.
+// This affects Node 18+, which resolves DNS in the order returned by the OS
+// rather than IPv4-first by default.
+dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
   const app    = await NestFactory.create(AppModule, { bufferLogs: true });
