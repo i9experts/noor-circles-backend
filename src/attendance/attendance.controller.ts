@@ -91,7 +91,7 @@ export class AttendanceController {
     @CurrentUser() user: UserDocument,
     @Body() dto: SubmitAttendanceDto,
   ) {
-    return this.attendanceService.submit(user._id.toString(), dto);
+    return this.attendanceService.submit(user._id.toString(), dto, user.role);
   }
 
   /** GET /attendance — Admin views all sessions */
@@ -111,22 +111,22 @@ export class AttendanceController {
   /** GET /attendance/by-student/:id — Attendance history of a specific student */
   @Get('by-student/:id')
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  getByStudent(@Param('id') id: string) {
-    return this.attendanceService.getByStudent(id);
+  getByStudent(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.attendanceService.getByStudent(id, user._id.toString(), user.role);
   }
 
   /** GET /attendance/circle/:id — Sessions for a specific circle */
   @Get('circle/:id')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
-  getByCircle(@Param('id') id: string) {
-    return this.attendanceService.getByCircle(id);
+  getByCircle(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.attendanceService.getByCircle(id, user._id.toString(), user.role);
   }
 
   /** GET /attendance/student/:id/rate — Student attendance rate */
   @Get('student/:id/rate')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
-  getStudentRate(@Param('id') id: string) {
-    return this.attendanceService.getStudentRate(id);
+  getStudentRate(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.attendanceService.getStudentRate(id, user._id.toString(), user.role);
   }
 
   /** GET /attendance/:id — Single session detail */
