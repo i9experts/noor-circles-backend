@@ -410,11 +410,45 @@ export class ParentService {
     });
   }
 
-  async register(dto: RegisterParentDto) {
+  /**
+   * For murabbi requesters, returns the set of student IDs actually
+   * assigned to them (admins get an empty set — callers should skip
+   * filtering entirely for admin role rather than use this).
+   */
+  private async getOwnedStudentIds(requesterId: string): Promise<Set<string>> {
+    const students = await this.studentModel
+      .find({ murabbi: new Types.ObjectId(requesterId) })
+      .select('_id')
+      .lean();
+    return new Set(students.map((s) => s._id.toString()));
+  }
+
+  /**
+   * Same class of gap already fixed in attendance/incentive/report
+   * services: parent records (containing a parent's name, phone number,
+   * and their child's name) were fully unscoped for murabbi role — any
+   * murabbi could list, read, edit, or attach feedback to any parent in
+   * the system, not just parents of their own students.
+   */
+  private assertParentOwnership(
+    parentStudentIds: Types.ObjectId[],
+    ownedIds: Set<string>,
+  ) {
+    const owns = parentStudentIds.some((id) => ownedIds.has(id.toString()));
+    if (!owns) throw new NotFoundException('Parent not found.');
+  }
+
+  async register(dto: RegisterParentDto, requesterId?: string, requesterRole?: string) {
     const studentOids = dto.studentIds.map((id) => new Types.ObjectId(id));
 
     const foundCount = await this.studentModel.countDocuments({ _id: { $in: studentOids } });
     if (foundCount !== studentOids.length) throw new NotFoundException('One or more students not found.');
+
+    if (requesterRole === 'murabbi' && requesterId) {
+      const owned = await this.getOwnedStudentIds(requesterId);
+      const allOwned = dto.studentIds.every((id) => owned.has(id));
+      if (!allOwned) throw new BadRequestException('One or more students are not assigned to you.');
+    }
 
     const parent = await this.parentModel.create({
       fullName      : dto.fullName,
@@ -428,9 +462,14 @@ export class ParentService {
     return { message: 'Parent registered successfully.', parent };
   }
 
-  async getAll() {
+  async getAll(requesterId?: string, requesterRole?: string) {
+    const filter: Record<string, unknown> = {};
+    if (requesterRole === 'murabbi' && requesterId) {
+      const owned = await this.getOwnedStudentIds(requesterId);
+      filter.students = { $in: [...owned].map((id) => new Types.ObjectId(id)) };
+    }
     return this.parentModel
-      .find()
+      .find(filter)
       .populate({
         path    : 'students',
         select  : 'fullName circle',
@@ -440,7 +479,7 @@ export class ParentService {
       .lean();
   }
 
-  async getOne(id: string) {
+  async getOne(id: string, requesterId?: string, requesterRole?: string) {
     const parent = await this.parentModel
       .findById(id)
       .populate({
@@ -450,10 +489,23 @@ export class ParentService {
       })
       .lean();
     if (!parent) throw new NotFoundException('Parent not found.');
+
+    if (requesterRole === 'murabbi' && requesterId) {
+      const owned = await this.getOwnedStudentIds(requesterId);
+      const studentIds = (parent.students as any[]).map((s) => new Types.ObjectId(s._id));
+      this.assertParentOwnership(studentIds, owned);
+    }
     return parent;
   }
 
-  async update(id: string, dto: UpdateParentDto) {
+  async update(id: string, dto: UpdateParentDto, requesterId?: string, requesterRole?: string) {
+    if (requesterRole === 'murabbi' && requesterId) {
+      const existing = await this.parentModel.findById(id).select('students').lean();
+      if (!existing) throw new NotFoundException('Parent not found.');
+      const owned = await this.getOwnedStudentIds(requesterId);
+      this.assertParentOwnership(existing.students as Types.ObjectId[], owned);
+    }
+
     const update: Record<string, unknown> = {};
     if (dto.fullName)       update['fullName']       = dto.fullName;
     if (dto.phone)          update['phone']          = dto.phone;
@@ -474,9 +526,14 @@ export class ParentService {
     return { message: 'Parent record deleted successfully.' };
   }
 
-  async addFeedback(id: string, dto: AddFeedbackDto) {
+  async addFeedback(id: string, dto: AddFeedbackDto, requesterId?: string, requesterRole?: string) {
     const parent = await this.parentModel.findById(id);
     if (!parent) throw new NotFoundException('Parent not found.');
+
+    if (requesterRole === 'murabbi' && requesterId) {
+      const owned = await this.getOwnedStudentIds(requesterId);
+      this.assertParentOwnership(parent.students as Types.ObjectId[], owned);
+    }
 
     parent.feedback.push({
       message      : dto.message,
