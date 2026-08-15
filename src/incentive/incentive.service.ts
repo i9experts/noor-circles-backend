@@ -40,9 +40,23 @@ export class IncentiveService {
     @InjectModel(Circle.name)      private readonly circleModel:      Model<CircleDocument>,
   ) {}
 
-  async award(awardedById: string, dto: AwardPointsDto) {
-    const student = await this.studentModel.findById(dto.studentId).lean();
+  /**
+   * For murabbi requesters, confirms the student is actually assigned to
+   * them (admins bypass). Same class of gap as attendance.service.ts had:
+   * award() and getByStudent() below previously let any murabbi award
+   * points to, or view the incentive history of, any student system-wide.
+   */
+  private async assertStudentOwnership(studentId: string, requesterId: string, requesterRole?: string) {
+    const student = await this.studentModel.findById(studentId).lean();
     if (!student) throw new NotFoundException('Student not found.');
+    if (requesterRole === 'murabbi' && student.murabbi?.toString() !== requesterId) {
+      throw new BadRequestException('This student is not assigned to you.');
+    }
+    return student;
+  }
+
+  async award(awardedById: string, dto: AwardPointsDto, requesterRole?: string) {
+    const student = await this.assertStudentOwnership(dto.studentId, awardedById, requesterRole);
 
     const points = AWARD_POINTS[dto.awardType];
     if (!points) throw new BadRequestException('Invalid award type.');
@@ -113,7 +127,10 @@ export class IncentiveService {
     }));
   }
 
-  async getByStudent(studentId: string) {
+  async getByStudent(studentId: string, requesterId?: string, requesterRole?: string) {
+    if (requesterId) {
+      await this.assertStudentOwnership(studentId, requesterId, requesterRole);
+    }
     const records = await this.incentiveModel
       .find({ student: new Types.ObjectId(studentId) })
       .populate('awardedBy', 'fullName')
