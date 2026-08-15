@@ -6,9 +6,10 @@ import { UserRole }     from '../user/user.schema';
 import { LessonService } from './lesson.service';
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { safeTrim } from '../common/utils/transform.util';
 
 class CreateLessonDto {
-  @IsString() @Transform(({ value }) => value?.trim()) title: string;
+  @IsString() @Transform(safeTrim) title: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() module?: string;
   @IsOptional() @IsString() level?: string;
