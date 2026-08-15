@@ -4,18 +4,19 @@ import { Model, Types } from 'mongoose';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Announcement, AnnouncementDocument, AnnouncementIcon } from './announcement.schema';
+import { safeTrim } from '../common/utils/transform.util';
 
 export class CreateAnnouncementDto {
   @IsString()
   @IsNotEmpty({ message: 'Title is required.' })
   @MaxLength(120)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   title: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Body is required.' })
   @MaxLength(300)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   body: string;
 
   @IsOptional()
