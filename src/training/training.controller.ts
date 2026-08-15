@@ -152,6 +152,13 @@ export class TrainingController {
     return this.trainingService.getAllCertificates();
   }
 
+  /** DELETE /training/certificates/:id — revoke/remove a certificate */
+  @Delete('certificates/:id')
+  @Roles(UserRole.ADMIN)
+  revokeCertificate(@Param('id') id: string) {
+    return this.trainingService.revokeCertificate(id);
+  }
+
   // ── Exam (murabbi) ───────────────────────────────────────────────────────────
 
   /**
