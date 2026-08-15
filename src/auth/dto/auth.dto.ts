@@ -7,17 +7,18 @@ import {
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { safeEmail, safeTrim } from '../../common/utils/transform.util';
 
 // ─── Signup Step 1 ────────────────────────────────────────────────────────────
 export class SignupRequestOtpDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name is required.' })
   @MaxLength(60, { message: 'Full name must be at most 60 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName: string;
 
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 
   @IsString()
@@ -35,7 +36,7 @@ export class SignupRequestOtpDto {
 // ─── Signup Step 2 ────────────────────────────────────────────────────────────
 export class SignupVerifyOtpDto {
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 
   @IsString()
@@ -48,7 +49,7 @@ export class SignupVerifyOtpDto {
 // ─── Sign In ──────────────────────────────────────────────────────────────────
 export class SignInDto {
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 
   @IsString()
@@ -59,14 +60,14 @@ export class SignInDto {
 // ─── Forgot Password ──────────────────────────────────────────────────────────
 export class ForgotPasswordDto {
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 }
 
 // ─── Verify OTP (password reset) ──────────────────────────────────────────────
 export class VerifyOtpDto {
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 
   @IsString()
@@ -93,6 +94,6 @@ export class ResetPasswordDto {
 // ─── Resend OTP ───────────────────────────────────────────────────────────────
 export class ResendOtpDto {
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 }
