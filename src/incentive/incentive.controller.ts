@@ -15,7 +15,7 @@ export class IncentiveController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
   award(@CurrentUser() user: UserDocument, @Body() dto: AwardPointsDto) {
-    return this.incentiveService.award(user._id.toString(), dto);
+    return this.incentiveService.award(user._id.toString(), dto, user.role);
   }
 
   /** GET /incentives — all incentive records (admin only) */
@@ -42,7 +42,7 @@ export class IncentiveController {
   /** GET /incentives/student/:id */
   @Get('student/:id')
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  getByStudent(@Param('id') id: string) {
-    return this.incentiveService.getByStudent(id);
+  getByStudent(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.incentiveService.getByStudent(id, user._id.toString(), user.role);
   }
 }
