@@ -13,6 +13,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { safeEmail, safeTrim } from '../common/utils/transform.util';
 
 // ── Murabbi ───────────────────────────────────────────────────────────────────
 
@@ -20,11 +21,11 @@ export class CreateMurabbiDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name is required.' })
   @MaxLength(60, { message: 'Full name must be at most 60 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName: string;
 
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email: string;
 
   @IsString()
@@ -42,29 +43,29 @@ export class CreateMurabbiDto {
   @IsOptional()
   @IsString()
   @MaxLength(200, { message: 'Address must be at most 200 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   address?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500, { message: 'Image URL too long.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   image?: string;
 }
 
 // ── Neighbourhood ─────────────────────────────────────────────────────────────
 
 export class CreateNeighbourhoodDto {
-  @IsString() @IsNotEmpty() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsString() @IsNotEmpty() @MaxLength(100) @Transform(safeTrim)
   name: string;
 
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim)
   city?: string;
 
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim)
   area?: string;
 
-  @IsOptional() @IsString() @MaxLength(300) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(300) @Transform(safeTrim)
   mosques?: string;
 
   @IsOptional() @IsString()
@@ -72,16 +73,16 @@ export class CreateNeighbourhoodDto {
 }
 
 export class UpdateNeighbourhoodDto {
-  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(100) @Transform(safeTrim)
   name?: string;
 
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim)
   city?: string;
 
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim)
   area?: string;
 
-  @IsOptional() @IsString() @MaxLength(300) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(300) @Transform(safeTrim)
   mosques?: string;
 
   @IsOptional() @IsString()
@@ -89,13 +90,13 @@ export class UpdateNeighbourhoodDto {
 }
 
 export class CreatePipelineDto {
-  @IsString() @IsNotEmpty() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsString() @IsNotEmpty() @MaxLength(100) @Transform(safeTrim)
   name: string;
 
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim)
   area?: string;
 
-  @IsOptional() @IsString() @MaxLength(200) @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @MaxLength(200) @Transform(safeTrim)
   mosqueContact?: string;
 
   @IsOptional() @IsNumber() @Min(1)
@@ -109,9 +110,9 @@ export class CreatePipelineDto {
 }
 
 export class UpdatePipelineDto {
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim()) name?: string;
-  @IsOptional() @IsString() @MaxLength(100) @Transform(({ value }) => value?.trim()) area?: string;
-  @IsOptional() @IsString() @MaxLength(200) @Transform(({ value }) => value?.trim()) mosqueContact?: string;
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim) name?: string;
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim) area?: string;
+  @IsOptional() @IsString() @MaxLength(200) @Transform(safeTrim) mosqueContact?: string;
   @IsOptional() @IsNumber() @Min(1) targetCircles?: number;
   @IsOptional() @IsNumber() @Min(0) @Max(100) interestLevel?: number;
   @IsOptional() @IsString() status?: 'prospecting' | 'in-talks' | 'ready-to-launch';
@@ -123,7 +124,7 @@ export class CreateCircleDto {
   @IsString()
   @IsNotEmpty({ message: 'Circle name is required.' })
   @MaxLength(100, { message: 'Name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   name: string;
 
   @IsMongoId({ message: 'Invalid neighbourhood ID.' })
@@ -143,7 +144,7 @@ export class UpdateCircleDto {
   @IsString()
   @IsNotEmpty({ message: 'Name cannot be empty.' })
   @MaxLength(100, { message: 'Name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   name?: string;
 
   @IsOptional()
@@ -166,13 +167,13 @@ export class EnrollStudentDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name is required.' })
   @MaxLength(100, { message: 'Full name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Father name is required.' })
   @MaxLength(100, { message: 'Father name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fatherName: string;
 
   @IsString()
@@ -182,7 +183,7 @@ export class EnrollStudentDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email?: string;
 
   @IsOptional()
@@ -192,7 +193,7 @@ export class EnrollStudentDto {
   @IsOptional()
   @IsString()
   @MaxLength(200, { message: 'Address must be at most 200 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   address?: string;
 
   @IsMongoId({ message: 'Invalid circle ID.' })
@@ -207,14 +208,14 @@ export class UpdateStudentDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name cannot be empty.' })
   @MaxLength(100, { message: 'Full name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName?: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty({ message: 'Father name cannot be empty.' })
   @MaxLength(100, { message: 'Father name must be at most 100 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fatherName?: string;
 
   @IsOptional()
@@ -224,7 +225,7 @@ export class UpdateStudentDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email?: string;
 
   @IsOptional()
@@ -234,7 +235,7 @@ export class UpdateStudentDto {
   @IsOptional()
   @IsString()
   @MaxLength(200, { message: 'Address must be at most 200 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   address?: string;
 }
 
@@ -250,7 +251,7 @@ export class UpdateMurabbiDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name cannot be empty.' })
   @MaxLength(60, { message: 'Full name must be at most 60 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName?: string;
 
   @IsOptional()
@@ -261,12 +262,12 @@ export class UpdateMurabbiDto {
   @IsOptional()
   @IsString()
   @MaxLength(200, { message: 'Address must be at most 200 characters.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   address?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500, { message: 'Image URL too long.' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   image?: string;
 }
