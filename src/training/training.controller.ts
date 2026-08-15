@@ -26,6 +26,8 @@ class CreateModuleDto {
   @IsOptional() @IsNumber() order?: number;
   @IsOptional() @IsNumber() daySlot?: number;
   @IsOptional() @IsString() timeSlot?: string;
+  /** Minimum murabbi tier (1-3) required to view this module. Defaults to 1 (everyone). */
+  @IsOptional() @IsNumber() @Min(1) @Max(3) minTier?: number;
 }
 
 @Controller('training')
@@ -53,14 +55,14 @@ export class TrainingController {
   @Get('modules')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
   getModules(@CurrentUser() user: UserDocument) {
-    return this.trainingService.getModules(user._id.toString());
+    return this.trainingService.getModules(user._id.toString(), user.role === UserRole.ADMIN);
   }
 
   /** GET /training/progress/summary */
   @Get('progress/summary')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
   getProgressSummary(@CurrentUser() user: UserDocument) {
-    return this.trainingService.getProgressSummary(user._id.toString());
+    return this.trainingService.getProgressSummary(user._id.toString(), user.role === UserRole.ADMIN);
   }
 
   /** PATCH /training/progress/:moduleId */
