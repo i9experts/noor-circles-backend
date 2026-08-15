@@ -8,12 +8,13 @@ import { MurabbiService, MurabbiEnrollStudentDto, MurabbiUpdateStudentDto } from
 import { UserDocument, UserRole } from '../user/user.schema';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { safeTrim } from '../common/utils/transform.util';
 
 class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(60)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName?: string;
 }
 
