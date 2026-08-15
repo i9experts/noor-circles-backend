@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
@@ -218,13 +218,20 @@ export class ReportService {
     return results;
   }
 
-  async getCircleDetail(circleId: string) {
+  async getCircleDetail(circleId: string, requesterId?: string, requesterRole?: string) {
     const circle = await this.circleModel
       .findById(circleId)
       .populate('murabbi', 'fullName email')
       .populate('neighbourhood', 'name city')
       .lean();
     if (!circle) throw new NotFoundException('Circle not found.');
+
+    // Data-exposure fix: this report includes student names, father names,
+    // and phone numbers — previously any authenticated murabbi could pull
+    // it for any circle in the system just by knowing/guessing the ID.
+    if (requesterRole === 'murabbi' && (circle as any).murabbi?._id?.toString() !== requesterId) {
+      throw new ForbiddenException('This circle is not assigned to you.');
+    }
 
     const [students, sessions] = await Promise.all([
       this.studentModel
