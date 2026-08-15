@@ -79,3 +79,5 @@ seed().catch((err) => {
   console.error('❌  Seed failed:', err);
   process.exit(1);
 });
+
+// touch: force fresh Railway build to pick up updated preDeployCommand
