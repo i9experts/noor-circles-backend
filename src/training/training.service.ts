@@ -62,9 +62,18 @@ export class TrainingService {
 
   // ── Module methods ────────────────────────────────────────────────────────────
 
-  async getModules(userId: string) {
+  /** A murabbi's tier gates which modules they can see (1 sees only minTier<=1, etc). Admins see everything. */
+  private async getViewableModuleFilter(userId: string, isAdmin: boolean): Promise<Record<string, unknown>> {
+    if (isAdmin) return {};
+    const user = await this.userModel.findById(userId).select('tier').lean();
+    const tier = user?.tier ?? 1;
+    return { minTier: { $lte: tier } };
+  }
+
+  async getModules(userId: string, isAdmin = false) {
+    const filter = await this.getViewableModuleFilter(userId, isAdmin);
     const [modules, progresses] = await Promise.all([
-      this.moduleModel.find().sort({ order: 1 }).lean(),
+      this.moduleModel.find(filter).sort({ order: 1 }).lean(),
       this.progressModel.find({ user: new Types.ObjectId(userId) }).lean(),
     ]);
     const progressMap = new Map(progresses.map((p) => [p.module.toString(), p]));
@@ -74,15 +83,20 @@ export class TrainingService {
     });
   }
 
-  async getProgressSummary(userId: string) {
-    const [total, progresses] = await Promise.all([
-      this.moduleModel.countDocuments(),
+  async getProgressSummary(userId: string, isAdmin = false) {
+    const filter = await this.getViewableModuleFilter(userId, isAdmin);
+    const [viewableModuleIds, progresses] = await Promise.all([
+      this.moduleModel.find(filter).select('_id').lean(),
       this.progressModel.find({ user: new Types.ObjectId(userId) }).lean(),
     ]);
-    const completed     = progresses.filter((p) => p.completed).length;
-    const inProgress    = progresses.filter((p) => !p.completed && p.progressPercent > 0).length;
+    const viewableIdSet = new Set(viewableModuleIds.map((m) => m._id.toString()));
+    const viewableProgresses = progresses.filter((p) => viewableIdSet.has(p.module.toString()));
+
+    const total          = viewableModuleIds.length;
+    const completed      = viewableProgresses.filter((p) => p.completed).length;
+    const inProgress     = viewableProgresses.filter((p) => !p.completed && p.progressPercent > 0).length;
     const overallPercent = total > 0
-      ? Math.round(progresses.reduce((s, p) => s + p.progressPercent, 0) / total)
+      ? Math.round(viewableProgresses.reduce((s, p) => s + p.progressPercent, 0) / total)
       : 0;
     return { total, completed, inProgress, overallPercent };
   }
@@ -185,7 +199,8 @@ export class TrainingService {
 
     if (!batch) return { batch: null, modules: [] };
 
-    const modules = await this.moduleModel.find().sort({ order: 1 }).lean();
+    const filter = await this.getViewableModuleFilter(murabbiId, false);
+    const modules = await this.moduleModel.find(filter).sort({ order: 1 }).lean();
     return { batch, modules };
   }
 
