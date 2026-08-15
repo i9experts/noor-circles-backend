@@ -6,16 +6,22 @@ import {
   TrainingModule as TrainingModuleEntity, TrainingModuleSchema,
   TrainingProgress, TrainingProgressSchema,
   TrainingBatch, TrainingBatchSchema,
+  TrainingExam, TrainingExamSchema,
+  TrainingExamAttempt, TrainingExamAttemptSchema,
+  TrainingCertificate, TrainingCertificateSchema,
 } from './training.schema';
 import { User, UserSchema } from '../user/user.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: TrainingModuleEntity.name, schema: TrainingModuleSchema   },
-      { name: TrainingProgress.name,     schema: TrainingProgressSchema },
-      { name: TrainingBatch.name,        schema: TrainingBatchSchema    },
-      { name: User.name,                 schema: UserSchema             },
+      { name: TrainingModuleEntity.name,  schema: TrainingModuleSchema      },
+      { name: TrainingProgress.name,      schema: TrainingProgressSchema    },
+      { name: TrainingBatch.name,         schema: TrainingBatchSchema       },
+      { name: TrainingExam.name,          schema: TrainingExamSchema        },
+      { name: TrainingExamAttempt.name,   schema: TrainingExamAttemptSchema },
+      { name: TrainingCertificate.name,   schema: TrainingCertificateSchema },
+      { name: User.name,                  schema: UserSchema                },
     ]),
   ],
   controllers: [TrainingController],
