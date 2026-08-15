@@ -122,6 +122,20 @@ export class AdminController {
     return this.adminService.getAllNeighbourhoods();
   }
 
+  // ── Neighbourhood Pipeline ────────────────────────────────────────────────────
+  // NOTE: these two GET routes must be registered before the generic
+  // GET 'neighbourhoods/:id' below — Nest/Express match routes for a given
+  // HTTP verb in registration order, and 'neighbourhoods/:id' has the same
+  // segment count as 'neighbourhoods/pipeline', so it was swallowing every
+  // request to /neighbourhoods/pipeline with id='pipeline' (a CastError,
+  // previously an unhandled 500, now a misleading 400 — either way the
+  // pipeline endpoint was completely unreachable). Registering it first
+  // fixes that; 'page-data' above was already safely ordered first for the
+  // same reason.
+
+  @Get('neighbourhoods/pipeline')
+  getPipeline() { return this.adminService.getPipeline(); }
+
   /** GET /admin/neighbourhoods/:id */
   @Get('neighbourhoods/:id')
   getOneNeighbourhood(@Param('id') id: string) {
@@ -146,11 +160,6 @@ export class AdminController {
   deleteNeighbourhood(@Param('id') id: string) {
     return this.adminService.deleteNeighbourhood(id);
   }
-
-  // ── Neighbourhood Pipeline ────────────────────────────────────────────────────
-
-  @Get('neighbourhoods/pipeline')
-  getPipeline() { return this.adminService.getPipeline(); }
 
   @Post('neighbourhoods/pipeline')
   @HttpCode(HttpStatus.CREATED)
