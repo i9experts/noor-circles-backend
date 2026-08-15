@@ -1,9 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export type TrainingModuleDocument  = TrainingModule  & Document;
-export type TrainingProgressDocument = TrainingProgress & Document;
-export type TrainingBatchDocument   = TrainingBatch   & Document;
+export type TrainingModuleDocument     = TrainingModule     & Document;
+export type TrainingProgressDocument   = TrainingProgress   & Document;
+export type TrainingBatchDocument      = TrainingBatch      & Document;
+export type TrainingExamDocument       = TrainingExam       & Document;
+export type TrainingExamAttemptDocument = TrainingExamAttempt & Document;
+export type TrainingCertificateDocument = TrainingCertificate & Document;
 
 @Schema({ timestamps: true })
 export class TrainingModule {
@@ -39,6 +42,16 @@ export class TrainingModule {
   /** Minimum murabbi tier (1, 2, or 3) required to access this module. */
   @Prop({ type: Number, enum: [1, 2, 3], default: 1 })
   minTier: number;
+
+  /**
+   * Participant-facing study content (Markdown), rendered in-app for
+   * self-paced reading/review. Distinct from any live-facilitation script —
+   * this is the "what a murabbi needs to know" distillation, not
+   * trainer-only material (facilitator scripts, activity logistics,
+   * trainer prep notes are deliberately excluded).
+   */
+  @Prop({ type: String, default: '' })
+  content: string;
 }
 
 export const TrainingModuleSchema = SchemaFactory.createForClass(TrainingModule);
@@ -98,3 +111,79 @@ export class TrainingBatch {
 export const TrainingBatchSchema = SchemaFactory.createForClass(TrainingBatch);
 TrainingBatchSchema.index({ batchNumber: 1 }, { unique: true });
 TrainingBatchSchema.index({ status: 1 });
+
+// ── TrainingExam ───────────────────────────────────────────────────────────────
+
+@Schema({ _id: false })
+export class ExamQuestion {
+  @Prop({ required: true, trim: true, maxlength: 500 })
+  question: string;
+
+  @Prop({ type: [String], required: true })
+  options: string[];
+
+  /** Index into `options` of the correct answer. Never sent to murabbis. */
+  @Prop({ type: Number, required: true })
+  correctIndex: number;
+}
+export const ExamQuestionSchema = SchemaFactory.createForClass(ExamQuestion);
+
+@Schema({ timestamps: true })
+export class TrainingExam {
+  @Prop({ required: true, trim: true, maxlength: 150 })
+  title: string;
+
+  /** Which murabbi tier this final assessment certifies. */
+  @Prop({ type: Number, enum: [1, 2, 3], required: true, unique: true })
+  tier: number;
+
+  @Prop({ type: [ExamQuestionSchema], default: [] })
+  questions: ExamQuestion[];
+
+  /** Minimum % correct required to pass, e.g. 70 */
+  @Prop({ type: Number, default: 70, min: 0, max: 100 })
+  passingScore: number;
+}
+export const TrainingExamSchema = SchemaFactory.createForClass(TrainingExam);
+
+// ── TrainingExamAttempt ──────────────────────────────────────────────────────
+
+@Schema({ timestamps: true })
+export class TrainingExamAttempt {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'TrainingExam', required: true })
+  exam: Types.ObjectId;
+
+  @Prop({ type: [Number], required: true })
+  answers: number[];
+
+  @Prop({ type: Number, required: true })
+  scorePercent: number;
+
+  @Prop({ type: Boolean, required: true })
+  passed: boolean;
+}
+export const TrainingExamAttemptSchema = SchemaFactory.createForClass(TrainingExamAttempt);
+TrainingExamAttemptSchema.index({ user: 1, exam: 1 });
+
+// ── TrainingCertificate ──────────────────────────────────────────────────────
+
+@Schema({ timestamps: true })
+export class TrainingCertificate {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
+
+  @Prop({ type: Number, enum: [1, 2, 3], required: true })
+  tier: number;
+
+  /** Human-readable unique cert number, e.g. "NC-T1-000123" */
+  @Prop({ required: true, unique: true })
+  certificateNumber: string;
+
+  @Prop({ type: Date, default: Date.now })
+  issuedAt: Date;
+}
+export const TrainingCertificateSchema = SchemaFactory.createForClass(TrainingCertificate);
+TrainingCertificateSchema.index({ user: 1, tier: 1 }, { unique: true });
