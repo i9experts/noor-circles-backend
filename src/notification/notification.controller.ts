@@ -8,9 +8,10 @@ import { NotificationService } from './notification.service';
 import { NotificationType } from './notification.schema';
 import { IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { safeTrim } from '../common/utils/transform.util';
 
 class RequestMaterialDto {
-  @IsOptional() @IsString() @Transform(({ value }) => value?.trim())
+  @IsOptional() @IsString() @Transform(safeTrim)
   note?: string;
 }
 
