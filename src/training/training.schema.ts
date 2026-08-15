@@ -35,6 +35,10 @@ export class TrainingModule {
   /** Display time, e.g. "9:20–10:30 AM" */
   @Prop({ type: String, default: '' })
   timeSlot: string;
+
+  /** Minimum murabbi tier (1, 2, or 3) required to access this module. */
+  @Prop({ type: Number, enum: [1, 2, 3], default: 1 })
+  minTier: number;
 }
 
 export const TrainingModuleSchema = SchemaFactory.createForClass(TrainingModule);
