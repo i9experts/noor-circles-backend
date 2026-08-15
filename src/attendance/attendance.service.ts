@@ -8,13 +8,44 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Attendance, AttendanceDocument } from './attendance.schema';
+import { Circle, CircleDocument }   from '../circle/circle.schema';
+import { Student, StudentDocument } from '../student/student.schema';
 
 @Injectable()
 export class AttendanceService {
   constructor(
     @InjectModel(Attendance.name)
     private readonly attendanceModel: Model<AttendanceDocument>,
+    @InjectModel(Circle.name)
+    private readonly circleModel: Model<CircleDocument>,
+    @InjectModel(Student.name)
+    private readonly studentModel: Model<StudentDocument>,
   ) {}
+
+  /**
+   * Confirms a circle exists and — for murabbi requesters — that it's
+   * actually assigned to them. Admins bypass the ownership check.
+   * Previously unchecked: any authenticated murabbi could submit
+   * attendance for, or read attendance/rates from, any circle or
+   * student in the system regardless of assignment.
+   */
+  private async assertCircleOwnership(circleId: string, requesterId: string, requesterRole?: string) {
+    const circle = await this.circleModel.findById(circleId).lean();
+    if (!circle) throw new NotFoundException('Circle not found.');
+    if (requesterRole === 'murabbi' && circle.murabbi.toString() !== requesterId) {
+      throw new ForbiddenException('This circle is not assigned to you.');
+    }
+    return circle;
+  }
+
+  private async assertStudentOwnership(studentId: string, requesterId: string, requesterRole?: string) {
+    const student = await this.studentModel.findById(studentId).lean();
+    if (!student) throw new NotFoundException('Student not found.');
+    if (requesterRole === 'murabbi' && student.murabbi?.toString() !== requesterId) {
+      throw new ForbiddenException('This student is not assigned to you.');
+    }
+    return student;
+  }
 
   // ── Submit ────────────────────────────────────────────────────────────────────
 
@@ -27,8 +58,11 @@ export class AttendanceService {
       topic?: string;
       records: { student: string; status: string; note?: string }[];
     },
+    requesterRole?: string,
   ) {
     if (!dto.records?.length) throw new BadRequestException('records cannot be empty');
+
+    await this.assertCircleOwnership(dto.circle, murabbiId, requesterRole);
 
     // One attendance record per circle per calendar day
     const dayStart = new Date(dto.sessionDate); dayStart.setHours(0,  0,  0,   0);
@@ -80,7 +114,10 @@ export class AttendanceService {
     return doc;
   }
 
-  async getByCircle(circleId: string) {
+  async getByCircle(circleId: string, requesterId?: string, requesterRole?: string) {
+    if (requesterId) {
+      await this.assertCircleOwnership(circleId, requesterId, requesterRole);
+    }
     return this.attendanceModel
       .find({ circle: new Types.ObjectId(circleId) })
       .populate('submittedBy', 'fullName')
@@ -98,7 +135,10 @@ export class AttendanceService {
       .lean();
   }
 
-  async getByStudent(studentId: string) {
+  async getByStudent(studentId: string, requesterId?: string, requesterRole?: string) {
+    if (requesterId) {
+      await this.assertStudentOwnership(studentId, requesterId, requesterRole);
+    }
     const sessions = await this.attendanceModel
       .find({ 'records.student': new Types.ObjectId(studentId) })
       .populate('circle', 'name')
@@ -122,7 +162,10 @@ export class AttendanceService {
     });
   }
 
-  async getStudentRate(studentId: string) {
+  async getStudentRate(studentId: string, requesterId?: string, requesterRole?: string) {
+    if (requesterId) {
+      await this.assertStudentOwnership(studentId, requesterId, requesterRole);
+    }
     const all = await this.attendanceModel
       .find({ 'records.student': new Types.ObjectId(studentId) })
       .lean();
