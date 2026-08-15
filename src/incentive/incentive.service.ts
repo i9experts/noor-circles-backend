@@ -13,6 +13,7 @@ import { Student, StudentDocument } from '../student/student.schema';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { User, UserDocument, UserRole } from '../user/user.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
+import { safeTrim } from '../common/utils/transform.util';
 
 export class AwardPointsDto {
   @IsMongoId({ message: 'Invalid student ID.' })
@@ -25,7 +26,7 @@ export class AwardPointsDto {
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   note?: string;
 }
 
