@@ -7,7 +7,11 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import * as PDFDocument from 'pdfkit';
+// pdfkit exports `module.exports = PDFDocument` (no ES default export),
+// so `import * as PDFDocument` binds a namespace object, not the class
+// itself — `new PDFDocument()` then fails with "not a constructor".
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PDFDocument = require('pdfkit');
 import {
   TrainingModule, TrainingModuleDocument,
   TrainingProgress, TrainingProgressDocument,
