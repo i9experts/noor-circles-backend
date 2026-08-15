@@ -118,23 +118,29 @@ export class ParentController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  getAll() { return this.parentService.getAll(); }
+  getAll(@CurrentUser() user: UserDocument) {
+    return this.parentService.getAll(user._id.toString(), user.role);
+  }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  getOne(@Param('id') id: string) { return this.parentService.getOne(id); }
+  getOne(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.parentService.getOne(id, user._id.toString(), user.role);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  register(@Body() dto: RegisterParentDto) { return this.parentService.register(dto); }
+  register(@CurrentUser() user: UserDocument, @Body() dto: RegisterParentDto) {
+    return this.parentService.register(dto, user._id.toString(), user.role);
+  }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  update(@Param('id') id: string, @Body() dto: UpdateParentDto) {
-    return this.parentService.update(id, dto);
+  update(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: UpdateParentDto) {
+    return this.parentService.update(id, dto, user._id.toString(), user.role);
   }
 
   @Delete(':id')
@@ -145,7 +151,7 @@ export class ParentController {
   @Post(':id/feedback')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  addFeedback(@Param('id') id: string, @Body() dto: AddFeedbackDto) {
-    return this.parentService.addFeedback(id, dto);
+  addFeedback(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: AddFeedbackDto) {
+    return this.parentService.addFeedback(id, dto, user._id.toString(), user.role);
   }
 }
