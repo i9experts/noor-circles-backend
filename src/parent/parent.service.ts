@@ -12,12 +12,13 @@ import axios from 'axios';
 import { Parent, ParentDocument } from './parent.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { EngagementConfig, EngagementConfigDocument } from './engagement.schema';
+import { safeEmail, safeTrim } from '../common/utils/transform.util';
 
 export class RegisterParentDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name is required.' })
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName: string;
 
   @IsString()
@@ -27,7 +28,7 @@ export class RegisterParentDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Invalid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email?: string;
 
   @IsOptional()
@@ -43,7 +44,7 @@ export class RegisterParentDto {
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   notes?: string;
 }
 
@@ -52,7 +53,7 @@ export class UpdateParentDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName?: string;
 
   @IsOptional()
@@ -62,7 +63,7 @@ export class UpdateParentDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Invalid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email?: string;
 
   @IsOptional()
@@ -73,7 +74,7 @@ export class UpdateParentDto {
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   notes?: string;
 }
 
@@ -82,7 +83,7 @@ export class AddFeedbackDto {
   @IsNotEmpty({ message: 'Feedback message is required.' })
   @MinLength(3)
   @MaxLength(500)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   message: string;
 
   @IsInt() @Min(1) @Max(5)
