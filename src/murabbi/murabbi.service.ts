@@ -11,18 +11,19 @@ import { Student, StudentDocument }      from '../student/student.schema';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { NotificationService }       from '../notification/notification.service';
 import { NotificationType }          from '../notification/notification.schema';
+import { safeEmail, safeTrim } from '../common/utils/transform.util';
 
 export class MurabbiEnrollStudentDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name is required.' })
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Father name is required.' })
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fatherName: string;
 
   @IsString()
@@ -32,7 +33,7 @@ export class MurabbiEnrollStudentDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email?: string;
 
   @IsOptional()
@@ -42,7 +43,7 @@ export class MurabbiEnrollStudentDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   address?: string;
 
   @IsMongoId({ message: 'Invalid circle ID.' })
@@ -57,14 +58,14 @@ export class MurabbiUpdateStudentDto {
   @IsString()
   @IsNotEmpty({ message: 'Full name cannot be empty.' })
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fullName?: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty({ message: 'Father name cannot be empty.' })
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   fatherName?: string;
 
   @IsOptional()
@@ -74,7 +75,7 @@ export class MurabbiUpdateStudentDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Please provide a valid email address.' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(safeEmail)
   email?: string;
 
   @IsOptional()
@@ -84,7 +85,7 @@ export class MurabbiUpdateStudentDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   address?: string;
 }
 
