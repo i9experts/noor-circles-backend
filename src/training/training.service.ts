@@ -299,6 +299,13 @@ export class TrainingService {
     return exam;
   }
 
+  /** Admin cleanup tool — e.g. removing a certificate issued during testing. */
+  async revokeCertificate(id: string) {
+    const cert = await this.certificateModel.findByIdAndDelete(id);
+    if (!cert) throw new NotFoundException('Certificate not found.');
+    return { message: 'Certificate revoked.' };
+  }
+
   async getAllCertificates() {
     return this.certificateModel
       .find()
