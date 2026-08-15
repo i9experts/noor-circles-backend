@@ -13,6 +13,7 @@ import {
   IsOptional, IsString, Min, ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { safeTrim } from '../common/utils/transform.util';
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ class SubmitAttendanceDto {
   sessionDate: string;
 
   @IsOptional() @IsString()
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   topic?: string;
 
   @IsArray()
@@ -66,7 +67,7 @@ class UpdateAttendanceDto {
   sessionDate?: string;
 
   @IsOptional() @IsString()
-  @Transform(({ value }) => value?.trim())
+  @Transform(safeTrim)
   topic?: string;
 
   @IsOptional()
