@@ -360,6 +360,9 @@ export class AdminService {
     const neighbourhood = await this.neighbourhoodModel.create({
       name: dto.name,
       city: dto.city ?? null,
+      area: dto.area ?? null,
+      mosques: dto.mosques ?? null,
+      status: dto.status ?? 'active',
     });
     this.logger.log(`Admin created neighbourhood → ${neighbourhood.name}`);
     return { message: 'Neighbourhood created successfully.', neighbourhood };
