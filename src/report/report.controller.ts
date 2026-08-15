@@ -35,8 +35,8 @@ export class ReportController {
   /** GET /reports/circle/:id/detail */
   @Get('circle/:id/detail')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
-  getCircleDetail(@Param('id') id: string) {
-    return this.reportService.getCircleDetail(id);
+  getCircleDetail(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.reportService.getCircleDetail(id, user._id.toString(), user.role);
   }
 
   /** GET /reports/attendance-trend?circleId=xxx */
