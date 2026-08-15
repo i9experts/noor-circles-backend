@@ -1,23 +1,22 @@
 /**
  * Admin Seed Script
- * Run: npx ts-node -r tsconfig-paths/register src/admin/seed-admin.ts
+ * Runs automatically as a Railway pre-deploy step (node dist/admin/seed-admin.js)
+ * after `npm run build` compiles this file. Idempotent: creates the admin if
+ * missing, or syncs the password/role on an existing account if ADMIN_EMAIL
+ * already exists — so updating ADMIN_PASSWORD in Railway and redeploying is
+ * enough to rotate the admin password without manual DB access.
  */
 
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 const email    = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
 
 if (!email || !password) {
-  console.error('❌  ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env');
+  console.error('❌  ADMIN_EMAIL and ADMIN_PASSWORD must be set.');
   process.exit(1);
 }
-
-const ADMIN = { fullName: 'Admin', email, password };
 
 const UserSchema = new mongoose.Schema(
   {
@@ -37,41 +36,41 @@ const UserSchema = new mongoose.Schema(
 async function seed() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    console.error('❌  MONGODB_URI missing in .env');
+    console.error('❌  MONGODB_URI missing.');
     process.exit(1);
   }
 
   await mongoose.connect(uri);
   console.log('✅  Connected to MongoDB');
 
-  // Prevent model re-registration error if run multiple times in watch mode
   const UserModel =
     mongoose.models['User'] || mongoose.model('User', UserSchema);
 
-  const existing = await UserModel.findOne({ email: ADMIN.email.toLowerCase() } as any);
+  const normalizedEmail = (email as string).toLowerCase();
+  const hashedPassword = await bcrypt.hash(password as string, 12);
+
+  const existing = await UserModel.findOne({ email: normalizedEmail } as any);
+
   if (existing) {
-    console.log(`⚠️   Admin already exists: ${ADMIN.email}`);
-    await mongoose.disconnect();
-    return;
+    existing.set({
+      password       : hashedPassword,
+      role           : 'admin',
+      isEmailVerified: true,
+      isActive       : true,
+    });
+    await existing.save();
+    console.log(`🔄  Existing admin synced: ${normalizedEmail}`);
+  } else {
+    await UserModel.create({
+      fullName       : 'Admin',
+      email          : normalizedEmail,
+      password       : hashedPassword,
+      role           : 'admin',
+      isEmailVerified: true,
+      isActive       : true,
+    });
+    console.log(`✅  Admin created: ${normalizedEmail}`);
   }
-
-  const hashedPassword = await bcrypt.hash(ADMIN.password, 12);
-
-  await UserModel.create({
-    fullName       : ADMIN.fullName,
-    email          : ADMIN.email.toLowerCase(),
-    password       : hashedPassword,
-    role           : 'admin',
-    isEmailVerified: true,
-    isActive       : true,
-  });
-
-  console.log('');
-  console.log('✅  Admin seeded successfully!');
-  console.log(`   Email   : ${ADMIN.email}`);
-  console.log(`   Password: ${ADMIN.password}`);
-  console.log('');
-  console.log('⚠️   IMPORTANT: Change the password after first login!');
 
   await mongoose.disconnect();
 }
