@@ -1,17 +1,47 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import * as PDFDocument from 'pdfkit';
 import {
   TrainingModule, TrainingModuleDocument,
   TrainingProgress, TrainingProgressDocument,
   TrainingBatch, TrainingBatchDocument,
+  TrainingExam, TrainingExamDocument,
+  TrainingExamAttempt, TrainingExamAttemptDocument,
+  TrainingCertificate, TrainingCertificateDocument,
 } from './training.schema';
 import { User, UserDocument, UserRole } from '../user/user.schema';
 
 import {
-  IsArray, IsDateString, IsEnum, IsInt, IsMongoId,
-  IsOptional, IsString, MaxLength, Min,
+  ArrayMinSize, IsArray, IsDateString, IsEnum, IsInt, IsMongoId,
+  IsNumber, IsOptional, IsString, Max, MaxLength, Min,
 } from 'class-validator';
+
+export class UpsertExamDto {
+  @IsInt() @Min(1) @Max(3)
+  tier: number;
+
+  @IsString() @MaxLength(150)
+  title: string;
+
+  @IsArray() @ArrayMinSize(1)
+  questions: { question: string; options: string[]; correctIndex: number }[];
+
+  @IsOptional() @IsNumber() @Min(0) @Max(100)
+  passingScore?: number;
+}
+
+export class SubmitExamDto {
+  @IsArray() @ArrayMinSize(1)
+  @IsNumber({}, { each: true })
+  answers: number[];
+}
 
 export class CreateBatchDto {
   @IsInt() @Min(1)
@@ -54,10 +84,13 @@ export class AddCandidatesDto {
 @Injectable()
 export class TrainingService {
   constructor(
-    @InjectModel(TrainingModule.name)  private readonly moduleModel:   Model<TrainingModuleDocument>,
-    @InjectModel(TrainingProgress.name) private readonly progressModel: Model<TrainingProgressDocument>,
-    @InjectModel(TrainingBatch.name)    private readonly batchModel:    Model<TrainingBatchDocument>,
-    @InjectModel(User.name)             private readonly userModel:     Model<UserDocument>,
+    @InjectModel(TrainingModule.name)     private readonly moduleModel:      Model<TrainingModuleDocument>,
+    @InjectModel(TrainingProgress.name)   private readonly progressModel:    Model<TrainingProgressDocument>,
+    @InjectModel(TrainingBatch.name)      private readonly batchModel:       Model<TrainingBatchDocument>,
+    @InjectModel(TrainingExam.name)       private readonly examModel:        Model<TrainingExamDocument>,
+    @InjectModel(TrainingExamAttempt.name) private readonly attemptModel:    Model<TrainingExamAttemptDocument>,
+    @InjectModel(TrainingCertificate.name) private readonly certificateModel: Model<TrainingCertificateDocument>,
+    @InjectModel(User.name)               private readonly userModel:        Model<UserDocument>,
   ) {}
 
   // ── Module methods ────────────────────────────────────────────────────────────
@@ -239,5 +272,219 @@ export class TrainingService {
       modules,
       allBatches,
     };
+  }
+
+  // ── Exams (admin) ────────────────────────────────────────────────────────────
+
+  async upsertExam(dto: UpsertExamDto) {
+    const update = {
+      title       : dto.title,
+      questions   : dto.questions,
+      passingScore: dto.passingScore ?? 70,
+    };
+    return this.examModel.findOneAndUpdate(
+      { tier: dto.tier },
+      { $set: update, $setOnInsert: { tier: dto.tier } },
+      { upsert: true, new: true },
+    );
+  }
+
+  async getExamAdmin(tier: number) {
+    const exam = await this.examModel.findOne({ tier }).lean();
+    if (!exam) throw new NotFoundException('No exam configured for this tier yet.');
+    return exam;
+  }
+
+  async getAllCertificates() {
+    return this.certificateModel
+      .find()
+      .populate('user', 'fullName email')
+      .sort({ issuedAt: -1 })
+      .lean();
+  }
+
+  // ── Exam (murabbi) ───────────────────────────────────────────────────────────
+
+  /** All modules must be at 100% before the exam for that tier unlocks. */
+  private async checkExamEligibility(userId: string, tier: number) {
+    const user = await this.userModel.findById(userId).select('tier').lean();
+    if (!user) throw new NotFoundException('User not found.');
+    if (tier > (user.tier ?? 1)) {
+      throw new ForbiddenException(`You are not yet Tier ${tier}.`);
+    }
+
+    const modules = await this.moduleModel.find({ minTier: { $lte: tier } }).select('_id').lean();
+    if (!modules.length) throw new NotFoundException('No modules found for this tier.');
+
+    const progresses = await this.progressModel
+      .find({ user: new Types.ObjectId(userId), module: { $in: modules.map((m) => m._id) } })
+      .lean();
+    const completedIds = new Set(
+      progresses.filter((p) => p.completed).map((p) => p.module.toString()),
+    );
+    const allComplete = modules.every((m) => completedIds.has(m._id.toString()));
+    if (!allComplete) {
+      throw new ForbiddenException(
+        'Complete all training modules for this tier before taking the assessment.',
+      );
+    }
+  }
+
+  /** Murabbi-facing: no correctIndex included. */
+  async getExamForMurabbi(userId: string, tier: number) {
+    await this.checkExamEligibility(userId, tier);
+    const exam = await this.examModel.findOne({ tier }).lean();
+    if (!exam) throw new NotFoundException('No assessment is available for this tier yet.');
+
+    const alreadyCertified = await this.certificateModel.findOne({
+      user: new Types.ObjectId(userId), tier,
+    }).lean();
+
+    return {
+      examId      : exam._id,
+      title       : exam.title,
+      passingScore: exam.passingScore,
+      alreadyCertified: !!alreadyCertified,
+      questions   : exam.questions.map((q, i) => ({ index: i, question: q.question, options: q.options })),
+    };
+  }
+
+  async submitExam(userId: string, tier: number, dto: SubmitExamDto) {
+    await this.checkExamEligibility(userId, tier);
+    const exam = await this.examModel.findOne({ tier });
+    if (!exam) throw new NotFoundException('No assessment is available for this tier yet.');
+
+    if (dto.answers.length !== exam.questions.length) {
+      throw new BadRequestException(
+        `Expected ${exam.questions.length} answers, received ${dto.answers.length}.`,
+      );
+    }
+
+    let correct = 0;
+    exam.questions.forEach((q, i) => {
+      if (dto.answers[i] === q.correctIndex) correct++;
+    });
+    const scorePercent = Math.round((correct / exam.questions.length) * 100);
+    const passed = scorePercent >= exam.passingScore;
+
+    await this.attemptModel.create({
+      user   : new Types.ObjectId(userId),
+      exam   : exam._id,
+      answers: dto.answers,
+      scorePercent,
+      passed,
+    });
+
+    let certificate = null;
+    if (passed) {
+      certificate = await this.issueCertificateIfNeeded(userId, tier);
+    }
+
+    return { scorePercent, passed, correctCount: correct, totalQuestions: exam.questions.length, certificate };
+  }
+
+  // ── Certificates ─────────────────────────────────────────────────────────────
+
+  private async issueCertificateIfNeeded(userId: string, tier: number) {
+    const existing = await this.certificateModel.findOne({ user: new Types.ObjectId(userId), tier });
+    if (existing) return existing;
+
+    // Certificate number: NC-T{tier}-{6 random digits}, retried on the rare collision.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const certificateNumber = `NC-T${tier}-${Math.floor(100000 + Math.random() * 900000)}`;
+      try {
+        return await this.certificateModel.create({
+          user: new Types.ObjectId(userId),
+          tier,
+          certificateNumber,
+        });
+      } catch (err: any) {
+        if (err?.code === 11000 && attempt < 4) continue; // certificateNumber collision, retry
+        throw err;
+      }
+    }
+    throw new ConflictException('Could not issue certificate — please try again.');
+  }
+
+  async getMyCertificates(userId: string) {
+    return this.certificateModel.find({ user: new Types.ObjectId(userId) }).sort({ tier: 1 }).lean();
+  }
+
+  private tierName(tier: number): string {
+    return tier === 1 ? 'Tier 1 — Asaas (Foundation)'
+         : tier === 2 ? 'Tier 2 — Mutqin (Proficient)'
+         : 'Tier 3 — Mudarrib (Master Trainer)';
+  }
+
+  async generateCertificatePdf(userId: string, tier: number): Promise<Buffer> {
+    const cert = await this.certificateModel.findOne({ user: new Types.ObjectId(userId), tier }).lean();
+    if (!cert) throw new NotFoundException('No certificate found for this tier. Pass the assessment first.');
+
+    const user = await this.userModel.findById(userId).select('fullName').lean();
+    const fullName = user?.fullName ?? 'Murabbi';
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 0 });
+      const chunks: Buffer[] = [];
+      doc.on('data', (c) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const MAROON = '#6d1b3a';
+      const GOLD   = '#c9a34e';
+      const W = doc.page.width;
+      const H = doc.page.height;
+
+      // Background + borders
+      doc.rect(0, 0, W, H).fill('#fffdf8');
+      doc.lineWidth(10).strokeColor(MAROON).rect(24, 24, W - 48, H - 48).stroke();
+      doc.lineWidth(1.5).strokeColor(GOLD).rect(38, 38, W - 76, H - 76).stroke();
+
+      doc.fillColor(MAROON)
+        .font('Times-Bold').fontSize(14)
+        .text('NOOR CIRCLES', 0, 68, { align: 'center', characterSpacing: 4 });
+
+      doc.fillColor('#555')
+        .font('Times-Roman').fontSize(11)
+        .text('The Deen Way (TDW) Education Network', 0, 90, { align: 'center' });
+
+      doc.moveTo(W / 2 - 60, 118).lineTo(W / 2 + 60, 118).lineWidth(1).strokeColor(GOLD).stroke();
+
+      doc.fillColor(MAROON)
+        .font('Times-Bold').fontSize(28)
+        .text('Certificate of Completion', 0, 140, { align: 'center' });
+
+      doc.fillColor('#333')
+        .font('Times-Roman').fontSize(13)
+        .text('This is to certify that', 0, 190, { align: 'center' });
+
+      doc.fillColor(MAROON)
+        .font('Times-Bold').fontSize(30)
+        .text(fullName, 0, 215, { align: 'center' });
+
+      doc.fillColor('#333')
+        .font('Times-Roman').fontSize(13)
+        .text(
+          `has successfully completed the ${this.tierName(tier)} Murabbi Training Programme,`,
+          80, 260, { align: 'center', width: W - 160 },
+        )
+        .text(
+          'demonstrating the knowledge and character required to lead a Noor Circle under EDUDEEN supervision.',
+          80, 280, { align: 'center', width: W - 160 },
+        );
+
+      const issued = new Date(cert.issuedAt);
+      const dateStr = issued.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+      doc.font('Times-Roman').fontSize(11).fillColor('#555')
+        .text(`Certificate No. ${cert.certificateNumber}`, 80, H - 110, { width: 250 })
+        .text(`Issued ${dateStr}`, 80, H - 92, { width: 250 });
+
+      doc.moveTo(W - 330, H - 110).lineTo(W - 80, H - 110).lineWidth(1).strokeColor('#999').stroke();
+      doc.font('Times-Italic').fontSize(11).fillColor('#555')
+        .text('Authorised Signatory', W - 330, H - 100, { width: 250, align: 'center' });
+
+      doc.end();
+    });
   }
 }
