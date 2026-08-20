@@ -120,16 +120,26 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getMe(@CurrentUser() user: UserDocument) {
+    // Flat shape (no nested `user` key) to match every other endpoint's
+    // { success, message, data } convention. The frontend's unwrap logic
+    // (`res.data.data || res.data`) expected fields directly on `data` —
+    // the previous `{ message, user: {...} }` shape meant the interceptor
+    // nested everything one level deeper than every caller expected, so
+    // fullName/email/role/image all silently came back undefined on the
+    // Profile and Settings pages (both murabbi and admin). Also adding
+    // phone/bio, which MurabbiSettings.tsx reads from this same call but
+    // were never included before.
     return {
-      message: 'User fetched successfully.',
-      user: {
-        id      : user._id,
-        fullName: user.fullName,
-        email   : user.email,
-        role    : user.role,
-        isActive: user.isActive,
-        image   : user.image ?? null,
-      },
+      message : 'User fetched successfully.',
+      id      : user._id,
+      fullName: user.fullName,
+      email   : user.email,
+      role    : user.role,
+      isActive: user.isActive,
+      image   : user.image ?? null,
+      phone   : user.phone ?? null,
+      bio     : user.bio ?? null,
+      tier    : user.tier ?? 1,
     };
   }
 
