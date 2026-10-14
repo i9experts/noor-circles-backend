@@ -7,7 +7,10 @@ import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-option
  * being listed in FRONTEND_URL. (The landing page's interest form was
  * silently blocked by CORS when its domain wasn't in that list.)
  */
-const PUBLIC_PATHS = [/^\/api\/v1\/interest\/?(\?.*)?$/];
+const PUBLIC_PATHS = [
+  /^\/api\/v1\/interest\/?(\?.*)?$/,
+  /^\/api\/v1\/contributions\/public\/checkout\/?(\?.*)?$/,
+];
 
 const BASE: CorsOptions = {
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

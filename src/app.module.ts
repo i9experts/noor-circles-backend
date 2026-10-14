@@ -23,6 +23,9 @@ import { LiveSessionModule }   from './live-session/live-session.module';
 import { UploadModule }        from './upload/upload.module';
 import { HealthModule }        from './health/health.module';
 import { InterestModule }      from './interest/interest.module';
+import { ContributionModule }  from './contribution/contribution.module';
+import { EngagementModule }    from './engagement/engagement.module';
+import { RewardsModule }       from './rewards/rewards.module';
 
 @Module({
   imports: [
@@ -60,6 +63,9 @@ import { InterestModule }      from './interest/interest.module';
     UploadModule,
     HealthModule,
     InterestModule,
+    ContributionModule,
+    EngagementModule,
+    RewardsModule,
   ],
   providers: [
     // Apply rate limiting globally
