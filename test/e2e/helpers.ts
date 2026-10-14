@@ -19,6 +19,7 @@ import * as bcrypt from 'bcrypt';
 import request from 'supertest';
 
 export const API = '/api/v1';
+export const PORTAL_ORIGIN = 'http://portal.e2e.test';
 export const ADMIN_EMAIL = 'admin@e2e.test';
 export const ADMIN_PASSWORD = 'AdminPass123';
 export const DEFAULT_PASSWORD = 'Password123';
@@ -105,6 +106,8 @@ export async function createApp(
   const app = moduleRef.createNestApplication({ logger: false });
   // Mirrors src/main.ts bootstrap (minus helmet/compression/morgan/swagger).
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  const { buildCorsDelegate } = await import('../../src/common/cors');
+  app.enableCors(buildCorsDelegate([PORTAL_ORIGIN]));
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

@@ -8,6 +8,7 @@ import {
   createMurabbi,
   E2EContext,
   MISSING_ID,
+  PORTAL_ORIGIN,
   signIn,
 } from './helpers';
 
@@ -180,6 +181,66 @@ describe('Interest requests (landing page form)', () => {
       (await ctx.http().delete(`${API}/interest/${id}`).set(bearer(admin)))
         .status,
     ).toBe(404);
+  });
+});
+
+describe('Interest form CORS', () => {
+  let ctx: E2EContext;
+  const SITE = 'https://noorcircles.example';
+  beforeAll(async () => {
+    ctx = await createApp('interest_cors');
+  });
+  afterAll(async () => ctx.close());
+
+  const preflight = (path: string, origin: string, method = 'POST') =>
+    ctx
+      .http()
+      .options(`${API}${path}`)
+      .set('Origin', origin)
+      .set('Access-Control-Request-Method', method)
+      .set('Access-Control-Request-Headers', 'content-type');
+
+  // Regression: the live landing page's form was blocked by CORS because its
+  // domain wasn't listed in FRONTEND_URL ("We could not reach Noor Circles").
+  it('any website may submit the public form (preflight + POST)', async () => {
+    const pre = await preflight('/interest', SITE);
+    expect(pre.status).toBe(204);
+    expect(pre.headers['access-control-allow-origin']).toBe(SITE);
+    expect(pre.headers['access-control-allow-credentials']).toBeUndefined();
+
+    const r = await ctx
+      .http()
+      .post(`${API}/interest`)
+      .set('Origin', SITE)
+      .send({ ...valid, email: 'cors@example.com' });
+    expect(r.status).toBe(201);
+    expect(r.headers['access-control-allow-origin']).toBe(SITE);
+  });
+
+  it('validation errors are readable cross-origin too', async () => {
+    const r = await ctx
+      .http()
+      .post(`${API}/interest`)
+      .set('Origin', SITE)
+      .send({ ...valid, phone: 'call me' });
+    expect(r.status).toBe(400);
+    expect(r.headers['access-control-allow-origin']).toBe(SITE);
+  });
+
+  it('other websites still cannot call authenticated endpoints or read interest data', async () => {
+    expect(
+      (await preflight('/auth/me', SITE, 'GET')).headers[
+        'access-control-allow-origin'
+      ],
+    ).toBeUndefined();
+    const list = await ctx.http().get(`${API}/interest`).set('Origin', SITE);
+    expect(list.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  it('the portal keeps credentialed CORS everywhere', async () => {
+    const pre = await preflight('/auth/me', PORTAL_ORIGIN, 'GET');
+    expect(pre.headers['access-control-allow-origin']).toBe(PORTAL_ORIGIN);
+    expect(pre.headers['access-control-allow-credentials']).toBe('true');
   });
 });
 
