@@ -29,6 +29,10 @@ export class User {
   @Prop({ type: Boolean, default: true })
   isActive: boolean;
 
+  /** true = self-registered and not yet approved by an admin */
+  @Prop({ type: Boolean, default: false })
+  pendingApproval: boolean;
+
   @Prop({ type: String, default: null, trim: true })
   phone: string | null;
 
