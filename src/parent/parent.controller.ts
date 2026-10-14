@@ -31,14 +31,17 @@ export class ParentController {
 
   // ── Stats & page data ────────────────────────────────────────────────────────
 
+  // Admin-only: both return system-wide data (page-data includes every
+  // parent's name, phone/WhatsApp number, email and children). They were open
+  // to murabbis, bypassing the per-murabbi scoping on GET /parents.
   @Get('stats')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MURABBI)
+  @Roles(UserRole.ADMIN)
   getStats() { return this.parentService.getStats(); }
 
   @Get('page-data')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MURABBI)
+  @Roles(UserRole.ADMIN)
   getPageData() { return this.parentService.getPageData(); }
 
   // ── Engagement config ────────────────────────────────────────────────────────

@@ -120,7 +120,7 @@ export class UsersService {
 
   async activateUser(userId: string) {
     const user = await this.userModel
-      .findByIdAndUpdate(userId, { isActive: true }, { new: true })
+      .findByIdAndUpdate(userId, { isActive: true, pendingApproval: false }, { new: true })
       .select('-password');
     if (!user) throw new NotFoundException('User not found.');
     return user;

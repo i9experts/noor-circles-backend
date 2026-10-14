@@ -16,6 +16,21 @@
 
 Each bug is a test that asserts the **correct** behaviour, wrapped in `it.failing`. While the bug exists, the test fails, so the suite passes. When someone fixes a bug, its `it.failing` turns red, which means: change it to a plain `it`. The suite therefore can't drift silently.
 
+## Fix status
+
+| Bug | Status |
+|---|---|
+| BUG-10 refresh tokens interchangeable | ✅ Fixed: SHA-256 token digests + unique `jti` (also fixes BUG-09) |
+| BUG-02 OTP returned in responses | ✅ Fixed: OTP echoed only with `EXPOSE_OTP_IN_RESPONSE=true` and never when `NODE_ENV=production`; Dockerfile sets `NODE_ENV=production`; Swagger fails closed |
+| BUG-01 public self-signup = active murabbi | ✅ Fixed: sign-ups are pending until an admin approves (Murabbis page → "Awaiting approval" → Approve); admins get a notification |
+| BUG-32 `/parents/page-data` leaks all parents | ✅ Fixed: `page-data` and `stats` are admin-only |
+| All others | Open; see below |
+
+**Deploy notes for these fixes:**
+- **Everyone is signed out once.** Old refresh tokens were stored as bcrypt hashes and no longer match, so each user signs in again once.
+- **Review existing self-registered accounts.** Accounts created through public sign-up *before* this fix are still active Murabbis. Deactivate any you don't recognise.
+- **Railway:** make sure `EXPOSE_OTP_IN_RESPONSE` is **not** set there.
+
 ## Running it
 
 ```bash

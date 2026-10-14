@@ -64,8 +64,9 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
-  // ── Swagger API Docs (only in non-production or if explicitly enabled) ─────────
-  if (!isProd || config.get('ENABLE_SWAGGER') === 'true') {
+  // ── Swagger API Docs (only when NODE_ENV=development or explicitly enabled) ───
+  // Fails closed: a deployment that forgets NODE_ENV no longer exposes docs.
+  if (config.get('NODE_ENV') === 'development' || config.get('ENABLE_SWAGGER') === 'true') {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Noor Circle API')
       .setDescription('Complete REST API for Noor Circle — Islamic Character Formation Platform')

@@ -60,7 +60,7 @@ describe('Auth', () => {
       expect(r.status).toBe(400);
     });
 
-    it('sends an OTP, then verifying it creates an account + returns tokens', async () => {
+    it('sends an OTP, then verifying it creates a pending account (no tokens)', async () => {
       const r1 = await post('signup/request-otp', {
         fullName: 'New User',
         email,
@@ -78,7 +78,9 @@ describe('Auth', () => {
 
       const r2 = await post('signup/verify-otp', { email, otp });
       expect(r2.status).toBe(201);
-      expect(r2.body.data.accessToken).toBeDefined();
+      expect(r2.body.data.pendingApproval).toBe(true);
+      expect(r2.body.data.accessToken).toBeUndefined();
+      expect(r2.body.data.refreshToken).toBeUndefined();
       expect(r2.body.data.user.role).toBe('murabbi');
       expect(r2.body.data.user.password).toBeUndefined();
     });
@@ -136,29 +138,70 @@ describe('Auth', () => {
       expect(r.status).toBe(401);
     });
 
-    // BUG-01: any member of the public can self-register and immediately gets
-    // the murabbi role, i.e. full access to the murabbi portal (lessons,
-    // training content, curriculum, global session list, parent stats...).
-    it.failing(
-      'BUG-01: public self-signup should NOT grant an active murabbi account without admin approval',
-      async () => {
-        const e = 'stranger@e2e.test';
-        await post('signup/request-otp', {
-          fullName: 'Stranger',
-          email: e,
-          password: DEFAULT_PASSWORD,
-        });
-        const v = await post('signup/verify-otp', {
-          email: e,
-          otp: ctx.lastOtp(e),
-        });
-        const r = await ctx
-          .http()
-          .get(`${API}/lessons`)
-          .set(bearer(v.body.data.accessToken));
-        expect(r.status).toBe(403);
-      },
-    );
+    // BUG-01 (fixed): self-registered accounts used to become active murabbis
+    // immediately. They now wait for an admin to approve them.
+    it('BUG-01: self-signup is pending until an admin approves it', async () => {
+      const e = 'stranger@e2e.test';
+      await post('signup/request-otp', {
+        fullName: 'Stranger',
+        email: e,
+        password: DEFAULT_PASSWORD,
+      });
+      const v = await post('signup/verify-otp', {
+        email: e,
+        otp: ctx.lastOtp(e),
+      });
+      expect(v.status).toBe(201);
+      expect(v.body.data.accessToken).toBeUndefined();
+
+      const denied = await post('signin', {
+        email: e,
+        password: DEFAULT_PASSWORD,
+      });
+      expect(denied.status).toBe(401);
+      expect(denied.body.message).toMatch(/awaiting admin approval/i);
+
+      // Admins are told about it…
+      const n = await ctx
+        .http()
+        .get(`${API}/notifications`)
+        .set(bearer(adminToken));
+      const notif = n.body.data.find((x: any) => x.payload?.email === e);
+      expect(notif).toBeDefined();
+
+      // …and approve with the existing Activate action.
+      const res = await ctx
+        .http()
+        .patch(`${API}/admin/murabbis/${notif.payload.userId}/activate`)
+        .set(bearer(adminToken));
+      expect(res.status).toBe(200);
+      const ok = await post('signin', { email: e, password: DEFAULT_PASSWORD });
+      expect(ok.status).toBe(200);
+      expect(
+        (
+          await ctx
+            .http()
+            .get(`${API}/lessons`)
+            .set(bearer(ok.body.data.accessToken))
+        ).status,
+      ).toBe(200);
+    });
+
+    it('a pending sign-up shows up as inactive in the admin murabbi list', async () => {
+      const e = 'pending.list@e2e.test';
+      await post('signup/request-otp', {
+        fullName: 'Pending',
+        email: e,
+        password: DEFAULT_PASSWORD,
+      });
+      await post('signup/verify-otp', { email: e, otp: ctx.lastOtp(e) });
+      const r = await ctx
+        .http()
+        .get(`${API}/admin/murabbis`)
+        .set(bearer(adminToken));
+      const m = r.body.data.find((x: any) => x.email === e);
+      expect(m).toMatchObject({ isActive: false, pendingApproval: true });
+    });
   });
 
   // ── OTP leakage in responses ────────────────────────────────────────────────
@@ -168,20 +211,33 @@ describe('Auth', () => {
     // deployment that forgets it lets anyone reset ANY account's password
     // (forgot-password → OTP in response → reset). Verified here with the
     // env var simply unset, which is the Dockerfile default.
-    it.failing(
-      'BUG-02: forgot-password must never return the OTP when NODE_ENV is unset',
-      async () => {
-        const prev = process.env.NODE_ENV;
-        delete process.env.NODE_ENV;
-        try {
-          const r = await post('forgot-password', { email: ADMIN_EMAIL });
-          expect(r.status).toBe(200);
-          expect(r.body.data?.otp).toBeUndefined();
-        } finally {
-          process.env.NODE_ENV = prev;
-        }
-      },
-    );
+    it('BUG-02: forgot-password must never return the OTP when NODE_ENV is unset', async () => {
+      const prev = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+      try {
+        const r = await post('forgot-password', { email: ADMIN_EMAIL });
+        expect(r.status).toBe(200);
+        expect(r.body.data?.otp).toBeUndefined();
+      } finally {
+        process.env.NODE_ENV = prev;
+      }
+    });
+
+    it('OTP is only echoed with the explicit dev opt-in, and never in production', async () => {
+      const prev = { ...process.env };
+      try {
+        process.env.EXPOSE_OTP_IN_RESPONSE = 'true';
+        process.env.NODE_ENV = 'development';
+        const dev = await post('forgot-password', { email: ADMIN_EMAIL });
+        expect(dev.body.data.otp).toMatch(/^\d{6}$/);
+        process.env.NODE_ENV = 'production';
+        const prod = await post('forgot-password', { email: ADMIN_EMAIL });
+        expect(prod.body.data?.otp).toBeUndefined();
+      } finally {
+        process.env.EXPOSE_OTP_IN_RESPONSE = prev.EXPOSE_OTP_IN_RESPONSE ?? '';
+        process.env.NODE_ENV = prev.NODE_ENV;
+      }
+    });
 
     it('with NODE_ENV=production the OTP is not returned', async () => {
       const prev = process.env.NODE_ENV;
@@ -281,15 +337,10 @@ describe('Auth', () => {
     // user within the same second are byte-identical. Rotation/reuse
     // detection and "revoke on password reset" can't tell them apart: e.g. a
     // session signed in the same second as a post-reset login survives the reset.
-    it.failing(
-      'BUG-09: refresh tokens should carry a unique id (jti) so same-second logins differ',
-      async () => {
-        const m = await createMurabbi(ctx, adminToken, 'same.second@e2e.test');
-        expect(
-          (jwt.decode(m.refreshToken) as jwt.JwtPayload).jti,
-        ).toBeDefined();
-      },
-    );
+    it('BUG-09: refresh tokens should carry a unique id (jti) so same-second logins differ', async () => {
+      const m = await createMurabbi(ctx, adminToken, 'same.second@e2e.test');
+      expect((jwt.decode(m.refreshToken) as jwt.JwtPayload).jti).toBeDefined();
+    });
 
     // BUG-10 (critical): refresh tokens are stored as bcrypt hashes, but bcrypt
     // only reads the first 72 bytes of its input. Every refresh JWT for the
@@ -297,34 +348,31 @@ describe('Auth', () => {
     // a user's refresh tokens matches ANY stored hash. Consequences:
     // rotation/reuse detection never fires, logout doesn't log that token
     // out, and a stolen token revives as soon as the victim signs in again.
-    it.failing(
-      'BUG-10: refresh rotates the token; old token reuse revokes every session',
-      async () => {
-        const m = await createMurabbi(ctx, adminToken, 'rotate@e2e.test');
-        await waitNextSecond();
-        const r1 = await ctx
-          .http()
-          .post(`${API}/auth/refresh`)
-          .set(bearer(m.refreshToken));
-        expect(r1.status).toBe(200);
-        const newRefresh = r1.body.data.refreshToken;
-        expect(newRefresh).toBeDefined();
+    it('BUG-10: refresh rotates the token; old token reuse revokes every session', async () => {
+      const m = await createMurabbi(ctx, adminToken, 'rotate@e2e.test');
+      await waitNextSecond();
+      const r1 = await ctx
+        .http()
+        .post(`${API}/auth/refresh`)
+        .set(bearer(m.refreshToken));
+      expect(r1.status).toBe(200);
+      const newRefresh = r1.body.data.refreshToken;
+      expect(newRefresh).toBeDefined();
 
-        // Reusing the old (already rotated) token = theft signal
-        const reuse = await ctx
-          .http()
-          .post(`${API}/auth/refresh`)
-          .set(bearer(m.refreshToken));
-        expect(reuse.status).toBe(401);
+      // Reusing the old (already rotated) token = theft signal
+      const reuse = await ctx
+        .http()
+        .post(`${API}/auth/refresh`)
+        .set(bearer(m.refreshToken));
+      expect(reuse.status).toBe(401);
 
-        // …which revoked the new one too
-        const after = await ctx
-          .http()
-          .post(`${API}/auth/refresh`)
-          .set(bearer(newRefresh));
-        expect(after.status).toBe(401);
-      },
-    );
+      // …which revoked the new one too
+      const after = await ctx
+        .http()
+        .post(`${API}/auth/refresh`)
+        .set(bearer(newRefresh));
+      expect(after.status).toBe(401);
+    });
 
     it('logout invalidates that refresh token (single session)', async () => {
       const m = await createMurabbi(ctx, adminToken, 'logout@e2e.test');
@@ -340,20 +388,17 @@ describe('Auth', () => {
       expect(again.status).toBe(401);
     });
 
-    it.failing(
-      'BUG-10: logging out one device must not leave that token usable while another session exists',
-      async () => {
-        const m = await createMurabbi(ctx, adminToken, 'logout.two@e2e.test');
-        await waitNextSecond();
-        await signIn(ctx, 'logout.two@e2e.test', DEFAULT_PASSWORD); // second device
-        await ctx.http().post(`${API}/auth/logout`).set(bearer(m.refreshToken));
-        const r = await ctx
-          .http()
-          .post(`${API}/auth/refresh`)
-          .set(bearer(m.refreshToken));
-        expect(r.status).toBe(401);
-      },
-    );
+    it('BUG-10: logging out one device must not leave that token usable while another session exists', async () => {
+      const m = await createMurabbi(ctx, adminToken, 'logout.two@e2e.test');
+      await waitNextSecond();
+      await signIn(ctx, 'logout.two@e2e.test', DEFAULT_PASSWORD); // second device
+      await ctx.http().post(`${API}/auth/logout`).set(bearer(m.refreshToken));
+      const r = await ctx
+        .http()
+        .post(`${API}/auth/refresh`)
+        .set(bearer(m.refreshToken));
+      expect(r.status).toBe(401);
+    });
 
     it('logout-all clears all refresh tokens', async () => {
       const m = await createMurabbi(ctx, adminToken, 'logoutall@e2e.test');
@@ -425,35 +470,32 @@ describe('Auth', () => {
       ).toBe(200);
     });
 
-    it.failing(
-      'BUG-10: a refresh token issued before a password reset stays dead after the owner signs in again',
-      async () => {
-        const before = await signIn(ctx, email, 'BrandNew123');
-        await post('forgot-password', { email });
-        const v = await post('verify-otp', { email, otp: ctx.lastOtp(email) });
-        expect(v.status).toBe(200);
-        resetToken = v.body.data.resetToken;
+    it('BUG-10: a refresh token issued before a password reset stays dead after the owner signs in again', async () => {
+      const before = await signIn(ctx, email, 'BrandNew123');
+      await post('forgot-password', { email });
+      const v = await post('verify-otp', { email, otp: ctx.lastOtp(email) });
+      expect(v.status).toBe(200);
+      resetToken = v.body.data.resetToken;
 
-        const r = await post(
-          'reset-password',
-          { newPassword: 'NewerPass123' },
-          bearer(v.body.data.resetToken),
-        );
-        expect(r.status).toBe(200);
-        await new Promise((res) => setTimeout(res, 1100)); // rule out BUG-09
-        expect(
-          (await post('signin', { email, password: 'NewerPass123' })).status,
-        ).toBe(200);
-        expect(
-          (
-            await ctx
-              .http()
-              .post(`${API}/auth/refresh`)
-              .set(bearer(before.refreshToken))
-          ).status,
-        ).toBe(401);
-      },
-    );
+      const r = await post(
+        'reset-password',
+        { newPassword: 'NewerPass123' },
+        bearer(v.body.data.resetToken),
+      );
+      expect(r.status).toBe(200);
+      await new Promise((res) => setTimeout(res, 1100)); // rule out BUG-09
+      expect(
+        (await post('signin', { email, password: 'NewerPass123' })).status,
+      ).toBe(200);
+      expect(
+        (
+          await ctx
+            .http()
+            .post(`${API}/auth/refresh`)
+            .set(bearer(before.refreshToken))
+        ).status,
+      ).toBe(401);
+    });
 
     it('OTP is single-use', async () => {
       await post('forgot-password', { email });

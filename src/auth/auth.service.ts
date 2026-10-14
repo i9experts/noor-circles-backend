@@ -10,10 +10,13 @@ import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { createHash, randomUUID } from 'crypto';
 
 import { User, UserDocument } from '../user/user.schema';
 import { UsersService } from '../user/user.service';
 import { MailService } from '../mail/mail.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from '../notification/notification.schema';
 import {
   SignupRequestOtpDto,
   SignupVerifyOtpDto,
@@ -37,6 +40,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly mailService: MailService,
+    private readonly notifService: NotificationService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -74,10 +78,9 @@ export class AuthService {
     await this.mailService.sendOtp(dto.email, otp, 'signup');
     this.logger.log(`Signup OTP sent → ${dto.email}`);
 
-    const isDev = this.config.get('NODE_ENV') !== 'production';
     return {
       message: 'OTP sent to your email. It is valid for 2 minutes.',
-      ...(isDev && { otp }),
+      ...(this.exposeOtp() && { otp }),
     };
   }
 
@@ -102,23 +105,30 @@ export class AuthService {
       throw new BadRequestException('Incorrect OTP. Please try again.');
     }
 
+    // Self-registered accounts start inactive and wait for an admin to
+    // approve them (PATCH /admin/murabbis/:id/activate). Previously they were
+    // active murabbis immediately, so anyone on the internet could sign up and
+    // read murabbi-scoped data. No tokens are issued until approval.
     user.isEmailVerified = true;
+    user.isActive        = false;
+    user.pendingApproval = true;
     user.otpCode         = null;
     user.otpExpiresAt    = null;
     user.pendingSignup   = null;
     await user.save();
 
-    const tokens = await this.generateTokens(user._id.toString(), user.email, user.role);
-    await this.usersService.addRefreshToken(
-      user._id.toString(),
-      await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS),
-    );
+    this.notifService.createForAdmins({
+      sender : user._id.toString(),
+      type   : NotificationType.MURABBI_ACTION,
+      title  : 'New Sign-up Awaiting Approval',
+      message: `${user.fullName} (${user.email}) signed up and is waiting for approval. Activate them from the Murabbis page.`,
+      payload: { userId: user._id.toString(), fullName: user.fullName, email: user.email },
+    }).catch(() => {});
 
-    this.logger.log(`Account created → ${user.email}`);
+    this.logger.log(`Account created (pending approval) → ${user.email}`);
     return {
-      message: 'Account created successfully!',
-      accessToken : tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      message: 'Email verified! Your account is awaiting admin approval — you can sign in once it is approved.',
+      pendingApproval: true,
       user: this.sanitize(user),
     };
   }
@@ -140,6 +150,11 @@ export class AuthService {
         'Email not verified. Please complete the OTP verification step.',
       );
     }
+    if (user.pendingApproval) {
+      throw new UnauthorizedException(
+        'Your account is awaiting admin approval. You will be able to sign in once it is approved.',
+      );
+    }
     if (!user.isActive) {
       throw new UnauthorizedException(
         'Your account has been deactivated. Please contact the admin.',
@@ -149,7 +164,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user._id.toString(), user.email, user.role);
     await this.usersService.addRefreshToken(
       user._id.toString(),
-      await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS),
+      this.hashToken(tokens.refreshToken),
     );
 
     this.logger.log(`Signed in → ${user.email} [${user.role}]`);
@@ -178,8 +193,7 @@ export class AuthService {
     await this.mailService.sendOtp(user.email, otp, 'reset');
 
     this.logger.log(`Reset OTP sent → ${user.email}`);
-    const isDev = this.config.get('NODE_ENV') !== 'production';
-    return { message: GENERIC, ...(isDev && { otp }) };
+    return { message: GENERIC, ...(this.exposeOtp() && { otp }) };
   }
 
   async verifyOtp(dto: VerifyOtpDto) {
@@ -259,8 +273,7 @@ export class AuthService {
     await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt);
     await this.mailService.sendOtp(user.email, otp, type);
 
-    const isDev = this.config.get('NODE_ENV') !== 'production';
-    return { message: GENERIC, ...(isDev && { otp }) };
+    return { message: GENERIC, ...(this.exposeOtp() && { otp }) };
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -274,7 +287,11 @@ export class AuthService {
       throw new UnauthorizedException('Session expired. Please sign in again.');
     }
 
-    const idx = await this.findTokenIndex(incomingRefreshToken, user.refreshTokens);
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been deactivated. Please contact the admin.');
+    }
+
+    const idx = this.findTokenIndex(incomingRefreshToken, user.refreshTokens);
     if (idx === -1) {
       await this.usersService.clearAllRefreshTokens(userId);
       this.logger.warn(`Token reuse detected → ${user.email}`);
@@ -285,7 +302,7 @@ export class AuthService {
 
     user.refreshTokens.splice(idx, 1);
     const tokens = await this.generateTokens(userId, user.email, user.role);
-    user.refreshTokens.push(await bcrypt.hash(tokens.refreshToken, BCRYPT_ROUNDS));
+    user.refreshTokens.push(this.hashToken(tokens.refreshToken));
     await user.save();
 
     return {
@@ -299,7 +316,7 @@ export class AuthService {
     const user = await this.userModel.findById(userId).select('+refreshTokens');
     if (!user) throw new UnauthorizedException('User not found.');
 
-    const idx = await this.findTokenIndex(refreshToken, user.refreshTokens);
+    const idx = this.findTokenIndex(refreshToken, user.refreshTokens);
     if (idx !== -1) {
       user.refreshTokens.splice(idx, 1);
       await user.save();
@@ -324,6 +341,7 @@ export class AuthService {
         {
           secret   : this.config.getOrThrow('JWT_ACCESS_SECRET'),
           expiresIn: this.config.getOrThrow('JWT_ACCESS_EXPIRES_IN'),
+          jwtid    : randomUUID(),
         },
       ),
       this.jwtService.signAsync(
@@ -331,15 +349,41 @@ export class AuthService {
         {
           secret   : this.config.getOrThrow('JWT_REFRESH_SECRET'),
           expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRES_IN'),
+          jwtid    : randomUUID(),
         },
       ),
     ]);
     return { accessToken, refreshToken };
   }
 
-  private async findTokenIndex(plain: string, hashed: string[]): Promise<number> {
-    const results = await Promise.all(hashed.map((h) => bcrypt.compare(plain, h)));
-    return results.findIndex(Boolean);
+  /**
+   * Refresh tokens are stored as SHA-256 digests. They used to be bcrypt
+   * hashes, but bcrypt only reads the first 72 bytes of its input and every
+   * refresh JWT for a user shares a much longer prefix (header + sub +
+   * email), so any of a user's refresh tokens matched any stored hash —
+   * logout, rotation and reuse detection were all ineffective. The JWT is
+   * already high-entropy, so a fast hash is appropriate here.
+   * Legacy bcrypt entries simply never match, forcing a one-time re-login.
+   */
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private findTokenIndex(plain: string, hashed: string[]): number {
+    return hashed.indexOf(this.hashToken(plain));
+  }
+
+  /**
+   * OTPs are only ever echoed in API responses when explicitly opted in for
+   * local development. This used to be on whenever NODE_ENV !== 'production',
+   * so a deployment that forgot NODE_ENV handed out password-reset codes for
+   * any account (including admins) in the HTTP response.
+   */
+  private exposeOtp(): boolean {
+    return (
+      this.config.get('EXPOSE_OTP_IN_RESPONSE') === 'true' &&
+      this.config.get('NODE_ENV') !== 'production'
+    );
   }
 
   private makeOtp(): string {

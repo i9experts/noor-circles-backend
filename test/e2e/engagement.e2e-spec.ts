@@ -147,35 +147,35 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // NOT scoped. Any murabbi gets every parent in the system — names, phone
     // and WhatsApp numbers, emails, their children's names and all feedback —
     // bypassing the scoping that GET /parents enforces.
-    it.failing(
-      "BUG-32: /parents/page-data must not expose other murabbis' parents",
-      async () => {
-        const r = await mA().get('parents/page-data');
-        expect(r.status).toBe(200);
-        const ids = (r.body.data.parents ?? []).map((p: any) => p._id);
-        expect(ids).not.toContain(parentB);
-      },
-    );
+    // BUG-32 (fixed): page-data and stats return system-wide data and are now admin-only.
+    it('BUG-32: /parents/page-data and /parents/stats are admin-only', async () => {
+      expect((await mA().get('parents/page-data')).status).toBe(403);
+      expect((await mA().get('parents/stats')).status).toBe(403);
+      const ids = (await mA().get('parents')).body.data.map((p: any) => p._id);
+      expect(ids).not.toContain(parentB);
+    });
 
-    // BUG-01 + BUG-32 chained: a member of the public self-registers and
-    // immediately downloads every parent's phone number.
-    it.failing(
-      "BUG-01+32: a self-registered stranger must not be able to read parents' phone numbers",
-      async () => {
-        const email = 'stranger.chain@e2e.test';
-        await ctx
-          .http()
-          .post(`${API}/auth/signup/request-otp`)
-          .send({ fullName: 'Stranger', email, password: 'Password123' });
-        const v = await ctx
-          .http()
-          .post(`${API}/auth/signup/verify-otp`)
-          .send({ email, otp: ctx.lastOtp(email) });
-        const r = await as(v.body.data.accessToken).get('parents/page-data');
-        const phones = JSON.stringify(r.body.data?.parents ?? []);
-        expect(phones).not.toMatch(/03009998888/);
-      },
-    );
+    // BUG-01 + BUG-32 chained (fixed): a stranger can no longer get a session
+    // at all, and even an approved murabbi can't reach other parents' data.
+    it("BUG-01+32: a self-registered stranger gets no session and can't read parents' data", async () => {
+      const email = 'stranger.chain@e2e.test';
+      await ctx
+        .http()
+        .post(`${API}/auth/signup/request-otp`)
+        .send({ fullName: 'Stranger', email, password: 'Password123' });
+      const v = await ctx
+        .http()
+        .post(`${API}/auth/signup/verify-otp`)
+        .send({ email, otp: ctx.lastOtp(email) });
+      expect(v.body.data.accessToken).toBeUndefined();
+      const login = await ctx
+        .http()
+        .post(`${API}/auth/signin`)
+        .send({ email, password: 'Password123' });
+      expect(login.status).toBe(401);
+      const r = await ctx.http().get(`${API}/parents/page-data`);
+      expect(r.status).toBe(401);
+    });
 
     it('admin-only parent operations', async () => {
       expect((await mA().del(`parents/${parentA}`)).status).toBe(403);
