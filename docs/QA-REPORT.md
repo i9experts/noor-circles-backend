@@ -24,6 +24,7 @@ Each bug is a test that asserts the **correct** behaviour, wrapped in `it.failin
 | BUG-02 OTP returned in responses | ✅ Fixed: OTP echoed only with `EXPOSE_OTP_IN_RESPONSE=true` and never when `NODE_ENV=production`; Dockerfile sets `NODE_ENV=production`; Swagger fails closed |
 | BUG-01 public self-signup = active murabbi | ✅ Fixed: sign-ups are pending until an admin approves (Murabbis page → "Awaiting approval" → Approve); admins get a notification |
 | BUG-32 `/parents/page-data` leaks all parents | ✅ Fixed: `page-data` and `stats` are admin-only |
+| BUG-47 every visitor shares one rate-limit bucket behind the proxy | ✅ Fixed: `trust proxy` set to one hop in `main.ts` |
 | All others | Open; see below |
 
 **Deploy notes for these fixes:**

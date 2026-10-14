@@ -362,20 +362,15 @@ describe('Rate limiting (real throttler)', () => {
     expect(last).toBe(429);
   });
 
-  // BUG-47 (likely production outage): main.ts never sets `trust proxy`, so
-  // behind Railway's proxy req.ip is the proxy's address for EVERY user. The
-  // 100 req/min limit is then shared by all users combined — a handful of
-  // admins loading dashboards (each page fires 5-10 calls) will start
-  // getting 429s. Simulated here: two different X-Forwarded-For clients
-  // share one bucket.
-  it.failing(
-    'BUG-47: different clients behind a proxy should not share one rate-limit bucket',
-    async () => {
-      const r = await ctx
-        .http()
-        .get(`${API}/health`)
-        .set('X-Forwarded-For', '203.0.113.77');
-      expect(r.status).toBe(200);
-    },
-  );
+  // BUG-47 (fixed): main.ts now sets `trust proxy` so that behind Railway's
+  // proxy each visitor gets their own rate-limit bucket instead of everyone
+  // sharing the proxy's. Simulated: a different X-Forwarded-For client is
+  // not blocked by another client's exhausted bucket.
+  it('BUG-47: different clients behind a proxy should not share one rate-limit bucket', async () => {
+    const r = await ctx
+      .http()
+      .get(`${API}/health`)
+      .set('X-Forwarded-For', '203.0.113.77');
+    expect(r.status).toBe(200);
+  });
 });

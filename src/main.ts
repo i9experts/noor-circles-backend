@@ -24,6 +24,11 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const isProd = config.get('NODE_ENV') === 'production';
 
+  // Behind Railway's proxy every request otherwise appears to come from the
+  // proxy itself, so all visitors shared ONE rate-limit bucket (QA BUG-47).
+  // Trust exactly one hop so req.ip is the real client address.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   // ── Security ─────────────────────────────────────────────────────────────────
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
