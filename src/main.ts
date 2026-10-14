@@ -20,7 +20,7 @@ import { buildCorsDelegate } from './common/cors';
 dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
-  const app    = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app    = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true }); // rawBody: Stripe webhook signatures
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
   const isProd = config.get('NODE_ENV') === 'production';

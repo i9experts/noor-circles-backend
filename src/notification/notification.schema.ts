@@ -11,6 +11,8 @@ export enum NotificationType {
   PERFORMANCE_REVIEW  = 'performance_review',   // admin → murabbi (review submitted)
   MATERIAL_REQUEST    = 'material_request',     // murabbi → admin (lesson material request)
   INTEREST_REQUEST    = 'interest_request',     // public landing page → admin (no sender)
+  CONTRIBUTION        = 'contribution',         // website pledge / Stripe payment → admin (no sender)
+  REWARD              = 'reward',               // admin → murabbi (reward paid)
 }
 
 export enum NotificationStatus {

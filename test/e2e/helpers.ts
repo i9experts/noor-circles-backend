@@ -59,6 +59,8 @@ export function setTestEnv(overrides: Record<string, string> = {}) {
     CLOUDINARY_API_SECRET: '',
     GREEN_API_INSTANCE_ID: '',
     GREEN_API_TOKEN: '',
+    STRIPE_SECRET_KEY: '',
+    STRIPE_WEBHOOK_SECRET: '',
   };
   Object.assign(process.env, base, overrides);
 }
@@ -103,7 +105,7 @@ export async function createApp(
   }
   const moduleRef = await builder.compile();
 
-  const app = moduleRef.createNestApplication({ logger: false });
+  const app = moduleRef.createNestApplication({ logger: false, rawBody: true });
   // Mirrors src/main.ts bootstrap (minus helmet/compression/morgan/swagger).
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
   const { buildCorsDelegate } = await import('../../src/common/cors');
