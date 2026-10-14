@@ -10,6 +10,7 @@ import * as dns from 'dns';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { buildCorsDelegate } from './common/cors';
 
 // Prefer IPv4 for outbound DNS resolution. Some container platforms (e.g.
 // Railway) advertise IPv6 routes for third-party hosts (Gmail SMTP, etc.)
@@ -49,12 +50,8 @@ async function bootstrap() {
     .split(',')
     .map((u) => u.trim());
 
-  app.enableCors({
-    origin        : origins,
-    methods       : 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials   : true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+  // Portal origins for everything; the public interest form accepts any origin.
+  app.enableCors(buildCorsDelegate(origins));
 
   // ── Validation ────────────────────────────────────────────────────────────────
   app.useGlobalPipes(
