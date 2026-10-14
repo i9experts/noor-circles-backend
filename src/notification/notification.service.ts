@@ -10,7 +10,8 @@ import { User, UserDocument, UserRole } from '../user/user.schema';
 
 export interface CreateNotificationInput {
   recipient       : string;
-  sender          : string;
+  /** Omit for system notifications that no user triggered. */
+  sender         ?: string;
   type            : NotificationType;
   title           : string;
   message         : string;
@@ -33,7 +34,7 @@ export class NotificationService {
 
     return this.notifModel.create({
       recipient       : new Types.ObjectId(input.recipient),
-      sender          : new Types.ObjectId(input.sender),
+      sender          : input.sender ? new Types.ObjectId(input.sender) : null,
       type            : input.type,
       title           : input.title,
       message         : input.message,

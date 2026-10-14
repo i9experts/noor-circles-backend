@@ -104,6 +104,7 @@ export async function createApp(
 
   const app = moduleRef.createNestApplication({ logger: false });
   // Mirrors src/main.ts bootstrap (minus helmet/compression/morgan/swagger).
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

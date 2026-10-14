@@ -10,6 +10,7 @@ export enum NotificationType {
   DELETE_REQUEST      = 'delete_request',       // murabbi → admin (requires approval)
   PERFORMANCE_REVIEW  = 'performance_review',   // admin → murabbi (review submitted)
   MATERIAL_REQUEST    = 'material_request',     // murabbi → admin (lesson material request)
+  INTEREST_REQUEST    = 'interest_request',     // public landing page → admin (no sender)
 }
 
 export enum NotificationStatus {
@@ -25,8 +26,9 @@ export class Notification {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   recipient: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  sender: Types.ObjectId;
+  /** null for system notifications (e.g. a public landing-page submission). */
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  sender: Types.ObjectId | null;
 
   @Prop({ type: String, enum: NotificationType, required: true })
   type: NotificationType;

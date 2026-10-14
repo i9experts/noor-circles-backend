@@ -22,6 +22,7 @@ import { AnnouncementModule }  from './announcement/announcement.module';
 import { LiveSessionModule }   from './live-session/live-session.module';
 import { UploadModule }        from './upload/upload.module';
 import { HealthModule }        from './health/health.module';
+import { InterestModule }      from './interest/interest.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { HealthModule }        from './health/health.module';
     LiveSessionModule,
     UploadModule,
     HealthModule,
+    InterestModule,
   ],
   providers: [
     // Apply rate limiting globally
