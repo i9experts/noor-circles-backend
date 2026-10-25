@@ -6,7 +6,10 @@ import {
   E2EContext,
   MISSING_ID,
   seedWorld,
+  signIn,
 } from './helpers';
+import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
 
 describe('Murabbi portal + Attendance', () => {
   let ctx: E2EContext;
@@ -156,6 +159,54 @@ describe('Murabbi portal + Attendance', () => {
         (await adm().patch(`notifications/${req._id}/reject`)).status,
       ).toBe(200);
       expect((await adm().get(`admin/students/${s}`)).status).toBe(200);
+    });
+
+    it('with two admins, deciding one copy of a request decides them all', async () => {
+      await ctx.db.collection('users').insertOne({
+        fullName: 'Second Admin', email: 'admin2@e2e.test', role: 'admin',
+        password: await bcrypt.hash('AdminTwo123', 4), isEmailVerified: true,
+        isActive: true, tier: 1, refreshTokens: [], createdAt: new Date(), updatedAt: new Date(),
+      });
+      const admin2 = (await signIn(ctx, 'admin2@e2e.test', 'AdminTwo123')).accessToken;
+      const s = await w.mkStudent('Two Admins', w.circleA);
+      await mA().post(`murabbi/request-delete/student/${s}`);
+      const mine = (await adm().get('notifications')).body.data.find((x: any) => x.payload?.targetId === s);
+      const theirs = (await as(admin2).get('notifications')).body.data.find((x: any) => x.payload?.targetId === s);
+      expect(theirs.status).toBe('pending');
+      expect((await adm().patch(`notifications/${mine._id}/accept`)).status).toBe(200);
+      // The other admin can no longer reject what was already carried out.
+      expect((await as(admin2).patch(`notifications/${theirs._id}/reject`)).status).toBe(404);
+      const after = (await as(admin2).get('notifications')).body.data.find((x: any) => x._id === theirs._id);
+      expect(after.status).toBe('accepted');
+    });
+
+    it('deleting a student removes their attendance entries, points and parent links', async () => {
+      const s = await w.mkStudent('Leaves No Trace', w.circleA);
+      const sess = await adm().post('attendance', {
+        circle: w.circleA, sessionNumber: 90, sessionDate: '2026-05-01T10:00:00.000Z',
+        records: [{ student: s, status: 'present' }],
+      });
+      expect(sess.status).toBe(201);
+      expect((await adm().post('incentives', { studentId: s, awardType: 'noor-star' })).status).toBe(201);
+      expect((await adm().del(`admin/students/${s}`)).status).toBe(200);
+      const oid = new Types.ObjectId(s);
+      expect(await ctx.db.collection('incentives').countDocuments({ student: oid })).toBe(0);
+      expect(await ctx.db.collection('attendances').countDocuments({ 'records.student': oid })).toBe(0);
+      // the session only had this student, so it's gone too
+      expect((await adm().get(`attendance/${sess.body.data._id}`)).status).toBe(404);
+    });
+
+    it('a circle with attendance history cannot be deleted (deactivate instead)', async () => {
+      const c = await w.mkCircle('Has History', w.A.id);
+      const s = await w.mkStudent('Historic', c);
+      await adm().post('attendance', {
+        circle: c, sessionNumber: 1, sessionDate: '2026-05-02T10:00:00.000Z',
+        records: [{ student: s, status: 'present' }],
+      });
+      const r = await adm().del(`admin/circles/${c}`);
+      expect(r.status).toBe(400);
+      expect(r.body.message).toMatch(/Deactivate/);
+      expect((await adm().patch(`admin/circles/${c}`, { isActive: false })).status).toBe(200);
     });
 
     it('murabbi cannot approve delete requests', async () => {

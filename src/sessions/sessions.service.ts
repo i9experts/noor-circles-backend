@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
+import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
+import { monthOf } from '../common/utils/month.util';
 
 const CURRICULUM_MAP: Record<number, string> = {
   1: 'Identity', 2: 'Honesty', 3: 'Family', 4: 'Gratitude',
@@ -18,27 +20,18 @@ export class SessionsService {
   ) {}
 
   async getStats() {
-    const [sessions, activeCircles] = await Promise.all([
-      this.attendanceModel.find().select('sessionNumber records').lean(),
+    const [sessionCount, totals, activeCircles] = await Promise.all([
+      this.attendanceModel.countDocuments(),
+      attendanceTotals(this.attendanceModel),
       this.circleModel.countDocuments({ isActive: true }),
     ]);
 
     // Every submitted session counts, not just distinct session numbers (BUG-42).
-    const sessionsCompleted = sessions.length;
+    const sessionsCompleted = sessionCount;
 
-    let totalPresent = 0;
-    let totalRecords = 0;
-    for (const s of sessions) {
-      for (const r of s.records) {
-        totalRecords++;
-        if (r.status === 'present') totalPresent++;
-      }
-    }
-    const avgAttendance = totalRecords > 0
-      ? Math.round((totalPresent / totalRecords) * 100)
-      : 0;
+    const avgAttendance = rateOf(totals.get('all'));
 
-    const currentMonth = new Date().getMonth() + 1;
+    const currentMonth = Number(monthOf().slice(5)); // Pakistan time, 1–12
     const currentTheme = CURRICULUM_MAP[currentMonth] ?? '—';
 
     return {

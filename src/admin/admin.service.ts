@@ -32,6 +32,10 @@ import {
   UpdateStudentDto,
 } from './admin.dto';
 import { escapeRegex } from '../common/utils/regex.util';
+import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
+import { deleteStudentCascade } from '../student/student-cleanup';
+import { Performance, PerformanceDocument } from '../performance/performance.schema';
+import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -47,10 +51,21 @@ export class AdminService {
     @InjectModel(Student.name)       private readonly studentModel:       Model<StudentDocument>,
     @InjectModel(Attendance.name)    private readonly attendanceModel:    Model<AttendanceDocument>,
     @InjectModel(Parent.name)        private readonly parentModel:        Model<ParentDocument>,
+    @InjectModel(Incentive.name)     private readonly incentiveModel:     Model<IncentiveDocument>,
+    @InjectModel(Performance.name)   private readonly performanceModel:   Model<PerformanceDocument>,
     private readonly usersService:        UsersService,
     private readonly notifService:        NotificationService,
     private readonly announcementService: AnnouncementService,
   ) {}
+
+  private cleanupModels() {
+    return {
+      studentModel   : this.studentModel,
+      attendanceModel: this.attendanceModel,
+      incentiveModel : this.incentiveModel,
+      parentModel    : this.parentModel,
+    };
+  }
 
   // ── Dashboard Stats ───────────────────────────────────────────────────────────
 
@@ -72,20 +87,12 @@ export class AdminService {
       this.circleModel.countDocuments({ isActive: true }),
       this.neighbourhoodModel.countDocuments(),
       this.attendanceModel.countDocuments(),
-      this.attendanceModel.find().select('records').lean(),
+      attendanceTotals(this.attendanceModel),
       this.parentModel.countDocuments(),
       this.parentModel.countDocuments({ 'feedback.0': { $exists: true } }),
     ]);
 
-    let totalPresent = 0;
-    let totalRecords = 0;
-    for (const session of attendanceSessions) {
-      for (const rec of session.records) {
-        totalRecords++;
-        if (rec.status === 'present') totalPresent++;
-      }
-    }
-    const avgAttendanceRate = totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0;
+    const avgAttendanceRate = rateOf(attendanceSessions.get('all'));
 
     return {
       totalMurabbis,
@@ -120,9 +127,9 @@ export class AdminService {
       .lean();
 
     // Fetch all circles & attendance in parallel
-    const [allCircles, allAttendance] = await Promise.all([
+    const [allCircles, attendanceByMurabbi] = await Promise.all([
       this.circleModel.find().populate('neighbourhood', 'name').lean(),
-      this.attendanceModel.find().select('circle submittedBy records').lean(),
+      attendanceTotals(this.attendanceModel, {}, 'submittedBy'),
     ]);
 
     // Build per-murabbi lookup maps
@@ -132,18 +139,6 @@ export class AdminService {
       if (!mid) continue;
       if (!circlesByMurabbi.has(mid)) circlesByMurabbi.set(mid, []);
       circlesByMurabbi.get(mid)!.push(c);
-    }
-
-    const attendanceByMurabbi = new Map<string, { present: number; total: number }>();
-    for (const sess of allAttendance) {
-      const mid = sess.submittedBy?.toString();
-      if (!mid) continue;
-      if (!attendanceByMurabbi.has(mid)) attendanceByMurabbi.set(mid, { present: 0, total: 0 });
-      const acc = attendanceByMurabbi.get(mid)!;
-      for (const rec of sess.records) {
-        acc.total++;
-        if (rec.status === 'present') acc.present++;
-      }
     }
 
     // Count students per murabbi (via their circles)
@@ -593,6 +588,18 @@ export class AdminService {
   }
 
   async deleteCircle(id: string) {
+    const oid = new Types.ObjectId(id);
+    if (!(await this.circleModel.exists({ _id: oid }))) throw new NotFoundException('Circle not found.');
+    // Deleting would orphan its attendance and reviews; deactivating keeps the history.
+    const [sessions, reviews] = await Promise.all([
+      this.attendanceModel.countDocuments({ circle: oid }),
+      this.performanceModel.countDocuments({ circle: oid }),
+    ]);
+    if (sessions || reviews) {
+      throw new BadRequestException(
+        'This circle has attendance or review history. Deactivate it instead, so the records and reports stay intact.',
+      );
+    }
     const circle = await this.circleModel.findByIdAndDelete(id).lean();
     if (!circle) throw new NotFoundException('Circle not found.');
     // Unassign students from deleted circle
@@ -768,7 +775,7 @@ export class AdminService {
   }
 
   async deleteStudent(id: string) {
-    const student = await this.studentModel.findByIdAndDelete(id).lean();
+    const student = await deleteStudentCascade(this.cleanupModels(), id);
     if (!student) throw new NotFoundException('Student not found.');
     return { message: 'Student record deleted successfully.' };
   }

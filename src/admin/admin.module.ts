@@ -10,6 +10,8 @@ import { Circle, CircleSchema }               from '../circle/circle.schema';
 import { Student, StudentSchema }             from '../student/student.schema';
 import { Attendance, AttendanceSchema }       from '../attendance/attendance.schema';
 import { Parent, ParentSchema }               from '../parent/parent.schema';
+import { Incentive, IncentiveSchema }         from '../incentive/incentive.schema';
+import { Performance, PerformanceSchema }     from '../performance/performance.schema';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { Parent, ParentSchema }               from '../parent/parent.schema';
       { name: Student.name,       schema: StudentSchema       },
       { name: Attendance.name,    schema: AttendanceSchema    },
       { name: Parent.name,        schema: ParentSchema        },
+      { name: Incentive.name,     schema: IncentiveSchema     },
+      { name: Performance.name,   schema: PerformanceSchema   },
     ]),
   ],
   controllers: [AdminController],

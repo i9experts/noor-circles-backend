@@ -286,12 +286,15 @@ export class TrainingService {
     const completedBatches = allBatches.filter((b) => b.status === 'completed');
     const activeBatch      = allBatches.find((b) => b.status === 'active') || null;
 
-    // Pass rate: % of candidates in completed batches (assume all completed = passed for now)
-    const totalCandidatesAllBatches = allBatches.reduce((s, b) => s + b.candidates.length, 0);
-    const completedCandidates       = completedBatches.reduce((s, b) => s + b.candidates.length, 0);
-    const passRate = totalCandidatesAllBatches > 0
-      ? Math.round((completedCandidates / totalCandidatesAllBatches) * 100)
-      : 0;
+    const completedCandidates = completedBatches.reduce((s, b) => s + b.candidates.length, 0);
+
+    // Pass rate from real exam results: of the murabbis who sat an
+    // assessment, the share who passed one (was derived from batch status).
+    const [attempted, passed] = await Promise.all([
+      this.attemptModel.distinct('user'),
+      this.attemptModel.distinct('user', { passed: true }),
+    ]);
+    const passRate = attempted.length > 0 ? Math.round((passed.length / attempted.length) * 100) : 0;
 
     return {
       stats: {

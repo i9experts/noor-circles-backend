@@ -556,6 +556,19 @@ describe('Auth', () => {
       },
     );
 
+    it('mail outage: forgot-password answers the same for real and unknown emails', async () => {
+      ctx.setMailFailing(true);
+      try {
+        const real = await post('forgot-password', { email });
+        const unknown = await post('forgot-password', { email: 'nobody.here@e2e.test' });
+        expect(real.status).toBe(200);
+        expect(unknown.status).toBe(200);
+        expect(real.body.message).toBe(unknown.body.message);
+      } finally {
+        ctx.setMailFailing(false);
+      }
+    });
+
     it('a few wrong OTP guesses still allow the real code', async () => {
       await post('forgot-password', { email });
       const real = ctx.lastOtp(email);

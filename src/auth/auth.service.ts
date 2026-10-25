@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -78,7 +79,12 @@ export class AuthService {
       { upsert: true, new: true },
     );
 
-    await this.mailService.sendOtp(dto.email, otp, 'signup');
+    try {
+      await this.mailService.sendOtp(dto.email, otp, 'signup');
+    } catch (err) {
+      this.logger.error(`Signup OTP email to ${dto.email} failed: ${(err as Error)?.message ?? err}`);
+      throw new ServiceUnavailableException('We could not send the verification email right now. Please try again in a few minutes.');
+    }
     this.logger.log(`Signup OTP sent → ${dto.email}`);
 
     return {
@@ -191,10 +197,23 @@ export class AuthService {
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
 
     await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt);
-    await this.mailService.sendOtp(user.email, otp, 'reset');
+    await this.sendOtpQuietly(user.email, otp, 'reset');
 
     this.logger.log(`Reset OTP sent → ${user.email}`);
     return { message: GENERIC, ...(this.exposeOtp() && { otp }) };
+  }
+
+  /**
+   * For flows that answer the same whether or not the account exists: a mail
+   * failure must not turn into a 500 only for real accounts, which would
+   * reveal who is registered. The failure is logged for the team instead.
+   */
+  private async sendOtpQuietly(email: string, otp: string, type: 'signup' | 'reset') {
+    try {
+      await this.mailService.sendOtp(email, otp, type);
+    } catch (err) {
+      this.logger.error(`OTP email (${type}) to ${email} failed: ${(err as Error)?.message ?? err}`);
+    }
   }
 
   /** Compares an OTP, counting wrong guesses and discarding the code after too many. */
@@ -301,7 +320,7 @@ export class AuthService {
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
 
     await this.usersService.setOtp(user._id.toString(), otp, otpExpiresAt);
-    await this.mailService.sendOtp(user.email, otp, type);
+    await this.sendOtpQuietly(user.email, otp, type);
 
     return { message: GENERIC, ...(this.exposeOtp() && { otp }) };
   }
