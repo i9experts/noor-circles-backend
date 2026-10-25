@@ -565,12 +565,13 @@ export class AdminService {
     if (!circle) throw new NotFoundException('Circle not found.');
 
     // Students follow their circle: ownership checks across the app use
-    // student.murabbi, so a handover must move them too (BUG-21).
-    if (dto.murabbiId) {
-      await this.studentModel.updateMany(
-        { circle: new Types.ObjectId(id) },
-        { $set: { murabbi: new Types.ObjectId(dto.murabbiId) } },
-      );
+    // student.murabbi, so a handover must move them too (BUG-21), and they
+    // stay in their circle's neighbourhood (BUG-18).
+    const follow: Record<string, Types.ObjectId> = {};
+    if (dto.murabbiId)       follow['murabbi']       = new Types.ObjectId(dto.murabbiId);
+    if (dto.neighbourhoodId) follow['neighbourhood'] = new Types.ObjectId(dto.neighbourhoodId);
+    if (Object.keys(follow).length) {
+      await this.studentModel.updateMany({ circle: new Types.ObjectId(id) }, { $set: follow });
     }
 
     if (adminId && dto.murabbiId) {
@@ -641,6 +642,10 @@ export class AdminService {
 
     if (!circle)        throw new NotFoundException('Circle not found.');
     if (!neighbourhood) throw new NotFoundException('Neighbourhood not found.');
+    // Students belong to their circle's neighbourhood (BUG-18).
+    if (circle.neighbourhood && circle.neighbourhood.toString() !== dto.neighbourhoodId) {
+      throw new BadRequestException("The student's neighbourhood must be the circle's neighbourhood.");
+    }
 
     if (!circle.isActive) {
       throw new BadRequestException('Cannot enroll in an inactive circle.');
@@ -724,6 +729,8 @@ export class AdminService {
           $set: {
             circle : new Types.ObjectId(dto.circleId),
             murabbi: circle.murabbi ? new Types.ObjectId(circle.murabbi.toString()) : null,
+            // the neighbourhood follows the circle (BUG-18)
+            ...(circle.neighbourhood && { neighbourhood: new Types.ObjectId(circle.neighbourhood.toString()) }),
           },
         },
         { new: true },

@@ -242,6 +242,10 @@ export class MurabbiService {
     if (!(await this.neighbourhoodModel.exists({ _id: new Types.ObjectId(dto.neighbourhoodId) }))) {
       throw new NotFoundException('Neighbourhood not found.');
     }
+    // Students belong to their circle's neighbourhood (BUG-18).
+    if (circle.neighbourhood && circle.neighbourhood.toString() !== dto.neighbourhoodId) {
+      throw new BadRequestException("The student's neighbourhood must be the circle's neighbourhood.");
+    }
 
     const enrolledCount = await this.studentModel.countDocuments({
       circle  : new Types.ObjectId(dto.circleId),
