@@ -196,6 +196,19 @@ describe('Murabbi portal + Attendance', () => {
       expect((await adm().get(`attendance/${sess.body.data._id}`)).status).toBe(404);
     });
 
+    it('editing an old session keeps a student who has since moved circle', async () => {
+      const s = await w.mkStudent('Mover', w.circleA);
+      const sess = await adm().post('attendance', {
+        circle: w.circleA, sessionNumber: 91, sessionDate: '2026-05-03T10:00:00.000Z',
+        records: [{ student: s, status: 'present' }],
+      });
+      await adm().patch(`admin/students/${s}/circle`, { circleId: w.circleB });
+      const r = await adm().patch(`attendance/${sess.body.data._id}`, {
+        records: [{ student: s, status: 'absent' }],
+      });
+      expect(r.status).toBe(200);
+    });
+
     it('a circle with attendance history cannot be deleted (deactivate instead)', async () => {
       const c = await w.mkCircle('Has History', w.A.id);
       const s = await w.mkStudent('Historic', c);

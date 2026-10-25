@@ -52,7 +52,11 @@ export class AttendanceService {
    * otherwise a murabbi could mark other circles' students, or the same
    * child twice, and corrupt attendance rates and reports.
    */
-  private async assertRecordsBelongToCircle(circleId: string, records: { student: string }[]) {
+  private async assertRecordsBelongToCircle(
+    circleId: string,
+    records: { student: string }[],
+    alreadyRecorded: string[] = [],
+  ) {
     const ids = records.map((r) => String(r.student));
     if (new Set(ids).size !== ids.length) {
       throw new BadRequestException('Each student can appear only once in a session.');
@@ -60,11 +64,17 @@ export class AttendanceService {
     if (ids.some((id) => !Types.ObjectId.isValid(id))) {
       throw new BadRequestException('Invalid student id in records.');
     }
-    const inCircle = await this.studentModel.countDocuments({
-      _id   : { $in: ids.map((id) => new Types.ObjectId(id)) },
-      circle: new Types.ObjectId(circleId),
-    });
-    if (inCircle !== ids.length) {
+    // On an edit, students already in the session stay valid even if they
+    // have since moved circle; only newly added ones must be in the circle.
+    const known = new Set(alreadyRecorded);
+    const added = ids.filter((id) => !known.has(id));
+    const inCircle = added.length
+      ? await this.studentModel.countDocuments({
+          _id   : { $in: added.map((id) => new Types.ObjectId(id)) },
+          circle: new Types.ObjectId(circleId),
+        })
+      : 0;
+    if (inCircle !== added.length) {
       throw new BadRequestException('Attendance can only include students of this circle.');
     }
   }
@@ -241,7 +251,7 @@ export class AttendanceService {
     const circleId = session.circle.toString();
     if (dto.records !== undefined) {
       if (!dto.records.length) throw new BadRequestException('records cannot be empty');
-      await this.assertRecordsBelongToCircle(circleId, dto.records);
+      await this.assertRecordsBelongToCircle(circleId, dto.records, session.records.map((r) => r.student.toString()));
     }
     await this.assertNoClash(circleId, dto.sessionDate, dto.sessionNumber, id);
 
