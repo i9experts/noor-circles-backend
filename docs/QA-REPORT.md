@@ -35,7 +35,7 @@ Each bug is a test that asserts the **correct** behaviour, wrapped in `it.failin
 | BUG-13 names interpolated into `$regex` | ✅ Fixed: escaped (`common/utils/regex.util.ts`) |
 | BUG-14 malformed ids → 500 | ✅ Fixed: `BSONError` maps to 400 in the global filter |
 | BUG-22 murabbi enrolment, unknown neighbourhood | ✅ Fixed |
-| BUG-18 neighbourhood not checked against the circle | ⏸ Open, needs a product decision: existence is checked, but the portal deliberately lets a student's neighbourhood differ from their circle's. Test still pinned. |
+| BUG-18 neighbourhood not checked against the circle | ✅ Fixed: a student's neighbourhood is always their circle's (checked on enrolment; follows the circle on reassignment and when a circle moves neighbourhood) |
 | BUG-26 module/lesson updates unvalidated | ✅ Fixed: real `PartialType` DTOs, enum checks, `runValidators` |
 | BUG-27 progress above the murabbi's tier | ✅ Fixed |
 | BUG-28 exam `correctIndex` out of range | ✅ Fixed |

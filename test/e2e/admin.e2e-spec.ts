@@ -563,7 +563,7 @@ describe('Admin', () => {
     // BUG-18: enrolment accepts any neighbourhoodId, even one unrelated to
     // the circle's neighbourhood. The student then appears under the wrong
     // neighbourhood in neighbourhood stats.
-    it.failing(
+    it(
       "BUG-18: enrolling with a neighbourhood that is not the circle's should be rejected",
       async () => {
         const other = await post('neighbourhoods', { name: 'Elsewhere' });
@@ -577,6 +577,17 @@ describe('Admin', () => {
         expect(r.status).toBe(400);
       },
     );
+
+    it("BUG-18: a student's neighbourhood follows their circle on reassignment and when the circle moves", async () => {
+      const elsewhere = (await post('neighbourhoods', { name: 'Gulistan' })).body.data.neighbourhood._id;
+      const there = (await post('circles', { name: 'Gulistan Circle', neighbourhoodId: elsewhere, murabbiId: w.A.id })).body.data.circle._id;
+      const s = await w.mkStudent('Moving Family', w.circleA);
+      expect((await patch(`students/${s}/circle`, { circleId: there })).status).toBe(200);
+      expect((await get(`students/${s}`)).body.data.neighbourhood._id).toBe(elsewhere);
+      // moving the circle itself moves its students
+      expect((await patch(`circles/${there}`, { neighbourhoodId: w.nbhId })).status).toBe(200);
+      expect((await get(`students/${s}`)).body.data.neighbourhood._id).toBe(w.nbhId);
+    });
 
     it('list (optionally filtered by murabbi) / get one', async () => {
       const all = await get('students');
