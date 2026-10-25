@@ -1,7 +1,7 @@
 import {
   Body, Controller, Delete, Get, MessageEvent,
   Param, Patch, Post, Query, Req, Sse,
-  UnauthorizedException, UseGuards,
+  BadRequestException, UnauthorizedException, UseGuards,
 } from '@nestjs/common';
 import { JwtService }    from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -54,14 +54,16 @@ export class ParentController {
   @Patch('engagement/weekly-card')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  toggleWeeklyCard(@Body('active') active: boolean) {
+  toggleWeeklyCard(@Body('active') active: unknown) {
+    if (typeof active !== 'boolean') throw new BadRequestException('"active" must be true or false.'); // BUG-33
     return this.parentService.toggleWeeklyCard(active);
   }
 
   @Patch('engagement/whatsapp')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  toggleWhatsapp(@Body('enabled') enabled: boolean) {
+  toggleWhatsapp(@Body('enabled') enabled: unknown) {
+    if (typeof enabled !== 'boolean') throw new BadRequestException('"enabled" must be true or false.'); // BUG-33
     return this.parentService.toggleWhatsapp(enabled);
   }
 

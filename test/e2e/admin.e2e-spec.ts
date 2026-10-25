@@ -366,7 +366,7 @@ describe('Admin', () => {
 
     // BUG-15: update uses findByIdAndUpdate without runValidators, and the
     // DTO only checks @IsString, so any status string is saved.
-    it.failing(
+    it(
       'BUG-15: pipeline update should reject an invalid status',
       async () => {
         const r = await patch(`neighbourhoods/pipeline/${pid}`, {
@@ -481,7 +481,7 @@ describe('Admin', () => {
 
     // BUG-16: capacity can be reduced below the number of students already
     // enrolled, leaving the circle permanently "over capacity".
-    it.failing(
+    it(
       'BUG-16: reducing capacity below current enrolment should be rejected',
       async () => {
         const c = await w.mkCircle('Cap Circle', w.A.id, 5);
@@ -494,7 +494,7 @@ describe('Admin', () => {
 
     // BUG-17: there is no way to deactivate/reactivate a circle — isActive is
     // checked in enrol/assign/reports, but no endpoint or DTO field sets it.
-    it.failing(
+    it(
       'BUG-17: admin should be able to deactivate a circle',
       async () => {
         const c = await w.mkCircle('To Deactivate', w.A.id);
@@ -608,7 +608,7 @@ describe('Admin', () => {
     // BUG-19: re-assigning a student to the circle they are already in is
     // rejected as "Circle is full" when that circle is at capacity, because
     // the student counts against themselves.
-    it.failing(
+    it(
       'BUG-19: re-assigning a student to their current (full) circle should not fail with "full"',
       async () => {
         const c = await w.mkCircle('Exactly Full', w.A.id, 1);
@@ -620,7 +620,7 @@ describe('Admin', () => {
 
     // BUG-20: re-activating a student skips the capacity check that enrol
     // and assign enforce, so a circle can silently exceed capacity.
-    it.failing(
+    it(
       'BUG-20: activating a student into a full circle should be rejected',
       async () => {
         const c = await w.mkCircle('Reactivate Full', w.A.id, 1);

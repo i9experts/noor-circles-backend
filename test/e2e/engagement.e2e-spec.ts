@@ -213,7 +213,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-33: the toggle endpoints take a raw @Body('field') with no
     // validation. A missing/garbage value returns "disabled" but changes
     // nothing (or casts silently).
-    it.failing(
+    it(
       'BUG-33: weekly-card toggle without a boolean should be 400',
       async () => {
         expect(
@@ -378,7 +378,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-36: ownership failures return 400 "Bad Request" here, whereas the
     // same check in attendance returns 403. Clients can't tell validation
     // errors from permission errors.
-    it.failing(
+    it(
       "BUG-36: awarding to another murabbi's student should be 403, consistent with attendance",
       async () => {
         const r = await mA().post('incentives', {
@@ -414,7 +414,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     });
 
     // BUG-37: points can be awarded to a deactivated student.
-    it.failing(
+    it(
       'BUG-37: awarding points to an inactive student should be rejected',
       async () => {
         const s = await w.mkStudent('Inactive Kid', w.circleA);
@@ -460,7 +460,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-38: a murabbi can file reviews against any circle id — another
     // murabbi's circle or one that doesn't exist.
-    it.failing(
+    it(
       'BUG-38: reviews for a circle that is not yours (or does not exist) should be rejected',
       async () => {
         const r1 = await mA().post('performance/reviews', {
@@ -599,7 +599,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-40: monthlyEnrollments sorts ascending then $limit 6, so once there
     // are more than 6 months of data the dashboard shows the OLDEST six
     // months and never the current one.
-    it.failing(
+    it(
       'BUG-40: admin report monthlyEnrollments should include the most recent month',
       async () => {
         for (let m = 1; m <= 8; m++) {

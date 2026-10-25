@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -49,14 +49,16 @@ export class IncentiveService {
   private async assertStudentOwnership(studentId: string, requesterId: string, requesterRole?: string) {
     const student = await this.studentModel.findById(studentId).lean();
     if (!student) throw new NotFoundException('Student not found.');
+    // 403 like attendance does for the same check (BUG-36).
     if (requesterRole === 'murabbi' && student.murabbi?.toString() !== requesterId) {
-      throw new BadRequestException('This student is not assigned to you.');
+      throw new ForbiddenException('This student is not assigned to you.');
     }
     return student;
   }
 
   async award(awardedById: string, dto: AwardPointsDto, requesterRole?: string) {
     const student = await this.assertStudentOwnership(dto.studentId, awardedById, requesterRole);
+    if (!student.isActive) throw new BadRequestException('Points can only be awarded to active students.'); // BUG-37
 
     const points = AWARD_POINTS[dto.awardType];
     if (!points) throw new BadRequestException('Invalid award type.');

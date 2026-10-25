@@ -259,7 +259,7 @@ describe('Content + platform', () => {
     // BUG-45: recurringTime is free text; "99:99" or "soon" is accepted and
     // produces an Invalid Date, and a recurring session with no time and no
     // scheduledAt is listed as "upcoming" forever with scheduledAt=null.
-    it.failing(
+    it(
       'BUG-45: recurringTime must be validated as HH:MM (and required for recurring sessions)',
       async () => {
         const r = await adm().post('live-sessions', {
@@ -305,7 +305,7 @@ describe('Content + platform', () => {
     });
 
     // BUG-46: posting without a file throws a plain Error → 500 instead of 400.
-    it.failing(
+    it(
       'BUG-46: upload with no file should be 400, not 500',
       async () => {
         const r = await ctx

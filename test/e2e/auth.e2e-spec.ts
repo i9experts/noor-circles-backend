@@ -586,11 +586,18 @@ describe('Auth', () => {
     });
 
     it('PATCH /users/profile updates allowed fields only', async () => {
+      // Privileged fields are rejected outright (validated DTO since BUG-05).
+      const bad = await ctx
+        .http()
+        .patch(`${API}/users/profile`)
+        .set(bearer(m.token))
+        .send({ fullName: 'Renamed', role: 'admin', tier: 3 });
+      expect(bad.status).toBe(400);
       const r = await ctx
         .http()
         .patch(`${API}/users/profile`)
         .set(bearer(m.token))
-        .send({ fullName: 'Renamed', bio: 'Hello', role: 'admin', tier: 3 });
+        .send({ fullName: 'Renamed', bio: 'Hello', phone: '' });
       expect(r.status).toBe(200);
       const doc = await ctx.db
         .collection('users')
@@ -603,7 +610,7 @@ describe('Auth', () => {
     // BUG-05: PATCH /users/profile takes `@Body() body: any`, so no DTO
     // validation runs: phone format (validated everywhere else) and the image
     // URL are stored as-is — e.g. a `javascript:` URL the UI renders.
-    it.failing(
+    it(
       'BUG-05: PATCH /users/profile should validate phone format and image URL',
       async () => {
         const r = await ctx
@@ -626,7 +633,7 @@ describe('Auth', () => {
 
     // BUG-06: change-password has no password-strength rules, unlike signup
     // and reset (min 8 chars, 1 uppercase, 1 digit).
-    it.failing(
+    it(
       'BUG-06: change-password should enforce the password policy',
       async () => {
         const r = await ctx
@@ -639,7 +646,7 @@ describe('Auth', () => {
     );
 
     // BUG-07: non-string currentPassword reaches bcrypt.compare and crashes → 500.
-    it.failing(
+    it(
       'BUG-07: change-password with a non-string password should be 400, not 500',
       async () => {
         const r = await ctx

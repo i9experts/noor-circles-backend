@@ -130,8 +130,10 @@ export class ReportService {
             count: { $sum: 1 },
           },
         },
-        { $sort: { '_id.year': 1, '_id.month': 1 } },
+        // Newest six months, returned oldest-first for the chart (BUG-40).
+        { $sort: { '_id.year': -1, '_id.month': -1 } },
         { $limit: 6 },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
       ]),
     ]);
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -6,6 +6,7 @@ import {
   IsString, Max, MaxLength, Min,
 } from 'class-validator';
 import { Performance, PerformanceDocument } from './performance.schema';
+import { Circle, CircleDocument } from '../circle/circle.schema';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
 
@@ -64,10 +65,20 @@ export class PerformanceService {
   constructor(
     @InjectModel(Performance.name)
     private readonly performanceModel: Model<PerformanceDocument>,
+    @InjectModel(Circle.name)
+    private readonly circleModel: Model<CircleDocument>,
     private readonly notifService: NotificationService,
   ) {}
 
-  async submitReview(murabbiId: string, dto: SubmitReviewDto, reviewerId?: string) {
+  async submitReview(murabbiId: string | null, dto: SubmitReviewDto, reviewerId?: string) {
+    // The circle must exist and belong to the murabbi being reviewed (BUG-38).
+    // Admins who don't name a murabbi review the circle's own murabbi.
+    const circle = await this.circleModel.findById(dto.circleId).select('murabbi').lean();
+    if (!circle) throw new NotFoundException('Circle not found.');
+    murabbiId ??= circle.murabbi?.toString() ?? null;
+    if (!murabbiId || circle.murabbi?.toString() !== murabbiId) {
+      throw new ForbiddenException('This circle is not assigned to that murabbi.');
+    }
     const scores = [
       dto.honestyScore ?? 0, dto.gratitudeScore ?? 0, dto.empathyScore  ?? 0,
       dto.identityScore ?? 0, dto.familyScore ?? 0, dto.consistencyScore ?? 0,

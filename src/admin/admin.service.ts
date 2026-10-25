@@ -340,7 +340,7 @@ export class AdminService {
   }
 
   async updatePipelineEntry(id: string, dto: UpdatePipelineDto) {
-    const entry = await this.pipelineModel.findByIdAndUpdate(id, { $set: dto }, { new: true }).lean();
+    const entry = await this.pipelineModel.findByIdAndUpdate(id, { $set: dto }, { new: true, runValidators: true }).lean();
     if (!entry) throw new NotFoundException('Pipeline entry not found.');
     return entry;
   }
@@ -551,6 +551,15 @@ export class AdminService {
     if (dto.neighbourhoodId) update['neighbourhood'] = new Types.ObjectId(dto.neighbourhoodId);
     if (dto.murabbiId)       update['murabbi']       = new Types.ObjectId(dto.murabbiId);
     if (dto.capacity)        update['capacity']      = dto.capacity;
+    if (dto.isActive !== undefined) update['isActive'] = dto.isActive;
+
+    // Capacity can't drop below the students already enrolled (BUG-16).
+    if (dto.capacity) {
+      const enrolled = await this.studentModel.countDocuments({ circle: new Types.ObjectId(id), isActive: true });
+      if (dto.capacity < enrolled) {
+        throw new BadRequestException(`This circle already has ${enrolled} active students; capacity can't be lower than that.`);
+      }
+    }
 
     const circle = await this.circleModel
       .findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
@@ -691,9 +700,11 @@ export class AdminService {
     if (!circle) throw new NotFoundException('Circle not found.');
     if (!circle.isActive) throw new BadRequestException('Cannot assign to an inactive circle.');
 
+    // The student doesn't count against their own circle (BUG-19).
     const enrolledCount = await this.studentModel.countDocuments({
       circle  : new Types.ObjectId(dto.circleId),
       isActive: true,
+      _id     : { $ne: new Types.ObjectId(id) },
     });
     if (enrolledCount >= circle.capacity) {
       throw new BadRequestException(`Circle is full (capacity: ${circle.capacity}).`);
@@ -739,6 +750,16 @@ export class AdminService {
   }
 
   async activateStudent(id: string) {
+    const existing = await this.studentModel.findById(id).select('circle isActive').lean();
+    if (!existing) throw new NotFoundException('Student not found.');
+    // Re-activation must respect capacity like enrol/assign do (BUG-20).
+    if (!existing.isActive && existing.circle) {
+      const circle = await this.circleModel.findById(existing.circle).select('capacity').lean();
+      const enrolled = await this.studentModel.countDocuments({ circle: existing.circle, isActive: true });
+      if (circle && enrolled >= circle.capacity) {
+        throw new BadRequestException(`Their circle is full (capacity: ${circle.capacity}). Move the student to another circle first.`);
+      }
+    }
     const student = await this.studentModel
       .findByIdAndUpdate(id, { $set: { isActive: true } }, { new: true })
       .lean();

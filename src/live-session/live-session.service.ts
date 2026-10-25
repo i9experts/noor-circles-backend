@@ -3,20 +3,27 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { LiveSession, LiveSessionDocument } from './live-session.schema';
 
-function nextOccurrence(dayOfWeek: number, time: string): Date {
+const PKT_OFFSET_MS = 5 * 3600_000; // Pakistan is UTC+5, no DST
+
+/**
+ * Start of the current-or-next weekly occurrence. The day and time are
+ * Pakistan time (the server runs in UTC). A session still in progress counts
+ * as the current occurrence, so it shows as live rather than jumping a week.
+ */
+function nextOccurrence(dayOfWeek: number, time: string, durationMinutes = 60): Date {
   const [h, m] = time.split(':').map(Number);
-  const now = new Date();
-  const next = new Date();
-  next.setHours(h, m, 0, 0);
-  const diff = (dayOfWeek - now.getDay() + 7) % 7;
-  next.setDate(now.getDate() + (diff === 0 && next <= now ? 7 : diff));
-  return next;
+  const now = Date.now();
+  const pk = new Date(now + PKT_OFFSET_MS); // wall-clock Pakistan time, read via UTC getters
+  const diff = (dayOfWeek - pk.getUTCDay() + 7) % 7;
+  let start = Date.UTC(pk.getUTCFullYear(), pk.getUTCMonth(), pk.getUTCDate() + diff, h, m) - PKT_OFFSET_MS;
+  if (start + durationMinutes * 60_000 < now) start += 7 * 24 * 3600_000;
+  return new Date(start);
 }
 
 function enrichWithStatus(s: any) {
   let scheduledAt = s.scheduledAt;
   if (s.isRecurring && s.recurringDay != null && s.recurringTime) {
-    scheduledAt = nextOccurrence(s.recurringDay, s.recurringTime);
+    scheduledAt = nextOccurrence(s.recurringDay, s.recurringTime, s.durationMinutes ?? 60);
   }
   const now = Date.now();
   const start = new Date(scheduledAt).getTime();

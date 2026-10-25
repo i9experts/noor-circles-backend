@@ -8,7 +8,6 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
-  BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -18,6 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserDocument, UserRole } from './user.schema';
+import { ChangePasswordDto, UpdateProfileDto } from './user.dto';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -32,18 +32,15 @@ export class UsersController {
   }
 
   @Patch('profile')
-  updateProfile(@CurrentUser() user: UserDocument, @Body() body: any) {
-    const { fullName, phone, bio, image } = body;
+  updateProfile(@CurrentUser() user: UserDocument, @Body() dto: UpdateProfileDto) {
+    const { fullName, phone, bio, image } = dto;
     return this.usersService.updateProfile(user._id.toString(), { fullName, phone, bio, image });
   }
 
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
-  async changePassword(@CurrentUser() user: UserDocument, @Body() body: any) {
-    const { currentPassword, newPassword } = body;
-    if (!currentPassword || !newPassword) {
-      throw new BadRequestException('currentPassword and newPassword are required.');
-    }
+  async changePassword(@CurrentUser() user: UserDocument, @Body() dto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = dto;
     const userWithPw = await this.usersService.findByIdWithPassword(user._id.toString());
     const match = await bcrypt.compare(currentPassword, userWithPw.password);
     if (!match) throw new UnauthorizedException('Current password is incorrect.');
