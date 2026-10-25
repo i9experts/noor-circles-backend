@@ -55,13 +55,14 @@ export class UsersService {
 
   async setOtp(userId: string, otpCode: string, otpExpiresAt: Date) {
     const hashedOtp = await bcrypt.hash(otpCode, 10);
-    await this.userModel.findByIdAndUpdate(userId, { otpCode: hashedOtp, otpExpiresAt });
+    await this.userModel.findByIdAndUpdate(userId, { otpCode: hashedOtp, otpExpiresAt, otpAttempts: 0 });
   }
 
   async clearOtp(userId: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       otpCode: null,
       otpExpiresAt: null,
+      otpAttempts: 0,
     });
   }
 

@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -29,6 +29,8 @@ import { AuthTokens, AuthUser } from './interface/auth.interface';
 
 const BCRYPT_ROUNDS = 12;
 const OTP_EXPIRY_MS = 2 * 60 * 1000; // 2 minutes
+/** Wrong OTP guesses allowed before the code is thrown away (BUG-04). */
+const MAX_OTP_ATTEMPTS = 5;
 
 @Injectable()
 export class AuthService {
@@ -70,6 +72,7 @@ export class AuthService {
         isEmailVerified: false,
         otpCode        : hashedOtp,
         otpExpiresAt,
+        otpAttempts    : 0,
         pendingSignup  : { fullName: dto.fullName, password: hashedPwd },
       },
       { upsert: true, new: true },
@@ -101,9 +104,7 @@ export class AuthService {
       await this.usersService.clearOtp(user._id.toString());
       throw new BadRequestException('OTP has expired. Please request a new one.');
     }
-    if (!(await bcrypt.compare(dto.otp, user.otpCode))) {
-      throw new BadRequestException('Incorrect OTP. Please try again.');
-    }
+    await this.checkOtp(user, dto.otp);
 
     // Self-registered accounts start inactive and wait for an admin to
     // approve them (PATCH /admin/murabbis/:id/activate). Previously they were
@@ -196,6 +197,21 @@ export class AuthService {
     return { message: GENERIC, ...(this.exposeOtp() && { otp }) };
   }
 
+  /** Compares an OTP, counting wrong guesses and discarding the code after too many. */
+  private async checkOtp(user: UserDocument, otp: string) {
+    if (await bcrypt.compare(String(otp), user.otpCode as string)) return;
+    const updated = await this.userModel.findOneAndUpdate(
+      { _id: user._id },
+      { $inc: { otpAttempts: 1 } },
+      { new: true, projection: { otpAttempts: 1 } },
+    ).lean();
+    if ((updated?.otpAttempts ?? MAX_OTP_ATTEMPTS) >= MAX_OTP_ATTEMPTS) {
+      await this.usersService.clearOtp(user._id.toString());
+      throw new BadRequestException('Too many incorrect attempts. Please request a new OTP.');
+    }
+    throw new BadRequestException('Incorrect OTP. Please try again.');
+  }
+
   async verifyOtp(dto: VerifyOtpDto) {
     const user = await this.userModel
       .findOne({ email: dto.email })
@@ -208,14 +224,17 @@ export class AuthService {
       await this.usersService.clearOtp(user._id.toString());
       throw new BadRequestException('OTP has expired. Please request a new one.');
     }
-    if (!(await bcrypt.compare(dto.otp, user.otpCode))) {
-      throw new BadRequestException('Incorrect OTP. Please try again.');
-    }
+    await this.checkOtp(user, dto.otp);
 
-    await this.usersService.clearOtp(user._id.toString());
+    // Only the newest reset token works, and only once (BUG-03).
+    const jti = randomUUID();
+    await this.userModel.updateOne(
+      { _id: user._id },
+      { $set: { otpCode: null, otpExpiresAt: null, otpAttempts: 0, resetTokenId: jti } },
+    );
 
     const resetToken = this.jwtService.sign(
-      { sub: user._id.toString(), email: user.email, purpose: 'reset' },
+      { sub: user._id.toString(), email: user.email, purpose: 'reset', jti },
       {
         secret    : this.config.getOrThrow<string>('JWT_RESET_SECRET'),
         expiresIn : this.config.get('JWT_RESET_EXPIRES_IN') || '10m',
@@ -228,7 +247,7 @@ export class AuthService {
   async resetPassword(resetToken: string, dto: ResetPasswordDto) {
     if (!resetToken) throw new BadRequestException('Reset token is missing.');
 
-    let payload: { sub: string; purpose: string; email: string };
+    let payload: { sub: string; purpose: string; email: string; jti?: string };
     try {
       payload = this.jwtService.verify(resetToken, {
         secret: this.config.getOrThrow<string>('JWT_RESET_SECRET'),
@@ -239,6 +258,17 @@ export class AuthService {
 
     if (payload.purpose !== 'reset') {
       throw new BadRequestException('Invalid token type.');
+    }
+
+    // Atomically consume the token so it can't be replayed.
+    const consumed = payload.jti && Types.ObjectId.isValid(payload.sub)
+      ? await this.userModel.updateOne(
+          { _id: new Types.ObjectId(payload.sub), resetTokenId: payload.jti },
+          { $set: { resetTokenId: null } },
+        )
+      : null;
+    if (!consumed?.modifiedCount) {
+      throw new BadRequestException('This reset link has already been used. Please request a new one.');
     }
 
     await this.usersService.updatePassword(

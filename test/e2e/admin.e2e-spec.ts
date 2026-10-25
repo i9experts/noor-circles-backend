@@ -651,7 +651,7 @@ describe('Admin', () => {
     // seeing and editing those students, and the NEW murabbi is refused
     // (403/400) when awarding points, viewing attendance history or
     // registering parents for students in their own circle.
-    it.failing(
+    it(
       'BUG-21: after reassigning a circle, its students follow the new murabbi',
       async () => {
         const c = await w.mkCircle('Handover', w.A.id);
@@ -664,7 +664,7 @@ describe('Admin', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-21: old murabbi must lose access to the moved students',
       async () => {
         const c = await w.mkCircle('Handover 2', w.A.id);
@@ -678,7 +678,7 @@ describe('Admin', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-21: new murabbi can award points to students in their newly-assigned circle',
       async () => {
         const c = await w.mkCircle('Handover 3', w.A.id);

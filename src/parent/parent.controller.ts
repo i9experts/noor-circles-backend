@@ -6,7 +6,7 @@ import {
 import { JwtService }    from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request }       from 'express';
-import { Observable }    from 'rxjs';
+import { Observable, defer, mergeMap } from 'rxjs';
 import { JwtAuthGuard }  from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }    from '../auth/guards/roles.guard';
 import { Roles }         from '../auth/decorators/roles.decorator';
@@ -86,27 +86,49 @@ export class ParentController {
     return this.parentService.sendWhatsapp(user._id.toString(), dto);
   }
 
+  /** POST /parents/engagement/whatsapp-ticket — one-time, 60-second ticket for the SSE stream. */
+  @Post('engagement/whatsapp-ticket')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  whatsappTicket(@CurrentUser() user: UserDocument, @Body() dto: SendWhatsappDto) {
+    return this.parentService.createStreamTicket(user._id.toString(), dto.message);
+  }
+
   /**
-   * SSE — NO class-level guard here.
-   * Auth via ?token= query param because EventSource cannot set headers.
+   * SSE — NO class-level guard here, because EventSource cannot set headers.
+   * Auth via ?ticket= (from whatsapp-ticket). ?token= is still accepted for
+   * older portal builds; either way the admin is re-checked in the database.
    */
   @Sse('engagement/whatsapp-stream')
   sendWhatsappStream(
     @Query('message') message: string,
     @Query('token')   token: string,
+    @Query('ticket')  ticket: string,
     @Req() _req: Request,
   ): Observable<MessageEvent> {
-    if (!token) throw new UnauthorizedException('Token required.');
-    let payload: { sub: string; role: string };
-    try {
-      payload = this.jwtService.verify(token, {
-        secret: this.config.getOrThrow('JWT_ACCESS_SECRET'),
-      });
-    } catch {
-      throw new UnauthorizedException('Invalid or expired token.');
-    }
-    if (payload.role !== 'admin') throw new UnauthorizedException('Admin only.');
-    return this.parentService.sendWhatsappSse(payload.sub, message);
+    return defer(async () => {
+      let adminId: string;
+      let body = message;
+      if (ticket) {
+        const t = this.parentService.redeemStreamTicket(ticket);
+        adminId = t.adminId;
+        body = t.message;
+      } else {
+        if (!token) throw new UnauthorizedException('Token required.');
+        let payload: { sub: string; role: string };
+        try {
+          payload = this.jwtService.verify(token, {
+            secret: this.config.getOrThrow('JWT_ACCESS_SECRET'),
+          });
+        } catch {
+          throw new UnauthorizedException('Invalid or expired token.');
+        }
+        if (payload.role !== 'admin') throw new UnauthorizedException('Admin only.');
+        adminId = payload.sub;
+      }
+      await this.parentService.assertActiveAdmin(adminId);
+      return { adminId, body };
+    }).pipe(mergeMap(({ adminId, body }) => this.parentService.sendWhatsappSse(adminId, body)));
   }
 
   @Get('engagement/test-whatsapp')

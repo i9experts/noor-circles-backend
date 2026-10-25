@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, Logger, MessageEvent, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, MessageEvent, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
@@ -12,6 +13,7 @@ import axios from 'axios';
 import { Parent, ParentDocument } from './parent.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { EngagementConfig, EngagementConfigDocument } from './engagement.schema';
+import { User, UserDocument, UserRole } from '../user/user.schema';
 import { safeEmail, safeTrim } from '../common/utils/transform.util';
 
 export class RegisterParentDto {
@@ -113,8 +115,49 @@ export class ParentService {
     @InjectModel(Parent.name)           private readonly parentModel:           Model<ParentDocument>,
     @InjectModel(Student.name)          private readonly studentModel:          Model<StudentDocument>,
     @InjectModel(EngagementConfig.name) private readonly engagementModel:       Model<EngagementConfigDocument>,
+    @InjectModel(User.name)             private readonly userModel:             Model<UserDocument>,
     private readonly config: ConfigService,
   ) {}
+
+  // ── WhatsApp stream tickets ──────────────────────────────────────────────────
+  // EventSource can't send headers, so the portal first asks (with its normal
+  // bearer token) for a one-time ticket and opens the stream with that. The
+  // access token never appears in a URL or access log (BUG-35).
+  private readonly streamTickets = new Map<string, { adminId: string; message: string; expires: number }>();
+  private static readonly TICKET_TTL_MS = 60_000;
+
+  createStreamTicket(adminId: string, message?: string) {
+    const now = Date.now();
+    for (const [k, t] of this.streamTickets) if (t.expires < now) this.streamTickets.delete(k);
+    const ticket = randomBytes(24).toString('base64url');
+    this.streamTickets.set(ticket, { adminId, message: message ?? '', expires: now + ParentService.TICKET_TTL_MS });
+    return { message: 'Stream ticket issued.', ticket, expiresInSeconds: ParentService.TICKET_TTL_MS / 1000 };
+  }
+
+  /** Single use: a ticket is deleted as soon as it's redeemed. */
+  redeemStreamTicket(ticket: string) {
+    const t = this.streamTickets.get(ticket);
+    this.streamTickets.delete(ticket);
+    if (!t || t.expires < Date.now()) throw new UnauthorizedException('Invalid or expired stream ticket.');
+    return t;
+  }
+
+  /** The token or ticket alone isn't enough: the admin must still exist and be active. */
+  async assertActiveAdmin(userId: string) {
+    const user = Types.ObjectId.isValid(userId)
+      ? await this.userModel.findById(userId).select('role isActive').lean()
+      : null;
+    if (!user || user.role !== UserRole.ADMIN || !user.isActive) {
+      throw new UnauthorizedException('Admin only.');
+    }
+  }
+
+  private async assertWhatsappEnabled() {
+    const cfg = await this.getOrCreateConfig();
+    if (cfg.whatsappEnabled === false) {
+      throw new BadRequestException('WhatsApp updates are switched off. Turn them on in Parent Engagement settings first.');
+    }
+  }
 
   // ── Engagement Config (singleton) ────────────────────────────────────────────
 
@@ -217,6 +260,7 @@ export class ParentService {
   }
 
   async sendWhatsapp(adminId: string, dto: SendWhatsappDto) {
+    await this.assertWhatsappEnabled();
     const parents = await this.parentModel
       .find()
       .select('fullName phone whatsappNumber')
@@ -320,6 +364,14 @@ export class ParentService {
       (async () => {
         const emit = (data: object) =>
           subscriber.next({ data: JSON.stringify(data) } as MessageEvent);
+
+        try {
+          await this.assertWhatsappEnabled();
+        } catch (e) {
+          emit({ type: 'error', error: (e as Error).message });
+          subscriber.complete();
+          return;
+        }
 
         const parents = await this.parentModel
           .find()

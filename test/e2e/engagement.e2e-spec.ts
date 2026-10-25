@@ -224,7 +224,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-34: "WhatsApp Updates" can be switched off in engagement settings,
     // but send-whatsapp ignores the flag and messages every parent anyway.
-    it.failing(
+    it(
       'BUG-34: send-whatsapp must respect whatsappEnabled=false',
       async () => {
         await adm().patch('parents/engagement/whatsapp', { enabled: false });
@@ -279,7 +279,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // instead of {"type":...}. ParentsPage.tsx parses it and checks
     // data.type — which is always undefined — so the WhatsApp broadcast UI
     // never shows progress or completion even though messages are being sent.
-    it.failing(
+    it(
       'BUG-43: SSE events must arrive as {type: ...} (not double-wrapped)',
       async () => {
         const r = await sse(`?token=${w.admin}&message=hi`);
@@ -288,10 +288,22 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
       },
     );
 
+    it('SSE ticket: issued to admins only, works once, and carries the message', async () => {
+      expect((await mA().post('parents/engagement/whatsapp-ticket', { message: 'x' })).status).toBe(403);
+      const t = await adm().post('parents/engagement/whatsapp-ticket', { message: 'From the ticket' });
+      expect(t.status).toBe(201);
+      const ticket = t.body.data.ticket as string;
+      const first = sseEvents((await sse(`?ticket=${ticket}`)).body as unknown as string)[0];
+      expect(first).toMatchObject({ type: 'start', message: 'From the ticket' });
+      const again = await sse(`?ticket=${ticket}`);
+      expect(again.body).toMatch(/event: error/);
+      expect(again.body).not.toMatch(/start/);
+    });
+
     // BUG-35: the SSE endpoint verifies the JWT signature + role claim only;
     // it never loads the user, so a deleted/deactivated admin's unexpired
     // token can still start a mass WhatsApp send to every parent.
-    it.failing(
+    it(
       'BUG-35: a token for a non-existent/deactivated admin must not start a WhatsApp blast',
       async () => {
         const ghostAdmin = jwt.sign(

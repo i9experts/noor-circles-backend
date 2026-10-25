@@ -239,7 +239,7 @@ describe('Murabbi portal + Attendance', () => {
     // circle. A murabbi can record attendance for other murabbis' students
     // (or non-existent ids) inside their own circle's session, corrupting
     // those students' attendance rates and every report built on them.
-    it.failing(
+    it(
       'BUG-23: attendance records must only contain students of that circle',
       async () => {
         const r = await mA().post('attendance', {
@@ -255,7 +255,7 @@ describe('Murabbi portal + Attendance', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-23: duplicate student entries in one session should be rejected',
       async () => {
         const r = await mA().post('attendance', {
@@ -330,7 +330,7 @@ describe('Murabbi portal + Attendance', () => {
 
     // BUG-24: editing a session's date skips the one-session-per-circle-per-day
     // rule that submission enforces.
-    it.failing(
+    it(
       'BUG-24: editing a session onto a day that already has one should be rejected',
       async () => {
         const r2 = await mA().post('attendance', {
@@ -349,7 +349,7 @@ describe('Murabbi portal + Attendance', () => {
     // BUG-25: sessionNumber is not unique per circle — two different days can
     // both be "Session 1". Trend reports group by sessionNumber and silently
     // merge them.
-    it.failing(
+    it(
       'BUG-25: the same sessionNumber twice in one circle should be rejected',
       async () => {
         const r = await mA().post('attendance', {

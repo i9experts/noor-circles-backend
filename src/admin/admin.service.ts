@@ -535,6 +535,15 @@ export class AdminService {
 
     if (!circle) throw new NotFoundException('Circle not found.');
 
+    // Students follow their circle: ownership checks across the app use
+    // student.murabbi, so a handover must move them too (BUG-21).
+    if (dto.murabbiId) {
+      await this.studentModel.updateMany(
+        { circle: new Types.ObjectId(id) },
+        { $set: { murabbi: new Types.ObjectId(dto.murabbiId) } },
+      );
+    }
+
     if (adminId && dto.murabbiId) {
       this.notifService.create({
         recipient: dto.murabbiId,

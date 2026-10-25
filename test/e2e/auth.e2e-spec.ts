@@ -507,7 +507,7 @@ describe('Auth', () => {
     // BUG-03: the reset token stays valid for its whole 10-minute lifetime
     // and can be replayed to change the password again (e.g. by anyone who
     // saw the link/token), because nothing marks it as consumed.
-    it.failing('BUG-03: a reset token should be single-use', async () => {
+    it('BUG-03: a reset token should be single-use', async () => {
       const again = await post(
         'reset-password',
         { newPassword: 'Attacker999' },
@@ -543,7 +543,7 @@ describe('Auth', () => {
     // BUG-04: a 6-digit OTP has no attempt limit. Wrong guesses are only
     // bounded by the global rate limit, and the OTP itself is not
     // invalidated after N failures.
-    it.failing(
+    it(
       'BUG-04: OTP should be invalidated after repeated wrong guesses',
       async () => {
         await post('forgot-password', { email });
@@ -555,6 +555,17 @@ describe('Auth', () => {
         expect(r.status).toBe(400);
       },
     );
+
+    it('a few wrong OTP guesses still allow the real code', async () => {
+      await post('forgot-password', { email });
+      const real = ctx.lastOtp(email);
+      const wrong = real === '123456' ? '654321' : '123456';
+      for (let i = 0; i < 4; i++) {
+        const r = await post('verify-otp', { email, otp: wrong });
+        expect(r.body.message).toMatch(/Incorrect OTP/);
+      }
+      expect((await post('verify-otp', { email, otp: real })).status).toBe(200);
+    });
   });
 
   // ── Users controller ────────────────────────────────────────────────────────

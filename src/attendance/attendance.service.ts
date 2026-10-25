@@ -47,6 +47,53 @@ export class AttendanceService {
     return student;
   }
 
+  /**
+   * Every record must be a distinct student of this circle (BUG-23):
+   * otherwise a murabbi could mark other circles' students, or the same
+   * child twice, and corrupt attendance rates and reports.
+   */
+  private async assertRecordsBelongToCircle(circleId: string, records: { student: string }[]) {
+    const ids = records.map((r) => String(r.student));
+    if (new Set(ids).size !== ids.length) {
+      throw new BadRequestException('Each student can appear only once in a session.');
+    }
+    if (ids.some((id) => !Types.ObjectId.isValid(id))) {
+      throw new BadRequestException('Invalid student id in records.');
+    }
+    const inCircle = await this.studentModel.countDocuments({
+      _id   : { $in: ids.map((id) => new Types.ObjectId(id)) },
+      circle: new Types.ObjectId(circleId),
+    });
+    if (inCircle !== ids.length) {
+      throw new BadRequestException('Attendance can only include students of this circle.');
+    }
+  }
+
+  private dayBounds(date: string | Date) {
+    const dayStart = new Date(date); dayStart.setHours(0,  0,  0,   0);
+    const dayEnd   = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+    return { dayStart, dayEnd };
+  }
+
+  /** One session per circle per day, and session numbers unique per circle. */
+  private async assertNoClash(circleId: string, sessionDate: string | Date | undefined, sessionNumber: number | undefined, excludeId?: string) {
+    const circle = new Types.ObjectId(circleId);
+    const notSelf = excludeId ? { _id: { $ne: new Types.ObjectId(excludeId) } } : {};
+    if (sessionDate !== undefined) {
+      const { dayStart, dayEnd } = this.dayBounds(sessionDate);
+      if (await this.attendanceModel.exists({ circle, sessionDate: { $gte: dayStart, $lte: dayEnd }, ...notSelf })) {
+        throw new ConflictException(
+          `Attendance for this circle on ${new Date(sessionDate).toDateString()} has already been submitted.`,
+        );
+      }
+    }
+    if (sessionNumber !== undefined) {
+      if (await this.attendanceModel.exists({ circle, sessionNumber, ...notSelf })) {
+        throw new ConflictException(`Session ${sessionNumber} has already been recorded for this circle.`);
+      }
+    }
+  }
+
   // ── Submit ────────────────────────────────────────────────────────────────────
 
   async submit(
@@ -63,19 +110,8 @@ export class AttendanceService {
     if (!dto.records?.length) throw new BadRequestException('records cannot be empty');
 
     await this.assertCircleOwnership(dto.circle, murabbiId, requesterRole);
-
-    // One attendance record per circle per calendar day
-    const dayStart = new Date(dto.sessionDate); dayStart.setHours(0,  0,  0,   0);
-    const dayEnd   = new Date(dto.sessionDate); dayEnd.setHours(23, 59, 59, 999);
-    const existing = await this.attendanceModel.findOne({
-      circle     : new Types.ObjectId(dto.circle),
-      sessionDate: { $gte: dayStart, $lte: dayEnd },
-    });
-    if (existing) {
-      throw new ConflictException(
-        `Attendance for this circle on ${new Date(dto.sessionDate).toDateString()} has already been submitted.`,
-      );
-    }
+    await this.assertRecordsBelongToCircle(dto.circle, dto.records);
+    await this.assertNoClash(dto.circle, dto.sessionDate, dto.sessionNumber);
 
     return this.attendanceModel.create({
       circle       : new Types.ObjectId(dto.circle),
@@ -196,14 +232,18 @@ export class AttendanceService {
     requesterId?: string,
     requesterRole?: string,
   ) {
+    const session = await this.attendanceModel.findById(id).lean();
+    if (!session) throw new NotFoundException('Attendance record not found.');
     // Murabbis may only edit sessions they submitted
-    if (requesterRole === 'murabbi' && requesterId) {
-      const session = await this.attendanceModel.findById(id).lean();
-      if (!session) throw new NotFoundException('Attendance record not found.');
-      if (session.submittedBy.toString() !== requesterId) {
-        throw new ForbiddenException('You can only edit attendance you submitted.');
-      }
+    if (requesterRole === 'murabbi' && requesterId && session.submittedBy.toString() !== requesterId) {
+      throw new ForbiddenException('You can only edit attendance you submitted.');
     }
+    const circleId = session.circle.toString();
+    if (dto.records !== undefined) {
+      if (!dto.records.length) throw new BadRequestException('records cannot be empty');
+      await this.assertRecordsBelongToCircle(circleId, dto.records);
+    }
+    await this.assertNoClash(circleId, dto.sessionDate, dto.sessionNumber, id);
 
     const patch: Record<string, unknown> = {};
     if (dto.topic         !== undefined) patch.topic         = dto.topic;
