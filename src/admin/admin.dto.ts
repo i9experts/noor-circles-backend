@@ -1,4 +1,5 @@
 import {
+  ValidateIf,
   IsIn,
   IsBoolean,
   IsDateString,
@@ -140,6 +141,26 @@ export class CreateCircleDto {
   @IsNumber({}, { message: 'Capacity must be a number.' })
   @Min(1, { message: 'Capacity must be at least 1.' })
   capacity?: number;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsMongoId({ message: 'Invalid syllabus track.' })
+  trackId?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsIn([0, 1, 2, 3, 4, 5, 6], { message: 'Meeting day must be 0–6 (Sunday–Saturday).' })
+  meetingDay?: number | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Meeting time must be HH:MM (24-hour).' })
+  meetingTime?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Start date must be YYYY-MM-DD.' })
+  startDate?: string | null;
 }
 
 export class UpdateCircleDto {
@@ -167,6 +188,26 @@ export class UpdateCircleDto {
   @IsOptional()
   @IsBoolean({ message: 'isActive must be true or false.' })
   isActive?: boolean;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsMongoId({ message: 'Invalid syllabus track.' })
+  trackId?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsIn([0, 1, 2, 3, 4, 5, 6], { message: 'Meeting day must be 0–6 (Sunday–Saturday).' })
+  meetingDay?: number | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Meeting time must be HH:MM (24-hour).' })
+  meetingTime?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Start date must be YYYY-MM-DD.' })
+  startDate?: string | null;
 }
 
 // ── Student ───────────────────────────────────────────────────────────────────
