@@ -36,6 +36,7 @@ import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
 import { deleteStudentCascade } from '../student/student-cleanup';
 import { Performance, PerformanceDocument } from '../performance/performance.schema';
 import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
+import { SyllabusTrack, SyllabusTrackDocument } from '../syllabus/syllabus.schema';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -52,6 +53,7 @@ export class AdminService {
     @InjectModel(Attendance.name)    private readonly attendanceModel:    Model<AttendanceDocument>,
     @InjectModel(Parent.name)        private readonly parentModel:        Model<ParentDocument>,
     @InjectModel(Incentive.name)     private readonly incentiveModel:     Model<IncentiveDocument>,
+    @InjectModel(SyllabusTrack.name) private readonly trackModel:         Model<SyllabusTrackDocument>,
     @InjectModel(Performance.name)   private readonly performanceModel:   Model<PerformanceDocument>,
     private readonly usersService:        UsersService,
     private readonly notifService:        NotificationService,
@@ -424,6 +426,7 @@ export class AdminService {
     return this.circleModel
       .find()
       .populate('neighbourhood', 'name city area status')
+      .populate('track', 'name ageGroup')
       .populate('murabbi', 'fullName email')
       .sort({ createdAt: -1 })
       .lean();
@@ -434,6 +437,7 @@ export class AdminService {
       this.circleModel
         .find()
         .populate('neighbourhood', 'name city area status')
+      .populate('track', 'name ageGroup')
         .populate('murabbi', 'fullName')
         .sort({ createdAt: -1 })
         .lean(),
@@ -497,6 +501,22 @@ export class AdminService {
     return circle;
   }
 
+  /** Track and weekly schedule; `null` clears a field, `undefined` leaves it. */
+  private scheduleFields(dto: { trackId?: string | null; meetingDay?: number | null; meetingTime?: string | null; startDate?: string | null }) {
+    const out: Record<string, unknown> = {};
+    if (dto.trackId !== undefined)     out['track']       = dto.trackId ? new Types.ObjectId(dto.trackId) : null;
+    if (dto.meetingDay !== undefined)  out['meetingDay']  = dto.meetingDay;
+    if (dto.meetingTime !== undefined) out['meetingTime'] = dto.meetingTime;
+    if (dto.startDate !== undefined)   out['startDate']   = dto.startDate;
+    return out;
+  }
+
+  private async assertTrack(trackId?: string | null) {
+    if (trackId && !(await this.trackModel.exists({ _id: new Types.ObjectId(trackId) }))) {
+      throw new NotFoundException('Syllabus track not found.');
+    }
+  }
+
   async createCircle(dto: CreateCircleDto, adminId?: string) {
     const [neighbourhood, murabbi] = await Promise.all([
       this.neighbourhoodModel.findById(dto.neighbourhoodId).lean(),
@@ -505,12 +525,14 @@ export class AdminService {
 
     if (!neighbourhood) throw new NotFoundException('Neighbourhood not found.');
     if (!murabbi)        throw new NotFoundException('Murabbi not found or is not an active murabbi.');
+    await this.assertTrack(dto.trackId);
 
     const circle = await this.circleModel.create({
       name        : dto.name,
       neighbourhood: new Types.ObjectId(dto.neighbourhoodId),
       murabbi     : new Types.ObjectId(dto.murabbiId),
       capacity    : dto.capacity ?? 30,
+      ...this.scheduleFields(dto),
     });
 
     this.logger.log(`Admin created circle → ${circle.name}`);
@@ -530,6 +552,7 @@ export class AdminService {
   }
 
   async updateCircle(id: string, dto: UpdateCircleDto, adminId?: string) {
+    await this.assertTrack(dto.trackId);
     if (dto.neighbourhoodId) {
       const neighbourhood = await this.neighbourhoodModel.findById(dto.neighbourhoodId).lean();
       if (!neighbourhood) throw new NotFoundException('Neighbourhood not found.');
@@ -547,6 +570,7 @@ export class AdminService {
     if (dto.murabbiId)       update['murabbi']       = new Types.ObjectId(dto.murabbiId);
     if (dto.capacity)        update['capacity']      = dto.capacity;
     if (dto.isActive !== undefined) update['isActive'] = dto.isActive;
+    Object.assign(update, this.scheduleFields(dto));
 
     // Capacity can't drop below the students already enrolled (BUG-16).
     if (dto.capacity) {

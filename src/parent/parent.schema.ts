@@ -45,6 +45,13 @@ export class Parent {
 
   @Prop({ trim: true, maxlength: 300, default: '' })
   notes: string;
+
+  /** Bumped to revoke the family's private link (the old one stops working). */
+  @Prop({ type: Number, default: 1 })
+  familyLinkVersion: number;
+
+  @Prop({ type: Date, default: null })
+  familyLinkLastViewedAt: Date | null;
 }
 
 export const ParentSchema = SchemaFactory.createForClass(Parent);

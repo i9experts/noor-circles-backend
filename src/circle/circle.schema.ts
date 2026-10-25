@@ -19,6 +19,24 @@ export class Circle {
 
   @Prop({ type: Boolean, default: true })
   isActive: boolean;
+
+  // ── Schedule & syllabus ─────────────────────────────────────────────────────
+
+  /** Syllabus track the circle follows (by age group). */
+  @Prop({ type: Types.ObjectId, ref: 'SyllabusTrack', default: null })
+  track: Types.ObjectId | null;
+
+  /** Weekly meeting day, 0 = Sunday … 6 = Saturday (Pakistan time). */
+  @Prop({ type: Number, min: 0, max: 6, default: null })
+  meetingDay: number | null;
+
+  /** "HH:MM", 24-hour, Pakistan time. */
+  @Prop({ type: String, default: null })
+  meetingTime: string | null;
+
+  /** First meeting, 'YYYY-MM-DD'; sets how far along the syllabus the circle should be. */
+  @Prop({ type: String, default: null })
+  startDate: string | null;
 }
 
 export const CircleSchema = SchemaFactory.createForClass(Circle);

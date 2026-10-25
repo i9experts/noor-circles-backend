@@ -11,6 +11,7 @@ import { Student, StudentSchema }             from '../student/student.schema';
 import { Attendance, AttendanceSchema }       from '../attendance/attendance.schema';
 import { Parent, ParentSchema }               from '../parent/parent.schema';
 import { Incentive, IncentiveSchema }         from '../incentive/incentive.schema';
+import { SyllabusTrack, SyllabusTrackSchema } from '../syllabus/syllabus.schema';
 import { Performance, PerformanceSchema }     from '../performance/performance.schema';
 
 @Module({
@@ -26,6 +27,7 @@ import { Performance, PerformanceSchema }     from '../performance/performance.s
       { name: Attendance.name,    schema: AttendanceSchema    },
       { name: Parent.name,        schema: ParentSchema        },
       { name: Incentive.name,     schema: IncentiveSchema     },
+      { name: SyllabusTrack.name, schema: SyllabusTrackSchema },
       { name: Performance.name,   schema: PerformanceSchema   },
     ]),
   ],
