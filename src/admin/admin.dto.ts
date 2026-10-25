@@ -1,4 +1,6 @@
 import {
+  IsIn,
+  IsBoolean,
   IsDateString,
   IsEmail,
   IsMongoId,
@@ -115,7 +117,8 @@ export class UpdatePipelineDto {
   @IsOptional() @IsString() @MaxLength(200) @Transform(safeTrim) mosqueContact?: string;
   @IsOptional() @IsNumber() @Min(1) targetCircles?: number;
   @IsOptional() @IsNumber() @Min(0) @Max(100) interestLevel?: number;
-  @IsOptional() @IsString() status?: 'prospecting' | 'in-talks' | 'ready-to-launch';
+  @IsOptional() @IsIn(['prospecting', 'in-talks', 'ready-to-launch'], { message: 'Status must be prospecting, in-talks or ready-to-launch.' })
+  status?: 'prospecting' | 'in-talks' | 'ready-to-launch';
 }
 
 // ── Circle ────────────────────────────────────────────────────────────────────
@@ -159,6 +162,11 @@ export class UpdateCircleDto {
   @IsNumber({}, { message: 'Capacity must be a number.' })
   @Min(1, { message: 'Capacity must be at least 1.' })
   capacity?: number;
+
+  /** Deactivate / reactivate a circle (BUG-17). */
+  @IsOptional()
+  @IsBoolean({ message: 'isActive must be true or false.' })
+  isActive?: boolean;
 }
 
 // ── Student ───────────────────────────────────────────────────────────────────

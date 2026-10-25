@@ -6,6 +6,10 @@ import { Student, StudentDocument } from '../student/student.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
 import { Parent, ParentDocument } from '../parent/parent.schema';
+import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
+
+/** Sessions in the full Noor Circles curriculum, per circle. */
+export const CURRICULUM_SESSIONS = 40;
 
 @Injectable()
 export class ReportService {
@@ -43,8 +47,11 @@ export class ReportService {
     }
     const avgAttendanceRate = totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0;
 
-    // Curriculum completion — sessions done out of 12-session standard curriculum
-    const curriculumCompletion = Math.min(Math.round((sessionsCompleted / 12) * 100), 100);
+    // Curriculum completion — sessions done out of the 40-session curriculum
+    // (same figure as /sessions/stats; this previously assumed 12).
+    const curriculumCompletion = circleIds.length
+      ? Math.min(Math.round((sessionsCompleted / (CURRICULUM_SESSIONS * circleIds.length)) * 100), 100)
+      : 0;
 
     // Total incentive points awarded to students in this murabbi's circles
     const studentIds = circleIds.length
@@ -106,13 +113,15 @@ export class ReportService {
     const [
       totalStudents,
       activeCircles,
-      sessions,
+      totalSessions,
+      totals,
       incentiveBreakdown,
       monthlyEnrollments,
     ] = await Promise.all([
       this.studentModel.countDocuments({ isActive: true }),
       this.circleModel.countDocuments({ isActive: true }),
-      this.attendanceModel.find().select('records').lean(),
+      this.attendanceModel.countDocuments(),
+      attendanceTotals(this.attendanceModel),
       this.incentiveModel.aggregate([
         {
           $group: {
@@ -130,22 +139,14 @@ export class ReportService {
             count: { $sum: 1 },
           },
         },
-        { $sort: { '_id.year': 1, '_id.month': 1 } },
+        // Newest six months, returned oldest-first for the chart (BUG-40).
+        { $sort: { '_id.year': -1, '_id.month': -1 } },
         { $limit: 6 },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
       ]),
     ]);
 
-    let totalPresent = 0;
-    let totalRecords = 0;
-    for (const session of sessions) {
-      for (const rec of session.records) {
-        totalRecords++;
-        if (rec.status === 'present') totalPresent++;
-      }
-    }
-    const avgAttendanceRate = totalRecords > 0
-      ? Math.round((totalPresent / totalRecords) * 100)
-      : 0;
+    const avgAttendanceRate = rateOf(totals.get('all'));
 
     const totalIncentivesAwarded = incentiveBreakdown.reduce(
       (sum: number, i: any) => sum + i.count, 0,
@@ -155,7 +156,7 @@ export class ReportService {
       overview: {
         totalStudents,
         activeCircles,
-        totalSessions   : sessions.length,
+        totalSessions,
         avgAttendanceRate,
         totalIncentivesAwarded,
       },
@@ -301,6 +302,12 @@ export class ReportService {
     let filter: any = {};
 
     if (circleId) {
+      // A murabbi may only read their own circle's trend (BUG-39).
+      if (murabbiId) {
+        const circle = await this.circleModel.findById(circleId).select('murabbi').lean();
+        if (!circle) throw new NotFoundException('Circle not found.');
+        if (circle.murabbi?.toString() !== murabbiId) throw new ForbiddenException('This circle is not assigned to you.');
+      }
       filter = { circle: new Types.ObjectId(circleId) };
     } else if (murabbiId) {
       const circleIds = (

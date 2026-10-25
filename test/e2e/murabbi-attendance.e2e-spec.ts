@@ -6,7 +6,10 @@ import {
   E2EContext,
   MISSING_ID,
   seedWorld,
+  signIn,
 } from './helpers';
+import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
 
 describe('Murabbi portal + Attendance', () => {
   let ctx: E2EContext;
@@ -84,7 +87,7 @@ describe('Murabbi portal + Attendance', () => {
     });
 
     // BUG-22: murabbi enrolment never checks that neighbourhoodId exists.
-    it.failing(
+    it(
       'BUG-22: murabbi enrolment with a non-existent neighbourhood should fail',
       async () => {
         const r = await mA().post('murabbi/enroll-student', {
@@ -115,7 +118,7 @@ describe('Murabbi portal + Attendance', () => {
       ).toBe(404);
     });
 
-    it.failing(
+    it(
       'BUG-14: PATCH /murabbi/students/<malformed id> → 400 (is 500)',
       async () => {
         expect(
@@ -156,6 +159,67 @@ describe('Murabbi portal + Attendance', () => {
         (await adm().patch(`notifications/${req._id}/reject`)).status,
       ).toBe(200);
       expect((await adm().get(`admin/students/${s}`)).status).toBe(200);
+    });
+
+    it('with two admins, deciding one copy of a request decides them all', async () => {
+      await ctx.db.collection('users').insertOne({
+        fullName: 'Second Admin', email: 'admin2@e2e.test', role: 'admin',
+        password: await bcrypt.hash('AdminTwo123', 4), isEmailVerified: true,
+        isActive: true, tier: 1, refreshTokens: [], createdAt: new Date(), updatedAt: new Date(),
+      });
+      const admin2 = (await signIn(ctx, 'admin2@e2e.test', 'AdminTwo123')).accessToken;
+      const s = await w.mkStudent('Two Admins', w.circleA);
+      await mA().post(`murabbi/request-delete/student/${s}`);
+      const mine = (await adm().get('notifications')).body.data.find((x: any) => x.payload?.targetId === s);
+      const theirs = (await as(admin2).get('notifications')).body.data.find((x: any) => x.payload?.targetId === s);
+      expect(theirs.status).toBe('pending');
+      expect((await adm().patch(`notifications/${mine._id}/accept`)).status).toBe(200);
+      // The other admin can no longer reject what was already carried out.
+      expect((await as(admin2).patch(`notifications/${theirs._id}/reject`)).status).toBe(404);
+      const after = (await as(admin2).get('notifications')).body.data.find((x: any) => x._id === theirs._id);
+      expect(after.status).toBe('accepted');
+    });
+
+    it('deleting a student removes their attendance entries, points and parent links', async () => {
+      const s = await w.mkStudent('Leaves No Trace', w.circleA);
+      const sess = await adm().post('attendance', {
+        circle: w.circleA, sessionNumber: 90, sessionDate: '2026-05-01T10:00:00.000Z',
+        records: [{ student: s, status: 'present' }],
+      });
+      expect(sess.status).toBe(201);
+      expect((await adm().post('incentives', { studentId: s, awardType: 'noor-star' })).status).toBe(201);
+      expect((await adm().del(`admin/students/${s}`)).status).toBe(200);
+      const oid = new Types.ObjectId(s);
+      expect(await ctx.db.collection('incentives').countDocuments({ student: oid })).toBe(0);
+      expect(await ctx.db.collection('attendances').countDocuments({ 'records.student': oid })).toBe(0);
+      // the session only had this student, so it's gone too
+      expect((await adm().get(`attendance/${sess.body.data._id}`)).status).toBe(404);
+    });
+
+    it('editing an old session keeps a student who has since moved circle', async () => {
+      const s = await w.mkStudent('Mover', w.circleA);
+      const sess = await adm().post('attendance', {
+        circle: w.circleA, sessionNumber: 91, sessionDate: '2026-05-03T10:00:00.000Z',
+        records: [{ student: s, status: 'present' }],
+      });
+      await adm().patch(`admin/students/${s}/circle`, { circleId: w.circleB });
+      const r = await adm().patch(`attendance/${sess.body.data._id}`, {
+        records: [{ student: s, status: 'absent' }],
+      });
+      expect(r.status).toBe(200);
+    });
+
+    it('a circle with attendance history cannot be deleted (deactivate instead)', async () => {
+      const c = await w.mkCircle('Has History', w.A.id);
+      const s = await w.mkStudent('Historic', c);
+      await adm().post('attendance', {
+        circle: c, sessionNumber: 1, sessionDate: '2026-05-02T10:00:00.000Z',
+        records: [{ student: s, status: 'present' }],
+      });
+      const r = await adm().del(`admin/circles/${c}`);
+      expect(r.status).toBe(400);
+      expect(r.body.message).toMatch(/Deactivate/);
+      expect((await adm().patch(`admin/circles/${c}`, { isActive: false })).status).toBe(200);
     });
 
     it('murabbi cannot approve delete requests', async () => {
@@ -239,7 +303,7 @@ describe('Murabbi portal + Attendance', () => {
     // circle. A murabbi can record attendance for other murabbis' students
     // (or non-existent ids) inside their own circle's session, corrupting
     // those students' attendance rates and every report built on them.
-    it.failing(
+    it(
       'BUG-23: attendance records must only contain students of that circle',
       async () => {
         const r = await mA().post('attendance', {
@@ -255,7 +319,7 @@ describe('Murabbi portal + Attendance', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-23: duplicate student entries in one session should be rejected',
       async () => {
         const r = await mA().post('attendance', {
@@ -305,7 +369,7 @@ describe('Murabbi portal + Attendance', () => {
       ).toBeGreaterThanOrEqual(1);
     });
 
-    it.failing(
+    it(
       'BUG-14: GET /attendance/by-murabbi/<malformed id> → 400 (is 500)',
       async () => {
         expect(
@@ -330,7 +394,7 @@ describe('Murabbi portal + Attendance', () => {
 
     // BUG-24: editing a session's date skips the one-session-per-circle-per-day
     // rule that submission enforces.
-    it.failing(
+    it(
       'BUG-24: editing a session onto a day that already has one should be rejected',
       async () => {
         const r2 = await mA().post('attendance', {
@@ -349,7 +413,7 @@ describe('Murabbi portal + Attendance', () => {
     // BUG-25: sessionNumber is not unique per circle — two different days can
     // both be "Session 1". Trend reports group by sessionNumber and silently
     // merge them.
-    it.failing(
+    it(
       'BUG-25: the same sessionNumber twice in one circle should be rejected',
       async () => {
         const r = await mA().post('attendance', {

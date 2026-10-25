@@ -19,8 +19,8 @@ export class PerformanceController {
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
   submitReview(@CurrentUser() user: UserDocument, @Body() dto: SubmitReviewDto) {
     const murabbiId =
-      user.role === UserRole.ADMIN && dto.murabbiId
-        ? dto.murabbiId
+      user.role === UserRole.ADMIN
+        ? dto.murabbiId ?? null
         : user._id.toString();
     return this.performanceService.submitReview(murabbiId, dto, user._id.toString());
   }

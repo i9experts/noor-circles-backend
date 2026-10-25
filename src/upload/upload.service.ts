@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -20,21 +20,21 @@ export class UploadService {
   }
 
   async uploadFile(file: Express.Multer.File): Promise<{ url: string }> {
+    if (!file?.buffer) {
+      throw new BadRequestException('No file received. Attach an image in the "file" field.'); // BUG-46
+    }
     if (!this.isConfigured) {
       throw new InternalServerErrorException(
         'Image uploads are not available yet — this feature has not been configured. Please contact your administrator.',
       );
     }
-    if (!file?.buffer) {
-      throw new Error('No file buffer received.');
-    }
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: 'uploads', allowed_formats: ['jpg', 'jpeg', 'png'] },
+        { folder: 'uploads', allowed_formats: ['jpg', 'jpeg', 'png', 'webp'] },
         (error, result) => {
           if (error || !result?.secure_url) {
             this.logger.error('Cloudinary upload failed', error?.message ?? 'no URL returned');
-            return reject(new Error('Upload failed: Cloudinary did not return a URL'));
+            return reject(new BadGatewayException('The image could not be uploaded. Please try again.'));
           }
           resolve({ url: result.secure_url });
         },

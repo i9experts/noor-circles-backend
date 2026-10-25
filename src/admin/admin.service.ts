@@ -31,6 +31,11 @@ import {
   UpdatePipelineDto,
   UpdateStudentDto,
 } from './admin.dto';
+import { escapeRegex } from '../common/utils/regex.util';
+import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
+import { deleteStudentCascade } from '../student/student-cleanup';
+import { Performance, PerformanceDocument } from '../performance/performance.schema';
+import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -46,10 +51,21 @@ export class AdminService {
     @InjectModel(Student.name)       private readonly studentModel:       Model<StudentDocument>,
     @InjectModel(Attendance.name)    private readonly attendanceModel:    Model<AttendanceDocument>,
     @InjectModel(Parent.name)        private readonly parentModel:        Model<ParentDocument>,
+    @InjectModel(Incentive.name)     private readonly incentiveModel:     Model<IncentiveDocument>,
+    @InjectModel(Performance.name)   private readonly performanceModel:   Model<PerformanceDocument>,
     private readonly usersService:        UsersService,
     private readonly notifService:        NotificationService,
     private readonly announcementService: AnnouncementService,
   ) {}
+
+  private cleanupModels() {
+    return {
+      studentModel   : this.studentModel,
+      attendanceModel: this.attendanceModel,
+      incentiveModel : this.incentiveModel,
+      parentModel    : this.parentModel,
+    };
+  }
 
   // ── Dashboard Stats ───────────────────────────────────────────────────────────
 
@@ -71,20 +87,12 @@ export class AdminService {
       this.circleModel.countDocuments({ isActive: true }),
       this.neighbourhoodModel.countDocuments(),
       this.attendanceModel.countDocuments(),
-      this.attendanceModel.find().select('records').lean(),
+      attendanceTotals(this.attendanceModel),
       this.parentModel.countDocuments(),
       this.parentModel.countDocuments({ 'feedback.0': { $exists: true } }),
     ]);
 
-    let totalPresent = 0;
-    let totalRecords = 0;
-    for (const session of attendanceSessions) {
-      for (const rec of session.records) {
-        totalRecords++;
-        if (rec.status === 'present') totalPresent++;
-      }
-    }
-    const avgAttendanceRate = totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0;
+    const avgAttendanceRate = rateOf(attendanceSessions.get('all'));
 
     return {
       totalMurabbis,
@@ -119,9 +127,9 @@ export class AdminService {
       .lean();
 
     // Fetch all circles & attendance in parallel
-    const [allCircles, allAttendance] = await Promise.all([
+    const [allCircles, attendanceByMurabbi] = await Promise.all([
       this.circleModel.find().populate('neighbourhood', 'name').lean(),
-      this.attendanceModel.find().select('circle submittedBy records').lean(),
+      attendanceTotals(this.attendanceModel, {}, 'submittedBy'),
     ]);
 
     // Build per-murabbi lookup maps
@@ -131,18 +139,6 @@ export class AdminService {
       if (!mid) continue;
       if (!circlesByMurabbi.has(mid)) circlesByMurabbi.set(mid, []);
       circlesByMurabbi.get(mid)!.push(c);
-    }
-
-    const attendanceByMurabbi = new Map<string, { present: number; total: number }>();
-    for (const sess of allAttendance) {
-      const mid = sess.submittedBy?.toString();
-      if (!mid) continue;
-      if (!attendanceByMurabbi.has(mid)) attendanceByMurabbi.set(mid, { present: 0, total: 0 });
-      const acc = attendanceByMurabbi.get(mid)!;
-      for (const rec of sess.records) {
-        acc.total++;
-        if (rec.status === 'present') acc.present++;
-      }
     }
 
     // Count students per murabbi (via their circles)
@@ -213,14 +209,38 @@ export class AdminService {
     };
   }
 
-  deactivateMurabbi(userId: string) { return this.usersService.deactivateUser(userId); }
-  activateMurabbi(userId: string)   { return this.usersService.activateUser(userId); }
-  deleteMurabbi(userId: string)     { return this.usersService.deleteMurabbi(userId); }
+  /** The /admin/murabbis/:id routes only ever act on murabbi accounts (BUG-08, BUG-11). */
+  private async assertMurabbi(userId: string) {
+    const exists = await this.userModel.exists({ _id: new Types.ObjectId(userId), role: UserRole.MURABBI });
+    if (!exists) throw new NotFoundException('Murabbi not found.');
+  }
+
+  async deactivateMurabbi(userId: string) {
+    await this.assertMurabbi(userId);
+    return this.usersService.deactivateUser(userId);
+  }
+
+  async activateMurabbi(userId: string) {
+    await this.assertMurabbi(userId);
+    return this.usersService.activateUser(userId);
+  }
+
+  async deleteMurabbi(userId: string) {
+    await this.assertMurabbi(userId);
+    // Circles would be left pointing at a deleted user (BUG-12).
+    const owned = await this.circleModel.countDocuments({ murabbi: new Types.ObjectId(userId) });
+    if (owned) {
+      throw new BadRequestException(
+        `This murabbi still leads ${owned} circle${owned === 1 ? '' : 's'}. Reassign ${owned === 1 ? 'it' : 'them'} to another murabbi first, or deactivate the account instead.`,
+      );
+    }
+    return this.usersService.deleteMurabbi(userId);
+  }
 
   async updateMurabbiTier(userId: string, tier: 1 | 2 | 3) {
     if (![1, 2, 3].includes(tier)) throw new BadRequestException('Tier must be 1, 2, or 3.');
-    const user = await this.userModel.findByIdAndUpdate(
-      userId, { tier }, { new: true },
+    const user = await this.userModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(userId), role: UserRole.MURABBI }, { tier }, { new: true },
     ).select('-password -refreshTokens');
     if (!user) throw new NotFoundException('Murabbi not found.');
     this.logger.log(`Admin updated tier → ${user.email} → Tier ${tier}`);
@@ -235,8 +255,8 @@ export class AdminService {
     if (dto.image    !== undefined) update['image']    = dto.image    || null;
     if (dto.tier     !== undefined) update['tier']     = dto.tier;
 
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
+    const user = await this.userModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(userId), role: UserRole.MURABBI },
       { $set: update },
       { new: true },
     ).select('-password -refreshTokens');
@@ -315,7 +335,7 @@ export class AdminService {
   }
 
   async updatePipelineEntry(id: string, dto: UpdatePipelineDto) {
-    const entry = await this.pipelineModel.findByIdAndUpdate(id, { $set: dto }, { new: true }).lean();
+    const entry = await this.pipelineModel.findByIdAndUpdate(id, { $set: dto }, { new: true, runValidators: true }).lean();
     if (!entry) throw new NotFoundException('Pipeline entry not found.');
     return entry;
   }
@@ -330,7 +350,7 @@ export class AdminService {
     const entry = await this.pipelineModel.findById(id).lean();
     if (!entry) throw new NotFoundException('Pipeline entry not found.');
 
-    const exists = await this.neighbourhoodModel.findOne({ name: { $regex: `^${entry.name}$`, $options: 'i' } });
+    const exists = await this.neighbourhoodModel.findOne({ name: { $regex: `^${escapeRegex(entry.name)}$`, $options: 'i' } });
     if (exists) throw new ConflictException('A neighbourhood with this name already exists.');
 
     const nbh = await this.neighbourhoodModel.create({
@@ -353,7 +373,7 @@ export class AdminService {
 
   async createNeighbourhood(dto: CreateNeighbourhoodDto) {
     const exists = await this.neighbourhoodModel.findOne({
-      name: { $regex: `^${dto.name}$`, $options: 'i' },
+      name: { $regex: `^${escapeRegex(dto.name)}$`, $options: 'i' },
     });
     if (exists) throw new ConflictException('A neighbourhood with this name already exists.');
 
@@ -372,7 +392,7 @@ export class AdminService {
     if (dto.name) {
       const duplicate = await this.neighbourhoodModel.findOne({
         _id : { $ne: new Types.ObjectId(id) },
-        name: { $regex: `^${dto.name}$`, $options: 'i' },
+        name: { $regex: `^${escapeRegex(dto.name)}$`, $options: 'i' },
       });
       if (duplicate) throw new ConflictException('A neighbourhood with this name already exists.');
     }
@@ -526,6 +546,15 @@ export class AdminService {
     if (dto.neighbourhoodId) update['neighbourhood'] = new Types.ObjectId(dto.neighbourhoodId);
     if (dto.murabbiId)       update['murabbi']       = new Types.ObjectId(dto.murabbiId);
     if (dto.capacity)        update['capacity']      = dto.capacity;
+    if (dto.isActive !== undefined) update['isActive'] = dto.isActive;
+
+    // Capacity can't drop below the students already enrolled (BUG-16).
+    if (dto.capacity) {
+      const enrolled = await this.studentModel.countDocuments({ circle: new Types.ObjectId(id), isActive: true });
+      if (dto.capacity < enrolled) {
+        throw new BadRequestException(`This circle already has ${enrolled} active students; capacity can't be lower than that.`);
+      }
+    }
 
     const circle = await this.circleModel
       .findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
@@ -534,6 +563,15 @@ export class AdminService {
       .lean();
 
     if (!circle) throw new NotFoundException('Circle not found.');
+
+    // Students follow their circle: ownership checks across the app use
+    // student.murabbi, so a handover must move them too (BUG-21).
+    if (dto.murabbiId) {
+      await this.studentModel.updateMany(
+        { circle: new Types.ObjectId(id) },
+        { $set: { murabbi: new Types.ObjectId(dto.murabbiId) } },
+      );
+    }
 
     if (adminId && dto.murabbiId) {
       this.notifService.create({
@@ -550,6 +588,18 @@ export class AdminService {
   }
 
   async deleteCircle(id: string) {
+    const oid = new Types.ObjectId(id);
+    if (!(await this.circleModel.exists({ _id: oid }))) throw new NotFoundException('Circle not found.');
+    // Deleting would orphan its attendance and reviews; deactivating keeps the history.
+    const [sessions, reviews] = await Promise.all([
+      this.attendanceModel.countDocuments({ circle: oid }),
+      this.performanceModel.countDocuments({ circle: oid }),
+    ]);
+    if (sessions || reviews) {
+      throw new BadRequestException(
+        'This circle has attendance or review history. Deactivate it instead, so the records and reports stay intact.',
+      );
+    }
     const circle = await this.circleModel.findByIdAndDelete(id).lean();
     if (!circle) throw new NotFoundException('Circle not found.');
     // Unassign students from deleted circle
@@ -657,9 +707,11 @@ export class AdminService {
     if (!circle) throw new NotFoundException('Circle not found.');
     if (!circle.isActive) throw new BadRequestException('Cannot assign to an inactive circle.');
 
+    // The student doesn't count against their own circle (BUG-19).
     const enrolledCount = await this.studentModel.countDocuments({
       circle  : new Types.ObjectId(dto.circleId),
       isActive: true,
+      _id     : { $ne: new Types.ObjectId(id) },
     });
     if (enrolledCount >= circle.capacity) {
       throw new BadRequestException(`Circle is full (capacity: ${circle.capacity}).`);
@@ -705,6 +757,16 @@ export class AdminService {
   }
 
   async activateStudent(id: string) {
+    const existing = await this.studentModel.findById(id).select('circle isActive').lean();
+    if (!existing) throw new NotFoundException('Student not found.');
+    // Re-activation must respect capacity like enrol/assign do (BUG-20).
+    if (!existing.isActive && existing.circle) {
+      const circle = await this.circleModel.findById(existing.circle).select('capacity').lean();
+      const enrolled = await this.studentModel.countDocuments({ circle: existing.circle, isActive: true });
+      if (circle && enrolled >= circle.capacity) {
+        throw new BadRequestException(`Their circle is full (capacity: ${circle.capacity}). Move the student to another circle first.`);
+      }
+    }
     const student = await this.studentModel
       .findByIdAndUpdate(id, { $set: { isActive: true } }, { new: true })
       .lean();
@@ -713,7 +775,7 @@ export class AdminService {
   }
 
   async deleteStudent(id: string) {
-    const student = await this.studentModel.findByIdAndDelete(id).lean();
+    const student = await deleteStudentCascade(this.cleanupModels(), id);
     if (!student) throw new NotFoundException('Student not found.');
     return { message: 'Student record deleted successfully.' };
   }

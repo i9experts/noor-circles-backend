@@ -2,9 +2,12 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Type } from 'class-transformer';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 // pdfkit exports `module.exports = PDFDocument` (no ES default export),
@@ -23,9 +26,24 @@ import {
 import { User, UserDocument, UserRole } from '../user/user.schema';
 
 import {
-  ArrayMinSize, IsArray, IsDateString, IsEnum, IsInt, IsMongoId,
-  IsNumber, IsOptional, IsString, Max, MaxLength, Min,
+  ArrayMaxSize, ArrayMinSize, IsArray, IsDateString, IsEnum, IsInt, IsMongoId, IsNotEmpty,
+  IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested,
 } from 'class-validator';
+
+/** Failed attempts allowed per rolling 24 hours (BUG-29). */
+export const MAX_FAILED_EXAM_ATTEMPTS_PER_DAY = 3;
+
+export class ExamQuestionDto {
+  @IsString() @IsNotEmpty({ message: 'Every question needs text.' }) @MaxLength(1000)
+  question: string;
+
+  @IsArray() @ArrayMinSize(2, { message: 'Every question needs at least 2 options.' }) @ArrayMaxSize(10)
+  @IsString({ each: true }) @IsNotEmpty({ each: true })
+  options: string[];
+
+  @IsInt() @Min(0)
+  correctIndex: number;
+}
 
 export class UpsertExamDto {
   @IsInt() @Min(1) @Max(3)
@@ -35,7 +53,8 @@ export class UpsertExamDto {
   title: string;
 
   @IsArray() @ArrayMinSize(1)
-  questions: { question: string; options: string[]; correctIndex: number }[];
+  @ValidateNested({ each: true }) @Type(() => ExamQuestionDto)
+  questions: ExamQuestionDto[];
 
   @IsOptional() @IsNumber() @Min(0) @Max(100)
   passingScore?: number;
@@ -141,6 +160,11 @@ export class TrainingService {
   async updateProgress(userId: string, moduleId: string, progressPercent: number) {
     const mod = await this.moduleModel.findById(moduleId);
     if (!mod) throw new NotFoundException('Module not found');
+    // Murabbis can't record progress on modules above their tier (BUG-27).
+    const user = await this.userModel.findById(userId).select('role tier').lean();
+    if (user?.role !== UserRole.ADMIN && (mod.minTier ?? 1) > (user?.tier ?? 1)) {
+      throw new ForbiddenException('This module is not available at your tier yet.');
+    }
     const clamped = Math.max(0, Math.min(100, progressPercent));
     return this.progressModel.findOneAndUpdate(
       { user: new Types.ObjectId(userId), module: new Types.ObjectId(moduleId) },
@@ -154,7 +178,7 @@ export class TrainingService {
   }
 
   async updateModule(id: string, data: Partial<TrainingModule>) {
-    const mod = await this.moduleModel.findByIdAndUpdate(id, data, { new: true });
+    const mod = await this.moduleModel.findByIdAndUpdate(id, data, { new: true, runValidators: true });
     if (!mod) throw new NotFoundException('Module not found');
     return mod;
   }
@@ -169,11 +193,9 @@ export class TrainingService {
   // ── Batch methods ─────────────────────────────────────────────────────────────
 
   async createBatch(dto: CreateBatchDto) {
-    // Mark all previous batches as completed if new one is active
-    if (dto.status === 'active') {
-      await this.batchModel.updateMany({ status: 'active' }, { status: 'completed' });
-    }
-    return this.batchModel.create({
+    // Insert first: if it fails (e.g. duplicate number) the current active
+    // batch must stay active (BUG-30). Only then close the previous one.
+    const batch = await this.batchModel.create({
       batchNumber : dto.batchNumber,
       status      : dto.status ?? 'upcoming',
       day1Date    : dto.day1Date ? new Date(dto.day1Date) : null,
@@ -183,6 +205,10 @@ export class TrainingService {
       day1Meta    : dto.day1Meta,
       day2Meta    : dto.day2Meta,
     });
+    if (batch.status === 'active') {
+      await this.batchModel.updateMany({ status: 'active', _id: { $ne: batch._id } }, { status: 'completed' });
+    }
+    return batch;
   }
 
   async updateBatch(id: string, dto: UpdateBatchDto) {
@@ -206,6 +232,10 @@ export class TrainingService {
     const batch = await this.batchModel.findById(batchId);
     if (!batch) throw new NotFoundException('Batch not found.');
     const oids = dto.userIds.map((id) => new Types.ObjectId(id));
+    const found = await this.userModel.countDocuments({ _id: { $in: oids }, role: UserRole.MURABBI });
+    if (found !== new Set(dto.userIds).size) {
+      throw new NotFoundException('One or more candidates are not murabbi accounts.');
+    }
     await this.batchModel.findByIdAndUpdate(batchId, { $addToSet: { candidates: { $each: oids } } });
     return { message: `${oids.length} candidate(s) added.` };
   }
@@ -256,12 +286,15 @@ export class TrainingService {
     const completedBatches = allBatches.filter((b) => b.status === 'completed');
     const activeBatch      = allBatches.find((b) => b.status === 'active') || null;
 
-    // Pass rate: % of candidates in completed batches (assume all completed = passed for now)
-    const totalCandidatesAllBatches = allBatches.reduce((s, b) => s + b.candidates.length, 0);
-    const completedCandidates       = completedBatches.reduce((s, b) => s + b.candidates.length, 0);
-    const passRate = totalCandidatesAllBatches > 0
-      ? Math.round((completedCandidates / totalCandidatesAllBatches) * 100)
-      : 0;
+    const completedCandidates = completedBatches.reduce((s, b) => s + b.candidates.length, 0);
+
+    // Pass rate from real exam results: of the murabbis who sat an
+    // assessment, the share who passed one (was derived from batch status).
+    const [attempted, passed] = await Promise.all([
+      this.attemptModel.distinct('user'),
+      this.attemptModel.distinct('user', { passed: true }),
+    ]);
+    const passRate = attempted.length > 0 ? Math.round((passed.length / attempted.length) * 100) : 0;
 
     return {
       stats: {
@@ -281,6 +314,11 @@ export class TrainingService {
   // ── Exams (admin) ────────────────────────────────────────────────────────────
 
   async upsertExam(dto: UpsertExamDto) {
+    dto.questions.forEach((q, i) => {
+      if (q.correctIndex >= q.options.length) {
+        throw new BadRequestException(`Question ${i + 1}: the correct answer must be one of its ${q.options.length} options.`);
+      }
+    });
     const update = {
       title       : dto.title,
       questions   : dto.questions,
@@ -365,6 +403,21 @@ export class TrainingService {
     const exam = await this.examModel.findOne({ tier });
     if (!exam) throw new NotFoundException('No assessment is available for this tier yet.');
 
+    const since = new Date(Date.now() - 24 * 3600_000);
+    const recentFails = await this.attemptModel
+      .find({ user: new Types.ObjectId(userId), exam: exam._id, passed: false, createdAt: { $gte: since } })
+      .sort({ createdAt: 1 })
+      .select('createdAt')
+      .lean<{ createdAt: Date }[]>();
+    const alreadyPassed = await this.certificateModel.exists({ user: new Types.ObjectId(userId), tier });
+    if (!alreadyPassed && recentFails.length >= MAX_FAILED_EXAM_ATTEMPTS_PER_DAY) {
+      const retryAt = new Date(recentFails[0].createdAt.getTime() + 24 * 3600_000);
+      throw new HttpException(
+        `You've used all ${MAX_FAILED_EXAM_ATTEMPTS_PER_DAY} attempts for now. Review the modules and try again after ${retryAt.toLocaleString('en-GB', { timeZone: 'Asia/Karachi', dateStyle: 'medium', timeStyle: 'short' })}.`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     if (dto.answers.length !== exam.questions.length) {
       throw new BadRequestException(
         `Expected ${exam.questions.length} answers, received ${dto.answers.length}.`,
@@ -391,7 +444,10 @@ export class TrainingService {
       certificate = await this.issueCertificateIfNeeded(userId, tier);
     }
 
-    return { scorePercent, passed, correctCount: correct, totalQuestions: exam.questions.length, certificate };
+    const attemptsRemaining = passed || alreadyPassed
+      ? null
+      : Math.max(0, MAX_FAILED_EXAM_ATTEMPTS_PER_DAY - recentFails.length - 1);
+    return { scorePercent, passed, correctCount: correct, totalQuestions: exam.questions.length, certificate, attemptsRemaining };
   }
 
   // ── Certificates ─────────────────────────────────────────────────────────────

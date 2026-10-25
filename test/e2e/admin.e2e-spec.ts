@@ -162,7 +162,7 @@ describe('Admin', () => {
 
     // BUG-11: /admin/murabbis/:id routes don't check the target's role, so
     // the "murabbi" update endpoint will happily edit an admin account.
-    it.failing(
+    it(
       'BUG-11: PATCH /admin/murabbis/:id should refuse to edit a non-murabbi (admin) account',
       async () => {
         const me = await ctx.http().get(`${API}/auth/me`).set(A());
@@ -189,7 +189,7 @@ describe('Admin', () => {
     // no longer exists. Every circle/report view then shows murabbi=null and
     // the circle can't be used for attendance (ownership check compares to a
     // dead id). Should be blocked while circles are assigned, or reassign.
-    it.failing(
+    it(
       'BUG-12: deleting a murabbi who still owns circles should be blocked (or circles reassigned)',
       async () => {
         const m = await createMurabbi(ctx, w.admin, 'orphan@e2e.test');
@@ -273,7 +273,7 @@ describe('Admin', () => {
     // duplicate check. A name with regex metacharacters (perfectly normal
     // for addresses, e.g. "Block [A]" or "Phase (2") crashes with 500, and
     // "." wildcards produce false duplicates.
-    it.failing(
+    it(
       'BUG-13: neighbourhood names containing regex characters should be accepted',
       async () => {
         const r = await post('neighbourhoods', { name: 'DHA Phase (2' });
@@ -281,7 +281,7 @@ describe('Admin', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-13: "Block.A" must not be reported as a duplicate of "BlockXA"',
       async () => {
         await post('neighbourhoods', { name: 'BlockXA' });
@@ -303,7 +303,7 @@ describe('Admin', () => {
     // BUG-14: several services build `new Types.ObjectId(id)` straight from a
     // route/query param. A malformed id throws a BSONError (not a Mongoose
     // CastError), which the global filter doesn't recognise → 500.
-    it.failing(
+    it(
       'BUG-14: PATCH /admin/neighbourhoods/:id with malformed id → 400 (is 500)',
       async () => {
         expect(
@@ -312,13 +312,13 @@ describe('Admin', () => {
         ).toBe(400);
       },
     );
-    it.failing(
+    it(
       'BUG-14: DELETE /admin/neighbourhoods/:id with malformed id → 400 (is 500)',
       async () => {
         expect((await del(`neighbourhoods/${BAD_ID}`)).status).toBe(400);
       },
     );
-    it.failing(
+    it(
       'BUG-14: GET /admin/students?murabbiId=<malformed> → 400 (is 500)',
       async () => {
         expect((await get(`students?murabbiId=${BAD_ID}`)).status).toBe(400);
@@ -366,7 +366,7 @@ describe('Admin', () => {
 
     // BUG-15: update uses findByIdAndUpdate without runValidators, and the
     // DTO only checks @IsString, so any status string is saved.
-    it.failing(
+    it(
       'BUG-15: pipeline update should reject an invalid status',
       async () => {
         const r = await patch(`neighbourhoods/pipeline/${pid}`, {
@@ -481,7 +481,7 @@ describe('Admin', () => {
 
     // BUG-16: capacity can be reduced below the number of students already
     // enrolled, leaving the circle permanently "over capacity".
-    it.failing(
+    it(
       'BUG-16: reducing capacity below current enrolment should be rejected',
       async () => {
         const c = await w.mkCircle('Cap Circle', w.A.id, 5);
@@ -494,7 +494,7 @@ describe('Admin', () => {
 
     // BUG-17: there is no way to deactivate/reactivate a circle — isActive is
     // checked in enrol/assign/reports, but no endpoint or DTO field sets it.
-    it.failing(
+    it(
       'BUG-17: admin should be able to deactivate a circle',
       async () => {
         const c = await w.mkCircle('To Deactivate', w.A.id);
@@ -608,7 +608,7 @@ describe('Admin', () => {
     // BUG-19: re-assigning a student to the circle they are already in is
     // rejected as "Circle is full" when that circle is at capacity, because
     // the student counts against themselves.
-    it.failing(
+    it(
       'BUG-19: re-assigning a student to their current (full) circle should not fail with "full"',
       async () => {
         const c = await w.mkCircle('Exactly Full', w.A.id, 1);
@@ -620,7 +620,7 @@ describe('Admin', () => {
 
     // BUG-20: re-activating a student skips the capacity check that enrol
     // and assign enforce, so a circle can silently exceed capacity.
-    it.failing(
+    it(
       'BUG-20: activating a student into a full circle should be rejected',
       async () => {
         const c = await w.mkCircle('Reactivate Full', w.A.id, 1);
@@ -651,7 +651,7 @@ describe('Admin', () => {
     // seeing and editing those students, and the NEW murabbi is refused
     // (403/400) when awarding points, viewing attendance history or
     // registering parents for students in their own circle.
-    it.failing(
+    it(
       'BUG-21: after reassigning a circle, its students follow the new murabbi',
       async () => {
         const c = await w.mkCircle('Handover', w.A.id);
@@ -664,7 +664,7 @@ describe('Admin', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-21: old murabbi must lose access to the moved students',
       async () => {
         const c = await w.mkCircle('Handover 2', w.A.id);
@@ -678,7 +678,7 @@ describe('Admin', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-21: new murabbi can award points to students in their newly-assigned circle',
       async () => {
         const c = await w.mkCircle('Handover 3', w.A.id);

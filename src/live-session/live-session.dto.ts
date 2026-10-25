@@ -1,4 +1,6 @@
-import { IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUrl, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUrl, Matches, MaxLength, Min, ValidateIf } from 'class-validator';
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export class CreateLiveSessionDto {
   @IsString()
@@ -26,13 +28,15 @@ export class CreateLiveSessionDto {
   @IsBoolean()
   isRecurring?: boolean;
 
-  @IsOptional()
-  @IsNumber()
+  @ValidateIf((o) => o.isRecurring === true || o.recurringDay !== undefined)
+  @IsNumber({}, { message: 'recurringDay is required for a recurring session (0–6, Sun–Sat).' })
   @IsIn([0, 1, 2, 3, 4, 5, 6], { message: 'recurringDay must be 0–6 (Sun–Sat).' })
   recurringDay?: number;
 
-  @IsOptional()
-  @IsString()
+  /** "HH:MM", 24-hour, Pakistan time. Required for recurring sessions (BUG-45). */
+  @ValidateIf((o) => o.isRecurring === true || o.recurringTime !== undefined)
+  @IsString({ message: 'recurringTime is required for a recurring session (HH:MM).' })
+  @Matches(HHMM, { message: 'recurringTime must be HH:MM (24-hour), e.g. 19:30.' })
   recurringTime?: string;
 }
 
@@ -69,7 +73,9 @@ export class UpdateLiveSessionDto {
   @IsIn([0, 1, 2, 3, 4, 5, 6])
   recurringDay?: number;
 
+  /** "HH:MM", 24-hour, Pakistan time (BUG-45). */
   @IsOptional()
   @IsString()
+  @Matches(HHMM, { message: 'recurringTime must be HH:MM (24-hour), e.g. 19:30.' })
   recurringTime?: string;
 }

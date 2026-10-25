@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
+import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
+import { monthOf } from '../common/utils/month.util';
 
 const CURRICULUM_MAP: Record<number, string> = {
   1: 'Identity', 2: 'Honesty', 3: 'Family', 4: 'Gratitude',
@@ -18,27 +20,18 @@ export class SessionsService {
   ) {}
 
   async getStats() {
-    const [sessions, activeCircles] = await Promise.all([
-      this.attendanceModel.find().select('sessionNumber records').lean(),
+    const [sessionCount, totals, activeCircles] = await Promise.all([
+      this.attendanceModel.countDocuments(),
+      attendanceTotals(this.attendanceModel),
       this.circleModel.countDocuments({ isActive: true }),
     ]);
 
-    const uniqueSessionNumbers = new Set(sessions.map((s) => s.sessionNumber));
-    const sessionsCompleted    = uniqueSessionNumbers.size;
+    // Every submitted session counts, not just distinct session numbers (BUG-42).
+    const sessionsCompleted = sessionCount;
 
-    let totalPresent = 0;
-    let totalRecords = 0;
-    for (const s of sessions) {
-      for (const r of s.records) {
-        totalRecords++;
-        if (r.status === 'present') totalPresent++;
-      }
-    }
-    const avgAttendance = totalRecords > 0
-      ? Math.round((totalPresent / totalRecords) * 100)
-      : 0;
+    const avgAttendance = rateOf(totals.get('all'));
 
-    const currentMonth = new Date().getMonth() + 1;
+    const currentMonth = Number(monthOf().slice(5)); // Pakistan time, 1–12
     const currentTheme = CURRICULUM_MAP[currentMonth] ?? '—';
 
     return {
@@ -51,9 +44,12 @@ export class SessionsService {
     };
   }
 
-  async getAllSessions() {
+  async getAllSessions(murabbiId?: string) {
+    const filter = murabbiId
+      ? { circle: { $in: (await this.circleModel.find({ murabbi: new Types.ObjectId(murabbiId) }).select('_id').lean()).map((c) => c._id) } }
+      : {};
     const sessions = await this.attendanceModel
-      .find()
+      .find(filter)
       .populate('circle', 'name')
       .populate('submittedBy', 'fullName')
       .sort({ sessionDate: -1, sessionNumber: -1 })

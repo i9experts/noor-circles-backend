@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -14,6 +14,8 @@ import { Attendance, AttendanceDocument } from '../attendance/attendance.schema'
 import { User, UserDocument, UserRole } from '../user/user.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { safeTrim } from '../common/utils/transform.util';
+import { currentMonth, monthRange } from '../common/utils/month.util';
+import { attendanceTotals } from '../attendance/attendance-stats';
 
 export class AwardPointsDto {
   @IsMongoId({ message: 'Invalid student ID.' })
@@ -49,14 +51,16 @@ export class IncentiveService {
   private async assertStudentOwnership(studentId: string, requesterId: string, requesterRole?: string) {
     const student = await this.studentModel.findById(studentId).lean();
     if (!student) throw new NotFoundException('Student not found.');
+    // 403 like attendance does for the same check (BUG-36).
     if (requesterRole === 'murabbi' && student.murabbi?.toString() !== requesterId) {
-      throw new BadRequestException('This student is not assigned to you.');
+      throw new ForbiddenException('This student is not assigned to you.');
     }
     return student;
   }
 
   async award(awardedById: string, dto: AwardPointsDto, requesterRole?: string) {
     const student = await this.assertStudentOwnership(dto.studentId, awardedById, requesterRole);
+    if (!student.isActive) throw new BadRequestException('Points can only be awarded to active students.'); // BUG-37
 
     const points = AWARD_POINTS[dto.awardType];
     if (!points) throw new BadRequestException('Invalid award type.');
@@ -142,10 +146,12 @@ export class IncentiveService {
   }
 
   async getPageData() {
-    const [leaderboard, allIncentives, allAttendance, murabbis, allCircles] = await Promise.all([
+    const month          = currentMonth();
+    const { start, end } = monthRange(month);
+    const [leaderboard, allIncentives, attMap, murabbis, allCircles] = await Promise.all([
       this.getLeaderboard(),
       this.incentiveModel.find().lean(),
-      this.attendanceModel.find().select('submittedBy records circle').lean(),
+      attendanceTotals(this.attendanceModel, { sessionDate: { $gte: start, $lt: end } }, 'submittedBy'),
       this.userModel.find({ role: UserRole.MURABBI, isEmailVerified: true, isActive: true })
         .select('fullName email image').lean(),
       this.circleModel.find().select('name murabbi').lean(),
@@ -160,45 +166,19 @@ export class IncentiveService {
     }
     const totalPointsAwarded = allIncentives.reduce((s, i) => s + i.points, 0);
 
-    // ── Murabbi of the Month — highest avg attendance this month ─────────────
-    const now          = new Date();
-    const monthStart   = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonth = now.toLocaleString('en-PK', { month: 'long', year: 'numeric' });
-
-    // Per-murabbi: count present / total from this month's sessions
-    const attMap = new Map<string, { present: number; total: number }>();
-    for (const sess of allAttendance) {
-      if (new Date((sess as any).createdAt) < monthStart) continue;
-      const mid = sess.submittedBy?.toString();
-      if (!mid) continue;
-      if (!attMap.has(mid)) attMap.set(mid, { present: 0, total: 0 });
-      const acc = attMap.get(mid)!;
-      for (const rec of sess.records) {
-        acc.total++;
-        if (rec.status === 'present') acc.present++;
-      }
-    }
-
-    // If no sessions this month, use all-time data
-    if (attMap.size === 0) {
-      for (const sess of allAttendance) {
-        const mid = sess.submittedBy?.toString();
-        if (!mid) continue;
-        if (!attMap.has(mid)) attMap.set(mid, { present: 0, total: 0 });
-        const acc = attMap.get(mid)!;
-        for (const rec of sess.records) {
-          acc.total++;
-          if (rec.status === 'present') acc.present++;
-        }
-      }
-    }
+    // ── Murabbi of the Month — highest attendance this (Pakistan) month ──────
+    // Only murabbis who actually recorded sessions this month qualify; with no
+    // data there is no winner (previously someone "won" at 0%, or on all-time
+    // data labelled as this month).
+    const monthLabel = start.toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Asia/Karachi' });
 
     let bestMurabbi: any = null;
     let bestRate = -1;
     for (const m of murabbis) {
-      const mid  = m._id.toString();
-      const att  = attMap.get(mid);
-      const rate = att && att.total > 0 ? att.present / att.total : 0;
+      const mid = m._id.toString();
+      const att = attMap.get(mid);
+      if (!att || att.total === 0) continue;
+      const rate = att.present / att.total;
       if (rate > bestRate) {
         bestRate = rate;
         const circle = allCircles.find((c) => c.murabbi?.toString() === mid);
@@ -208,7 +188,7 @@ export class IncentiveService {
           image    : m.image,
           circle   : circle ? circle.name : null,
           attRate  : Math.round(rate * 100),
-          month    : currentMonth,
+          month    : monthLabel,
         };
       }
     }

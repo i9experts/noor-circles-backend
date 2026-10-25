@@ -2,19 +2,21 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@n
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
-import { UserRole }     from '../user/user.schema';
+import { UserDocument, UserRole } from '../user/user.schema';
+import { CurrentUser }  from '../auth/decorators/current-user.decorator';
+import { PartialType }  from '@nestjs/mapped-types';
 import { LessonService } from './lesson.service';
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { safeTrim } from '../common/utils/transform.util';
 
 class CreateLessonDto {
-  @IsString() @Transform(safeTrim) title: string;
+  @IsString() @Transform(safeTrim) @IsNotEmpty({ message: 'Title is required.' }) title: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() module?: string;
   @IsOptional() @IsString() level?: string;
   @IsOptional() @IsString() duration?: string;
-  @IsOptional() @IsString() status?: string;
+  @IsOptional() @IsIn(['Available', 'Upcoming', 'Draft'], { message: 'Status must be Available, Upcoming or Draft.' }) status?: string;
   @IsOptional() @IsString() pdfUrl?: string;
   @IsOptional() @IsString() videoUrl?: string;
   @IsOptional() @IsNumber() @Type(() => Number) order?: number;
@@ -22,6 +24,9 @@ class CreateLessonDto {
   @IsOptional() @IsArray() @IsString({ each: true }) objectives?: string[];
   @IsOptional() @IsArray() @IsString({ each: true }) keyTopics?: string[];
 }
+
+/** A real class (not `Partial<...>`, which erases to Object) so updates are validated (BUG-26). */
+class UpdateLessonDto extends PartialType(CreateLessonDto) {}
 
 @Controller('lessons')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -31,12 +36,14 @@ export class LessonController {
   /** GET /lessons — all roles */
   @Get()
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
-  getAll() { return this.lessonService.getAll(); }
+  getAll(@CurrentUser() user: UserDocument) { return this.lessonService.getAll(user.role === UserRole.ADMIN); }
 
   /** GET /lessons/:id */
   @Get(':id')
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
-  getOne(@Param('id') id: string) { return this.lessonService.getOne(id); }
+  getOne(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.lessonService.getOne(id, user.role === UserRole.ADMIN);
+  }
 
   /** POST /lessons — Admin only */
   @Post()
@@ -46,7 +53,7 @@ export class LessonController {
   /** PATCH /lessons/:id — Admin only */
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  update(@Param('id') id: string, @Body() dto: Partial<CreateLessonDto>) {
+  update(@Param('id') id: string, @Body() dto: UpdateLessonDto) {
     return this.lessonService.update(id, dto);
   }
 

@@ -213,7 +213,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-33: the toggle endpoints take a raw @Body('field') with no
     // validation. A missing/garbage value returns "disabled" but changes
     // nothing (or casts silently).
-    it.failing(
+    it(
       'BUG-33: weekly-card toggle without a boolean should be 400',
       async () => {
         expect(
@@ -224,7 +224,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-34: "WhatsApp Updates" can be switched off in engagement settings,
     // but send-whatsapp ignores the flag and messages every parent anyway.
-    it.failing(
+    it(
       'BUG-34: send-whatsapp must respect whatsappEnabled=false',
       async () => {
         await adm().patch('parents/engagement/whatsapp', { enabled: false });
@@ -279,7 +279,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // instead of {"type":...}. ParentsPage.tsx parses it and checks
     // data.type — which is always undefined — so the WhatsApp broadcast UI
     // never shows progress or completion even though messages are being sent.
-    it.failing(
+    it(
       'BUG-43: SSE events must arrive as {type: ...} (not double-wrapped)',
       async () => {
         const r = await sse(`?token=${w.admin}&message=hi`);
@@ -288,10 +288,22 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
       },
     );
 
+    it('SSE ticket: issued to admins only, works once, and carries the message', async () => {
+      expect((await mA().post('parents/engagement/whatsapp-ticket', { message: 'x' })).status).toBe(403);
+      const t = await adm().post('parents/engagement/whatsapp-ticket', { message: 'From the ticket' });
+      expect(t.status).toBe(201);
+      const ticket = t.body.data.ticket as string;
+      const first = sseEvents((await sse(`?ticket=${ticket}`)).body as unknown as string)[0];
+      expect(first).toMatchObject({ type: 'start', message: 'From the ticket' });
+      const again = await sse(`?ticket=${ticket}`);
+      expect(again.body).toMatch(/event: error/);
+      expect(again.body).not.toMatch(/start/);
+    });
+
     // BUG-35: the SSE endpoint verifies the JWT signature + role claim only;
     // it never loads the user, so a deleted/deactivated admin's unexpired
     // token can still start a mass WhatsApp send to every parent.
-    it.failing(
+    it(
       'BUG-35: a token for a non-existent/deactivated admin must not start a WhatsApp blast',
       async () => {
         const ghostAdmin = jwt.sign(
@@ -366,7 +378,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-36: ownership failures return 400 "Bad Request" here, whereas the
     // same check in attendance returns 403. Clients can't tell validation
     // errors from permission errors.
-    it.failing(
+    it(
       "BUG-36: awarding to another murabbi's student should be 403, consistent with attendance",
       async () => {
         const r = await mA().post('incentives', {
@@ -402,7 +414,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     });
 
     // BUG-37: points can be awarded to a deactivated student.
-    it.failing(
+    it(
       'BUG-37: awarding points to an inactive student should be rejected',
       async () => {
         const s = await w.mkStudent('Inactive Kid', w.circleA);
@@ -448,7 +460,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-38: a murabbi can file reviews against any circle id — another
     // murabbi's circle or one that doesn't exist.
-    it.failing(
+    it(
       'BUG-38: reviews for a circle that is not yours (or does not exist) should be rejected',
       async () => {
         const r1 = await mA().post('performance/reviews', {
@@ -518,7 +530,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
       expect((await adm().del(`performance/reviews/${id}`)).status).toBe(404);
     });
 
-    it.failing(
+    it(
       'BUG-14: GET /performance/reviews?circleId=<malformed> → 400 (is 500)',
       async () => {
         expect(
@@ -564,7 +576,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-39: attendance-trend ignores ownership when circleId is supplied —
     // the murabbi-scoping branch only applies when circleId is omitted.
-    it.failing(
+    it(
       "BUG-39: murabbi must not read another circle's attendance trend via ?circleId=",
       async () => {
         const r = await mA().get(
@@ -574,7 +586,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-14: GET /reports/attendance-trend?circleId=<malformed> → 400 (is 500)',
       async () => {
         expect(
@@ -587,7 +599,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-40: monthlyEnrollments sorts ascending then $limit 6, so once there
     // are more than 6 months of data the dashboard shows the OLDEST six
     // months and never the current one.
-    it.failing(
+    it(
       'BUG-40: admin report monthlyEnrollments should include the most recent month',
       async () => {
         for (let m = 1; m <= 8; m++) {
@@ -629,7 +641,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-41: /sessions/list returns every attendance session in the system
     // (all circles, all murabbis) to any murabbi — inconsistent with the
     // per-circle ownership enforced on /attendance.
-    it.failing(
+    it(
       "BUG-41: /sessions/list should only show a murabbi their own circles' sessions",
       async () => {
         const r = await mA().get('sessions/list');
@@ -640,7 +652,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-42: sessionsCompleted counts DISTINCT session numbers across all
     // circles, so 10 circles each running session 1 shows "1 session".
-    it.failing(
+    it(
       'BUG-42: sessions/stats.sessionsCompleted should count sessions, not distinct numbers',
       async () => {
         const r = await adm().get('sessions/stats');

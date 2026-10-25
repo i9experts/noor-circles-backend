@@ -36,6 +36,8 @@ export interface E2EContext {
   db: Connection;
   mails: SentMail[];
   lastOtp: (email: string) => string | undefined;
+  /** Makes the fake mailer throw, as if SMTP were down. */
+  setMailFailing: (failing: boolean) => void;
   close: () => Promise<void>;
 }
 
@@ -84,10 +86,12 @@ export async function createApp(
     await import('../../src/common/interceptors/response.interceptor');
 
   const mails: SentMail[] = [];
+  let mailFailing = false;
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(MailService)
     .useValue({
       sendOtp: (to: string, otp: string, type: 'signup' | 'reset') => {
+        if (mailFailing) return Promise.reject(new Error('SMTP down'));
         mails.push({ to, otp, type });
         return Promise.resolve();
       },
@@ -135,6 +139,7 @@ export async function createApp(
     mails,
     http: () => request(app.getHttpServer()),
     lastOtp: (email) => [...mails].reverse().find((m) => m.to === email)?.otp,
+    setMailFailing: (failing) => { mailFailing = failing; },
     close: async () => {
       await db.dropDatabase();
       await app.close();

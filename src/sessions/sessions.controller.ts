@@ -2,7 +2,8 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
 import { Roles }        from '../auth/decorators/roles.decorator';
-import { UserRole }     from '../user/user.schema';
+import { UserDocument, UserRole } from '../user/user.schema';
+import { CurrentUser }  from '../auth/decorators/current-user.decorator';
 import { SessionsService } from './sessions.service';
 
 const CURRICULUM_THEMES = [
@@ -58,7 +59,8 @@ export class SessionsController {
   /** GET /sessions/list */
   @Get('list')
   @Roles(UserRole.ADMIN, UserRole.MURABBI)
-  getSessionsList() {
-    return this.sessionsService.getAllSessions();
+  getSessionsList(@CurrentUser() user: UserDocument) {
+    // Murabbis only see their own circles' sessions (BUG-41).
+    return this.sessionsService.getAllSessions(user.role === UserRole.MURABBI ? user._id.toString() : undefined);
   }
 }

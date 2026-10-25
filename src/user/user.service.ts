@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -55,13 +55,14 @@ export class UsersService {
 
   async setOtp(userId: string, otpCode: string, otpExpiresAt: Date) {
     const hashedOtp = await bcrypt.hash(otpCode, 10);
-    await this.userModel.findByIdAndUpdate(userId, { otpCode: hashedOtp, otpExpiresAt });
+    await this.userModel.findByIdAndUpdate(userId, { otpCode: hashedOtp, otpExpiresAt, otpAttempts: 0 });
   }
 
   async clearOtp(userId: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       otpCode: null,
       otpExpiresAt: null,
+      otpAttempts: 0,
     });
   }
 
@@ -107,6 +108,12 @@ export class UsersService {
   }
 
   async deactivateUser(userId: string) {
+    const target = await this.userModel.findById(userId).select('role').lean();
+    if (!target) throw new NotFoundException('User not found.');
+    // Deactivating an admin (including yourself) could lock everyone out (BUG-08).
+    if (target.role === UserRole.ADMIN) {
+      throw new BadRequestException('Admin accounts cannot be deactivated.');
+    }
     const user = await this.userModel
       .findByIdAndUpdate(
         userId,

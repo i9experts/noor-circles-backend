@@ -7,6 +7,10 @@ import {
 } from './notification.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { User, UserDocument, UserRole } from '../user/user.schema';
+import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
+import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
+import { Parent, ParentDocument } from '../parent/parent.schema';
+import { deleteStudentCascade } from '../student/student-cleanup';
 
 export interface CreateNotificationInput {
   recipient       : string;
@@ -25,7 +29,31 @@ export class NotificationService {
     @InjectModel(Notification.name) private readonly notifModel:   Model<NotificationDocument>,
     @InjectModel(Student.name)      private readonly studentModel: Model<StudentDocument>,
     @InjectModel(User.name)         private readonly userModel:    Model<UserDocument>,
+    @InjectModel(Attendance.name)   private readonly attendanceModel: Model<AttendanceDocument>,
+    @InjectModel(Incentive.name)    private readonly incentiveModel:  Model<IncentiveDocument>,
+    @InjectModel(Parent.name)       private readonly parentModel:     Model<ParentDocument>,
   ) {}
+
+  private cleanupModels() {
+    return {
+      studentModel   : this.studentModel,
+      attendanceModel: this.attendanceModel,
+      incentiveModel : this.incentiveModel,
+      parentModel    : this.parentModel,
+    };
+  }
+
+  /**
+   * Requests that need approval go to every admin as separate copies. Once one
+   * admin decides, the other copies get the same outcome, so nobody can
+   * "reject" a request that was already carried out.
+   */
+  private resolveSiblings(n: NotificationDocument, status: NotificationStatus) {
+    return this.notifModel.updateMany(
+      { _id: { $ne: n._id }, type: n.type, sender: n.sender, payload: n.payload, status: NotificationStatus.PENDING },
+      { $set: { status } },
+    );
+  }
 
   async create(input: CreateNotificationInput) {
     const status = input.requiresApproval
@@ -102,11 +130,12 @@ export class NotificationService {
 
     if (n.type === NotificationType.DELETE_REQUEST) {
       const { targetId } = n.payload as { targetId: string };
-      await this.studentModel.findByIdAndDelete(targetId);
+      if (Types.ObjectId.isValid(targetId)) await deleteStudentCascade(this.cleanupModels(), targetId);
     }
 
     n.status = NotificationStatus.ACCEPTED;
     await n.save();
+    await this.resolveSiblings(n, NotificationStatus.ACCEPTED);
     return { message: 'Request accepted and executed.' };
   }
 
@@ -118,6 +147,7 @@ export class NotificationService {
     if (!n) throw new NotFoundException('Pending notification not found.');
     n.status = NotificationStatus.REJECTED;
     await n.save();
+    await this.resolveSiblings(n, NotificationStatus.REJECTED);
     return { message: 'Request rejected.' };
   }
 

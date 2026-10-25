@@ -68,7 +68,7 @@ describe('Training', () => {
     // Partial<CreateModuleDto>. Generic types erase to Object at runtime, so
     // the ValidationPipe validates nothing, and the update runs without
     // runValidators: enums, minTier range and required title are all bypassed.
-    it.failing(
+    it(
       'BUG-26: module update should validate (type enum / minTier 1-3 / non-empty title)',
       async () => {
         const tmp = await adm().post('modules', {
@@ -124,7 +124,7 @@ describe('Training', () => {
 
     // BUG-27: a murabbi can record progress on modules above their tier,
     // which they aren't allowed to view.
-    it.failing(
+    it(
       "BUG-27: progress on a module above the murabbi's tier should be refused",
       async () => {
         const r = await mA().patch(`progress/${mods.t2}`, {
@@ -162,7 +162,7 @@ describe('Training', () => {
     // BUG-28: exam questions are not validated beyond "is an array" —
     // correctIndex can point past the options list (unanswerable question),
     // options can be empty, etc.
-    it.failing(
+    it(
       'BUG-28: exam upsert should reject correctIndex outside the options',
       async () => {
         const r = await adm().post('exams', {
@@ -212,7 +212,7 @@ describe('Training', () => {
     // one answer at a time reveals every correct answer in at most
     // (options-1) × questions attempts, so anyone can pass without knowing
     // the material.
-    it.failing(
+    it(
       'BUG-29: the exam should not be brute-forceable via correctCount over unlimited attempts',
       async () => {
         const answers = [0, 0, 0, 0];
@@ -236,6 +236,8 @@ describe('Training', () => {
     );
 
     it('passing issues one certificate (idempotent) with a downloadable PDF', async () => {
+      // The BUG-29 test above used up today's failed attempts.
+      await ctx.db.collection('trainingexamattempts').deleteMany({});
       const r1 = await mA().post('exam/submit', { answers: [0, 1, 2, 0] });
       expect(r1.body.data).toMatchObject({ passed: true, scorePercent: 100 });
       expect(r1.body.data.certificate.certificateNumber).toMatch(
@@ -306,7 +308,7 @@ describe('Training', () => {
     // active batch "completed", THEN inserts. If the insert fails (e.g.
     // duplicate batchNumber) the currently-active batch has already been
     // closed — silent data corruption from a rejected request.
-    it.failing(
+    it(
       'BUG-30: a rejected batch creation must not complete the current active batch',
       async () => {
         await adm().post('batches', { batchNumber: 1, status: 'active' }); // 409
@@ -337,7 +339,7 @@ describe('Training', () => {
 
     // BUG-31: candidate ids are not checked — non-existent users (or admins)
     // can be added to a batch and are counted in "candidates" stats.
-    it.failing(
+    it(
       'BUG-31: adding a non-existent user as candidate should fail',
       async () => {
         const r = await adm().post(`batches/${b1}/candidates`, {

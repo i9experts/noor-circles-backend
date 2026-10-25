@@ -15,27 +15,31 @@ import {
   UpsertExamDto,
   SubmitExamDto,
 } from './training.service';
-import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 class UpdateProgressDto {
   @IsNumber() @Min(0) @Max(100) progressPercent: number;
 }
 
 class CreateModuleDto {
-  @IsString() title: string;
+  @IsString() @IsNotEmpty({ message: 'Title is required.' }) title: string;
   @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsString() type?: string;
-  @IsOptional() @IsString() status?: string;
+  @IsOptional() @IsIn(['Video', 'PDF', 'Live', 'Mixed'], { message: 'Type must be Video, PDF, Live or Mixed.' }) type?: string;
+  @IsOptional() @IsIn(['Available', 'Upcoming', 'Locked'], { message: 'Status must be Available, Upcoming or Locked.' }) status?: string;
   @IsOptional() @IsNumber() totalLessons?: number;
   @IsOptional() @IsNumber() durationMinutes?: number;
   @IsOptional() @IsNumber() order?: number;
-  @IsOptional() @IsNumber() daySlot?: number;
+  @IsOptional() @IsIn([1, 2], { message: 'Day slot must be 1 or 2.' }) daySlot?: number;
   @IsOptional() @IsString() timeSlot?: string;
   /** Minimum murabbi tier (1-3) required to view this module. Defaults to 1 (everyone). */
   @IsOptional() @IsNumber() @Min(1) @Max(3) minTier?: number;
   /** Participant-facing study content (Markdown). */
   @IsOptional() @IsString() content?: string;
 }
+
+/** A real class (not `Partial<...>`, which erases to Object) so updates are validated (BUG-26). */
+class UpdateModuleDto extends PartialType(CreateModuleDto) {}
 
 @Controller('training')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -87,7 +91,7 @@ export class TrainingController {
   /** PATCH /training/modules/:id */
   @Patch('modules/:id')
   @Roles(UserRole.ADMIN)
-  updateModule(@Param('id') id: string, @Body() dto: Partial<CreateModuleDto>) {
+  updateModule(@Param('id') id: string, @Body() dto: UpdateModuleDto) {
     return this.trainingService.updateModule(id, dto);
   }
 

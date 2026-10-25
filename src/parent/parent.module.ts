@@ -6,6 +6,7 @@ import { ParentService }    from './parent.service';
 import { Parent, ParentSchema }                           from './parent.schema';
 import { Student, StudentSchema }                         from '../student/student.schema';
 import { EngagementConfig, EngagementConfigSchema }       from './engagement.schema';
+import { User, UserSchema }                               from '../user/user.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { EngagementConfig, EngagementConfigSchema }       from './engagement.sch
       { name: Parent.name,           schema: ParentSchema           },
       { name: Student.name,          schema: StudentSchema          },
       { name: EngagementConfig.name, schema: EngagementConfigSchema },
+      { name: User.name,             schema: UserSchema             },
     ]),
   ],
   controllers: [ParentController],

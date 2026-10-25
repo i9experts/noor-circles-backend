@@ -507,7 +507,7 @@ describe('Auth', () => {
     // BUG-03: the reset token stays valid for its whole 10-minute lifetime
     // and can be replayed to change the password again (e.g. by anyone who
     // saw the link/token), because nothing marks it as consumed.
-    it.failing('BUG-03: a reset token should be single-use', async () => {
+    it('BUG-03: a reset token should be single-use', async () => {
       const again = await post(
         'reset-password',
         { newPassword: 'Attacker999' },
@@ -543,7 +543,7 @@ describe('Auth', () => {
     // BUG-04: a 6-digit OTP has no attempt limit. Wrong guesses are only
     // bounded by the global rate limit, and the OTP itself is not
     // invalidated after N failures.
-    it.failing(
+    it(
       'BUG-04: OTP should be invalidated after repeated wrong guesses',
       async () => {
         await post('forgot-password', { email });
@@ -555,6 +555,30 @@ describe('Auth', () => {
         expect(r.status).toBe(400);
       },
     );
+
+    it('mail outage: forgot-password answers the same for real and unknown emails', async () => {
+      ctx.setMailFailing(true);
+      try {
+        const real = await post('forgot-password', { email });
+        const unknown = await post('forgot-password', { email: 'nobody.here@e2e.test' });
+        expect(real.status).toBe(200);
+        expect(unknown.status).toBe(200);
+        expect(real.body.message).toBe(unknown.body.message);
+      } finally {
+        ctx.setMailFailing(false);
+      }
+    });
+
+    it('a few wrong OTP guesses still allow the real code', async () => {
+      await post('forgot-password', { email });
+      const real = ctx.lastOtp(email);
+      const wrong = real === '123456' ? '654321' : '123456';
+      for (let i = 0; i < 4; i++) {
+        const r = await post('verify-otp', { email, otp: wrong });
+        expect(r.body.message).toMatch(/Incorrect OTP/);
+      }
+      expect((await post('verify-otp', { email, otp: real })).status).toBe(200);
+    });
   });
 
   // ── Users controller ────────────────────────────────────────────────────────
@@ -575,11 +599,18 @@ describe('Auth', () => {
     });
 
     it('PATCH /users/profile updates allowed fields only', async () => {
+      // Privileged fields are rejected outright (validated DTO since BUG-05).
+      const bad = await ctx
+        .http()
+        .patch(`${API}/users/profile`)
+        .set(bearer(m.token))
+        .send({ fullName: 'Renamed', role: 'admin', tier: 3 });
+      expect(bad.status).toBe(400);
       const r = await ctx
         .http()
         .patch(`${API}/users/profile`)
         .set(bearer(m.token))
-        .send({ fullName: 'Renamed', bio: 'Hello', role: 'admin', tier: 3 });
+        .send({ fullName: 'Renamed', bio: 'Hello', phone: '' });
       expect(r.status).toBe(200);
       const doc = await ctx.db
         .collection('users')
@@ -592,7 +623,7 @@ describe('Auth', () => {
     // BUG-05: PATCH /users/profile takes `@Body() body: any`, so no DTO
     // validation runs: phone format (validated everywhere else) and the image
     // URL are stored as-is — e.g. a `javascript:` URL the UI renders.
-    it.failing(
+    it(
       'BUG-05: PATCH /users/profile should validate phone format and image URL',
       async () => {
         const r = await ctx
@@ -615,7 +646,7 @@ describe('Auth', () => {
 
     // BUG-06: change-password has no password-strength rules, unlike signup
     // and reset (min 8 chars, 1 uppercase, 1 digit).
-    it.failing(
+    it(
       'BUG-06: change-password should enforce the password policy',
       async () => {
         const r = await ctx
@@ -628,7 +659,7 @@ describe('Auth', () => {
     );
 
     // BUG-07: non-string currentPassword reaches bcrypt.compare and crashes → 500.
-    it.failing(
+    it(
       'BUG-07: change-password with a non-string password should be 400, not 500',
       async () => {
         const r = await ctx
@@ -664,7 +695,7 @@ describe('Auth', () => {
     // BUG-08: an admin can deactivate their own account (or the only other
     // admin) via /users/:id/deactivate or /admin/murabbis/:id/deactivate,
     // locking everyone out of the admin portal.
-    it.failing(
+    it(
       'BUG-08: admin accounts should not be deactivatable through these endpoints',
       async () => {
         const me = await ctx

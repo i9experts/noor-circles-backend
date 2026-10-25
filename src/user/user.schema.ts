@@ -58,6 +58,14 @@ export class User {
   @Prop({ type: Date, default: null, select: false })
   otpExpiresAt: Date | null;
 
+  /** Wrong guesses against the current OTP; it's discarded at MAX_OTP_ATTEMPTS. */
+  @Prop({ type: Number, default: 0, select: false })
+  otpAttempts: number;
+
+  /** Id of the one reset token currently allowed; cleared when it's used. */
+  @Prop({ type: String, default: null, select: false })
+  resetTokenId: string | null;
+
   /** Temp data before email verified */
   @Prop({ type: Object, default: null, select: false })
   pendingSignup: { fullName: string; password: string } | null;

@@ -25,7 +25,32 @@ Each bug is a test that asserts the **correct** behaviour, wrapped in `it.failin
 | BUG-01 public self-signup = active murabbi | ✅ Fixed: sign-ups are pending until an admin approves (Murabbis page → "Awaiting approval" → Approve); admins get a notification |
 | BUG-32 `/parents/page-data` leaks all parents | ✅ Fixed: `page-data` and `stats` are admin-only |
 | BUG-47 every visitor shares one rate-limit bucket behind the proxy | ✅ Fixed: `trust proxy` set to one hop in `main.ts` |
-| All others | Open; see below |
+| **Second batch (2026-10-25)** | |
+| BUG-21 circle handover leaves students with the old murabbi | ✅ Fixed: students move with their circle |
+| BUG-23 attendance accepts other circles' students / duplicates | ✅ Fixed: records must be distinct students of that circle (students already in a session stay editable after moving) |
+| BUG-43 SSE events double-wrapped | ✅ Fixed: the response interceptor skips SSE handlers |
+| BUG-04 unlimited OTP guesses | ✅ Fixed: the code is discarded after 5 wrong guesses |
+| BUG-03 reset token replayable | ✅ Fixed: single-use, and only the newest one works |
+| BUG-08 / 11 / 12 murabbi routes act on admins; delete orphans circles | ✅ Fixed: those routes only touch murabbi accounts; admins can't be deactivated; a murabbi who leads circles can't be deleted |
+| BUG-13 names interpolated into `$regex` | ✅ Fixed: escaped (`common/utils/regex.util.ts`) |
+| BUG-14 malformed ids → 500 | ✅ Fixed: `BSONError` maps to 400 in the global filter |
+| BUG-22 murabbi enrolment, unknown neighbourhood | ✅ Fixed |
+| BUG-18 neighbourhood not checked against the circle | ⏸ Open, needs a product decision: existence is checked, but the portal deliberately lets a student's neighbourhood differ from their circle's. Test still pinned. |
+| BUG-26 module/lesson updates unvalidated | ✅ Fixed: real `PartialType` DTOs, enum checks, `runValidators` |
+| BUG-27 progress above the murabbi's tier | ✅ Fixed |
+| BUG-28 exam `correctIndex` out of range | ✅ Fixed |
+| BUG-29 exam brute force | ✅ Fixed: at most 3 failed attempts per 24 hours |
+| BUG-30 rejected batch closes the active one | ✅ Fixed |
+| BUG-31 unknown batch candidates | ✅ Fixed |
+| BUG-34 WhatsApp "off" ignored | ✅ Fixed |
+| BUG-35 SSE token loads no user; token in URL | ✅ Fixed: one-time 60 s stream ticket; the admin is re-checked in the DB (`?token=` still accepted for older portal builds) |
+| BUG-39 / 41 murabbis see other circles' trend and sessions | ✅ Fixed |
+| BUG-44 Draft lessons visible to murabbis | ✅ Fixed |
+| BUG-05 / 06 / 07 profile and change-password validation | ✅ Fixed |
+| BUG-15 / 16 / 17 / 19 / 20 pipeline status, capacity, circle deactivation | ✅ Fixed (circles can be deactivated from the portal) |
+| BUG-24 / 25 one session per day; unique session numbers | ✅ Fixed |
+| BUG-33 / 36 / 37 / 38 / 40 / 42 / 45 / 46 | ✅ Fixed |
+| Code-review findings | ✅ Fixed: `npm test`, WebP uploads, Pakistan-time recurring sessions, mail-failure enumeration, orphans on delete, multi-admin delete requests, Murabbi of the Month / curriculum / pass-rate stats, dashboard attendance aggregated in MongoDB |
 
 **Deploy notes for these fixes:**
 - **Everyone is signed out once.** Old refresh tokens were stored as bcrypt hashes and no longer match, so each user signs in again once.
