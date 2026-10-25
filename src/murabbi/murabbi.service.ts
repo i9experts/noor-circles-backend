@@ -12,6 +12,7 @@ import { Attendance, AttendanceDocument } from '../attendance/attendance.schema'
 import { NotificationService }       from '../notification/notification.service';
 import { NotificationType }          from '../notification/notification.schema';
 import { safeEmail, safeTrim } from '../common/utils/transform.util';
+import { Neighbourhood, NeighbourhoodDocument } from '../neighbourhood/neighbourhood.schema';
 
 export class MurabbiEnrollStudentDto {
   @IsString()
@@ -95,6 +96,7 @@ export class MurabbiService {
     @InjectModel(Circle.name)      private readonly circleModel:      Model<CircleDocument>,
     @InjectModel(Student.name)     private readonly studentModel:     Model<StudentDocument>,
     @InjectModel(Attendance.name)  private readonly attendanceModel:  Model<AttendanceDocument>,
+    @InjectModel(Neighbourhood.name) private readonly neighbourhoodModel: Model<NeighbourhoodDocument>,
     private readonly notifService: NotificationService,
   ) {}
 
@@ -237,6 +239,9 @@ export class MurabbiService {
       throw new BadRequestException('This circle is not assigned to you.');
     }
     if (!circle.isActive) throw new BadRequestException('Cannot enroll in an inactive circle.');
+    if (!(await this.neighbourhoodModel.exists({ _id: new Types.ObjectId(dto.neighbourhoodId) }))) {
+      throw new NotFoundException('Neighbourhood not found.');
+    }
 
     const enrolledCount = await this.studentModel.countDocuments({
       circle  : new Types.ObjectId(dto.circleId),

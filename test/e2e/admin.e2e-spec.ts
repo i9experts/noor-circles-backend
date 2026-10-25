@@ -162,7 +162,7 @@ describe('Admin', () => {
 
     // BUG-11: /admin/murabbis/:id routes don't check the target's role, so
     // the "murabbi" update endpoint will happily edit an admin account.
-    it.failing(
+    it(
       'BUG-11: PATCH /admin/murabbis/:id should refuse to edit a non-murabbi (admin) account',
       async () => {
         const me = await ctx.http().get(`${API}/auth/me`).set(A());
@@ -189,7 +189,7 @@ describe('Admin', () => {
     // no longer exists. Every circle/report view then shows murabbi=null and
     // the circle can't be used for attendance (ownership check compares to a
     // dead id). Should be blocked while circles are assigned, or reassign.
-    it.failing(
+    it(
       'BUG-12: deleting a murabbi who still owns circles should be blocked (or circles reassigned)',
       async () => {
         const m = await createMurabbi(ctx, w.admin, 'orphan@e2e.test');
@@ -273,7 +273,7 @@ describe('Admin', () => {
     // duplicate check. A name with regex metacharacters (perfectly normal
     // for addresses, e.g. "Block [A]" or "Phase (2") crashes with 500, and
     // "." wildcards produce false duplicates.
-    it.failing(
+    it(
       'BUG-13: neighbourhood names containing regex characters should be accepted',
       async () => {
         const r = await post('neighbourhoods', { name: 'DHA Phase (2' });
@@ -281,7 +281,7 @@ describe('Admin', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-13: "Block.A" must not be reported as a duplicate of "BlockXA"',
       async () => {
         await post('neighbourhoods', { name: 'BlockXA' });
@@ -303,7 +303,7 @@ describe('Admin', () => {
     // BUG-14: several services build `new Types.ObjectId(id)` straight from a
     // route/query param. A malformed id throws a BSONError (not a Mongoose
     // CastError), which the global filter doesn't recognise → 500.
-    it.failing(
+    it(
       'BUG-14: PATCH /admin/neighbourhoods/:id with malformed id → 400 (is 500)',
       async () => {
         expect(
@@ -312,13 +312,13 @@ describe('Admin', () => {
         ).toBe(400);
       },
     );
-    it.failing(
+    it(
       'BUG-14: DELETE /admin/neighbourhoods/:id with malformed id → 400 (is 500)',
       async () => {
         expect((await del(`neighbourhoods/${BAD_ID}`)).status).toBe(400);
       },
     );
-    it.failing(
+    it(
       'BUG-14: GET /admin/students?murabbiId=<malformed> → 400 (is 500)',
       async () => {
         expect((await get(`students?murabbiId=${BAD_ID}`)).status).toBe(400);

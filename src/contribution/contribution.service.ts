@@ -16,6 +16,7 @@ import { Parent, ParentDocument } from '../parent/parent.schema';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
 import { addMonths, currentMonth, monthOf, monthsBetween } from '../common/utils/month.util';
+import { escapeRegex } from '../common/utils/regex.util';
 
 export type MonthState = 'paid' | 'partial' | 'due' | 'overdue' | 'advance';
 
@@ -136,7 +137,7 @@ export class ContributionService {
     if (filters.type)   q.type   = filters.type;
     if (filters.status) q.status = filters.status;
     if (filters.search) {
-      const rx = new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const rx = new RegExp(escapeRegex(filters.search), 'i');
       q.$or = [{ fullName: rx }, { email: rx }, { phone: rx }];
     }
     const contributors = await this.contributorModel

@@ -301,6 +301,12 @@ export class ReportService {
     let filter: any = {};
 
     if (circleId) {
+      // A murabbi may only read their own circle's trend (BUG-39).
+      if (murabbiId) {
+        const circle = await this.circleModel.findById(circleId).select('murabbi').lean();
+        if (!circle) throw new NotFoundException('Circle not found.');
+        if (circle.murabbi?.toString() !== murabbiId) throw new ForbiddenException('This circle is not assigned to you.');
+      }
       filter = { circle: new Types.ObjectId(circleId) };
     } else if (murabbiId) {
       const circleIds = (

@@ -84,7 +84,7 @@ describe('Murabbi portal + Attendance', () => {
     });
 
     // BUG-22: murabbi enrolment never checks that neighbourhoodId exists.
-    it.failing(
+    it(
       'BUG-22: murabbi enrolment with a non-existent neighbourhood should fail',
       async () => {
         const r = await mA().post('murabbi/enroll-student', {
@@ -115,7 +115,7 @@ describe('Murabbi portal + Attendance', () => {
       ).toBe(404);
     });
 
-    it.failing(
+    it(
       'BUG-14: PATCH /murabbi/students/<malformed id> → 400 (is 500)',
       async () => {
         expect(
@@ -305,7 +305,7 @@ describe('Murabbi portal + Attendance', () => {
       ).toBeGreaterThanOrEqual(1);
     });
 
-    it.failing(
+    it(
       'BUG-14: GET /attendance/by-murabbi/<malformed id> → 400 (is 500)',
       async () => {
         expect(

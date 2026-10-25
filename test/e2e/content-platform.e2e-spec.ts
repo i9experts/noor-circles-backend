@@ -69,7 +69,7 @@ describe('Content + platform', () => {
 
     // BUG-26 (same root cause): PATCH /lessons/:id body is Partial<CreateLessonDto>
     // → no validation, no runValidators.
-    it.failing(
+    it(
       'BUG-26: lesson update should reject an invalid status / empty title',
       async () => {
         const r = await adm().patch(`lessons/${id}`, {
@@ -81,7 +81,7 @@ describe('Content + platform', () => {
     );
 
     // BUG-44: lessons in status "Draft" are returned to murabbis.
-    it.failing(
+    it(
       'BUG-44: Draft lessons should not be visible to murabbis',
       async () => {
         await adm().post('lessons', { title: 'Unfinished', status: 'Draft' });
@@ -164,7 +164,7 @@ describe('Content + platform', () => {
       ).toBe(404);
     });
 
-    it.failing(
+    it(
       'BUG-14: PATCH /notifications/<malformed>/read → 400 (is 500)',
       async () => {
         expect((await mA().patch(`notifications/${BAD_ID}/read`)).status).toBe(
@@ -172,7 +172,7 @@ describe('Content + platform', () => {
         );
       },
     );
-    it.failing(
+    it(
       'BUG-14: PATCH /notifications/<malformed>/accept → 400 (is 500)',
       async () => {
         expect(

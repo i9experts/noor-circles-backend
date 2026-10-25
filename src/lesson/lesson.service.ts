@@ -9,13 +9,14 @@ export class LessonService {
     @InjectModel(Lesson.name) private readonly lessonModel: Model<LessonDocument>,
   ) {}
 
-  async getAll() {
-    return this.lessonModel.find().sort({ order: 1 }).lean();
+  /** Murabbis never see Draft lessons (BUG-44). */
+  async getAll(includeDrafts = false) {
+    return this.lessonModel.find(includeDrafts ? {} : { status: { $ne: 'Draft' } }).sort({ order: 1 }).lean();
   }
 
-  async getOne(id: string) {
+  async getOne(id: string, includeDrafts = false) {
     const lesson = await this.lessonModel.findById(id).lean();
-    if (!lesson) throw new NotFoundException('Lesson not found');
+    if (!lesson || (!includeDrafts && lesson.status === 'Draft')) throw new NotFoundException('Lesson not found');
     return lesson;
   }
 
@@ -24,7 +25,7 @@ export class LessonService {
   }
 
   async update(id: string, data: Partial<Lesson>) {
-    const lesson = await this.lessonModel.findByIdAndUpdate(id, data, { new: true });
+    const lesson = await this.lessonModel.findByIdAndUpdate(id, data, { new: true, runValidators: true });
     if (!lesson) throw new NotFoundException('Lesson not found');
     return lesson;
   }

@@ -530,7 +530,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
       expect((await adm().del(`performance/reviews/${id}`)).status).toBe(404);
     });
 
-    it.failing(
+    it(
       'BUG-14: GET /performance/reviews?circleId=<malformed> → 400 (is 500)',
       async () => {
         expect(
@@ -576,7 +576,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-39: attendance-trend ignores ownership when circleId is supplied —
     // the murabbi-scoping branch only applies when circleId is omitted.
-    it.failing(
+    it(
       "BUG-39: murabbi must not read another circle's attendance trend via ?circleId=",
       async () => {
         const r = await mA().get(
@@ -586,7 +586,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
       },
     );
 
-    it.failing(
+    it(
       'BUG-14: GET /reports/attendance-trend?circleId=<malformed> → 400 (is 500)',
       async () => {
         expect(
@@ -641,7 +641,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
     // BUG-41: /sessions/list returns every attendance session in the system
     // (all circles, all murabbis) to any murabbi — inconsistent with the
     // per-circle ownership enforced on /attendance.
-    it.failing(
+    it(
       "BUG-41: /sessions/list should only show a murabbi their own circles' sessions",
       async () => {
         const r = await mA().get('sessions/list');
@@ -652,7 +652,7 @@ describe('Parents / Incentives / Performance / Reports / Sessions', () => {
 
     // BUG-42: sessionsCompleted counts DISTINCT session numbers across all
     // circles, so 10 circles each running session 1 shows "1 session".
-    it.failing(
+    it(
       'BUG-42: sessions/stats.sessionsCompleted should count sessions, not distinct numbers',
       async () => {
         const r = await adm().get('sessions/stats');

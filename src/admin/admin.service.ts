@@ -31,6 +31,7 @@ import {
   UpdatePipelineDto,
   UpdateStudentDto,
 } from './admin.dto';
+import { escapeRegex } from '../common/utils/regex.util';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -213,14 +214,38 @@ export class AdminService {
     };
   }
 
-  deactivateMurabbi(userId: string) { return this.usersService.deactivateUser(userId); }
-  activateMurabbi(userId: string)   { return this.usersService.activateUser(userId); }
-  deleteMurabbi(userId: string)     { return this.usersService.deleteMurabbi(userId); }
+  /** The /admin/murabbis/:id routes only ever act on murabbi accounts (BUG-08, BUG-11). */
+  private async assertMurabbi(userId: string) {
+    const exists = await this.userModel.exists({ _id: new Types.ObjectId(userId), role: UserRole.MURABBI });
+    if (!exists) throw new NotFoundException('Murabbi not found.');
+  }
+
+  async deactivateMurabbi(userId: string) {
+    await this.assertMurabbi(userId);
+    return this.usersService.deactivateUser(userId);
+  }
+
+  async activateMurabbi(userId: string) {
+    await this.assertMurabbi(userId);
+    return this.usersService.activateUser(userId);
+  }
+
+  async deleteMurabbi(userId: string) {
+    await this.assertMurabbi(userId);
+    // Circles would be left pointing at a deleted user (BUG-12).
+    const owned = await this.circleModel.countDocuments({ murabbi: new Types.ObjectId(userId) });
+    if (owned) {
+      throw new BadRequestException(
+        `This murabbi still leads ${owned} circle${owned === 1 ? '' : 's'}. Reassign ${owned === 1 ? 'it' : 'them'} to another murabbi first, or deactivate the account instead.`,
+      );
+    }
+    return this.usersService.deleteMurabbi(userId);
+  }
 
   async updateMurabbiTier(userId: string, tier: 1 | 2 | 3) {
     if (![1, 2, 3].includes(tier)) throw new BadRequestException('Tier must be 1, 2, or 3.');
-    const user = await this.userModel.findByIdAndUpdate(
-      userId, { tier }, { new: true },
+    const user = await this.userModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(userId), role: UserRole.MURABBI }, { tier }, { new: true },
     ).select('-password -refreshTokens');
     if (!user) throw new NotFoundException('Murabbi not found.');
     this.logger.log(`Admin updated tier → ${user.email} → Tier ${tier}`);
@@ -235,8 +260,8 @@ export class AdminService {
     if (dto.image    !== undefined) update['image']    = dto.image    || null;
     if (dto.tier     !== undefined) update['tier']     = dto.tier;
 
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
+    const user = await this.userModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(userId), role: UserRole.MURABBI },
       { $set: update },
       { new: true },
     ).select('-password -refreshTokens');
@@ -330,7 +355,7 @@ export class AdminService {
     const entry = await this.pipelineModel.findById(id).lean();
     if (!entry) throw new NotFoundException('Pipeline entry not found.');
 
-    const exists = await this.neighbourhoodModel.findOne({ name: { $regex: `^${entry.name}$`, $options: 'i' } });
+    const exists = await this.neighbourhoodModel.findOne({ name: { $regex: `^${escapeRegex(entry.name)}$`, $options: 'i' } });
     if (exists) throw new ConflictException('A neighbourhood with this name already exists.');
 
     const nbh = await this.neighbourhoodModel.create({
@@ -353,7 +378,7 @@ export class AdminService {
 
   async createNeighbourhood(dto: CreateNeighbourhoodDto) {
     const exists = await this.neighbourhoodModel.findOne({
-      name: { $regex: `^${dto.name}$`, $options: 'i' },
+      name: { $regex: `^${escapeRegex(dto.name)}$`, $options: 'i' },
     });
     if (exists) throw new ConflictException('A neighbourhood with this name already exists.');
 
@@ -372,7 +397,7 @@ export class AdminService {
     if (dto.name) {
       const duplicate = await this.neighbourhoodModel.findOne({
         _id : { $ne: new Types.ObjectId(id) },
-        name: { $regex: `^${dto.name}$`, $options: 'i' },
+        name: { $regex: `^${escapeRegex(dto.name)}$`, $options: 'i' },
       });
       if (duplicate) throw new ConflictException('A neighbourhood with this name already exists.');
     }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 
@@ -23,8 +23,8 @@ export class SessionsService {
       this.circleModel.countDocuments({ isActive: true }),
     ]);
 
-    const uniqueSessionNumbers = new Set(sessions.map((s) => s.sessionNumber));
-    const sessionsCompleted    = uniqueSessionNumbers.size;
+    // Every submitted session counts, not just distinct session numbers (BUG-42).
+    const sessionsCompleted = sessions.length;
 
     let totalPresent = 0;
     let totalRecords = 0;
@@ -51,9 +51,12 @@ export class SessionsService {
     };
   }
 
-  async getAllSessions() {
+  async getAllSessions(murabbiId?: string) {
+    const filter = murabbiId
+      ? { circle: { $in: (await this.circleModel.find({ murabbi: new Types.ObjectId(murabbiId) }).select('_id').lean()).map((c) => c._id) } }
+      : {};
     const sessions = await this.attendanceModel
-      .find()
+      .find(filter)
       .populate('circle', 'name')
       .populate('submittedBy', 'fullName')
       .sort({ sessionDate: -1, sessionNumber: -1 })

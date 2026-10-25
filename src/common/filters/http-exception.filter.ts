@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Error as MongooseError } from 'mongoose';
+import { Error as MongooseError, mongo } from 'mongoose';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -45,6 +45,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       // each handler individually.
       status  = HttpStatus.BAD_REQUEST;
       message = `Invalid ${exception.path === '_id' ? 'id' : exception.path} format.`;
+    } else if (exception instanceof mongo.BSON.BSONError) {
+      // `new Types.ObjectId(badString)` in a service throws a BSONError
+      // rather than a CastError (BUG-14). It's always a malformed id.
+      status  = HttpStatus.BAD_REQUEST;
+      message = 'Invalid id format.';
     } else if (exception instanceof MongooseError.ValidationError) {
       status  = HttpStatus.BAD_REQUEST;
       message = 'Validation failed';

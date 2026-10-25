@@ -675,7 +675,7 @@ describe('Auth', () => {
     // BUG-08: an admin can deactivate their own account (or the only other
     // admin) via /users/:id/deactivate or /admin/murabbis/:id/deactivate,
     // locking everyone out of the admin portal.
-    it.failing(
+    it(
       'BUG-08: admin accounts should not be deactivatable through these endpoints',
       async () => {
         const me = await ctx
