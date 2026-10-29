@@ -26,5 +26,6 @@ import { User, UserSchema } from '../user/user.schema';
   ],
   controllers: [TrainingController],
   providers  : [TrainingService],
+  exports    : [TrainingService],
 })
 export class TrainingNestModule {}

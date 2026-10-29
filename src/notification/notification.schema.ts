@@ -13,6 +13,7 @@ export enum NotificationType {
   INTEREST_REQUEST    = 'interest_request',     // public landing page → admin (no sender)
   CONTRIBUTION        = 'contribution',         // website pledge / Stripe payment → admin (no sender)
   REWARD              = 'reward',               // admin → murabbi (reward paid)
+  TRAINING            = 'training',             // admin → murabbi (training assigned / reviewed / certified)
 }
 
 export enum NotificationStatus {
