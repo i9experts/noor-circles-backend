@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type InterestDocument = Interest & Document;
 
@@ -43,6 +43,10 @@ export class Interest {
   /** Internal follow-up notes (admin only). */
   @Prop({ trim: true, maxlength: 1000, default: '' })
   notes: string;
+
+  /** The portal account created from this request (murabbi or parent). */
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  account: Types.ObjectId | null;
 }
 
 export const InterestSchema = SchemaFactory.createForClass(Interest);

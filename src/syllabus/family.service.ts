@@ -95,6 +95,18 @@ export class FamilyService {
   async view(token: string) {
     const parent = await this.parentFromToken(token);
     this.parentModel.updateOne({ _id: parent._id }, { $set: { familyLinkLastViewedAt: new Date() } }).catch(() => {});
+    return this.build(parent);
+  }
+
+  /** The same page for a parent signed in with their own account. */
+  async viewForAccount(userId: string, accountName: string) {
+    const parent = await this.parentModel.findOne({ account: new Types.ObjectId(userId) }).select('fullName students').lean();
+    if (!parent) throw new NotFoundException('We couldn’t find your family record. Please contact the Noor Circles team.');
+    // Greet them by their own name (the record may have been entered as e.g. "Parent of Ahmed").
+    return this.build({ ...parent, fullName: accountName || parent.fullName });
+  }
+
+  private async build(parent: { _id: Types.ObjectId; fullName: string; students: Types.ObjectId[] }) {
 
     const students = await this.studentModel.find({ _id: { $in: parent.students }, isActive: true })
       .populate({ path: 'circle', populate: [{ path: 'murabbi', select: 'fullName' }, { path: 'track', select: 'name ageGroup' }, { path: 'neighbourhood', select: 'name' }] })

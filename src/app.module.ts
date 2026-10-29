@@ -28,6 +28,7 @@ import { EngagementModule }    from './engagement/engagement.module';
 import { RewardsModule }       from './rewards/rewards.module';
 import { SyllabusModule }      from './syllabus/syllabus.module';
 import { CourseModule }        from './course/course.module';
+import { AccountModule }       from './account/account.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { CourseModule }        from './course/course.module';
     RewardsModule,
     SyllabusModule,
     CourseModule,
+    AccountModule,
   ],
   providers: [
     // Apply rate limiting globally

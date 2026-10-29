@@ -9,6 +9,8 @@ export interface AuthUser {
   email   : string;
   role    : string;
   image  ?: string | null;
+  /** The user signed in with a temporary password and must choose their own. */
+  mustChangePassword?: boolean;
 }
 
 export interface JwtPayload {

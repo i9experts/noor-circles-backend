@@ -52,9 +52,14 @@ export class Parent {
 
   @Prop({ type: Date, default: null })
   familyLinkLastViewedAt: Date | null;
+
+  /** The parent's sign-in account, if one has been created. */
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  account: Types.ObjectId | null;
 }
 
 export const ParentSchema = SchemaFactory.createForClass(Parent);
 
 ParentSchema.index({ isEngaged: 1 });
 ParentSchema.index({ phone: 1 });
+ParentSchema.index({ account: 1 }, { unique: true, partialFilterExpression: { account: { $type: 'objectId' } } });

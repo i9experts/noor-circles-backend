@@ -173,6 +173,7 @@ export class AuthService {
       user._id.toString(),
       this.hashToken(tokens.refreshToken),
     );
+    await this.userModel.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
 
     this.logger.log(`Signed in → ${user.email} [${user.role}]`);
     return {
@@ -446,6 +447,7 @@ export class AuthService {
       email   : user.email,
       role    : user.role,
       image   : user.image ?? null,
+      mustChangePassword: !!user.mustChangePassword,
     };
   }
 }

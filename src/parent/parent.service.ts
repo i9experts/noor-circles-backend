@@ -527,6 +527,7 @@ export class ParentService {
         select  : 'fullName circle',
         populate: { path: 'circle', select: 'name' },
       })
+      .populate(requesterRole === 'admin' ? { path: 'account', select: 'email isActive mustChangePassword lastLoginAt' } : [])
       .sort({ createdAt: -1 })
       .lean();
   }
@@ -575,6 +576,8 @@ export class ParentService {
   async remove(id: string) {
     const parent = await this.parentModel.findByIdAndDelete(id).lean();
     if (!parent) throw new NotFoundException('Parent not found.');
+    // Their sign-in goes with them.
+    if (parent.account) await this.userModel.deleteOne({ _id: parent.account, role: UserRole.PARENT });
     return { message: 'Parent record deleted successfully.' };
   }
 
@@ -604,6 +607,7 @@ export class ParentService {
       this.parentModel
         .find()
         .populate({ path: 'students', select: 'fullName circle', populate: { path: 'circle', select: 'name' } })
+        .populate({ path: 'account', select: 'email isActive mustChangePassword lastLoginAt' })
         .lean(),
       this.studentModel.countDocuments(),
     ]);

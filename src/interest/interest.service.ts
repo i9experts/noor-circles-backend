@@ -52,7 +52,7 @@ export class InterestService {
     const q: Record<string, string> = {};
     if (filters.status) q.status = filters.status;
     if (filters.role)   q.role   = filters.role;
-    return this.interestModel.find(q).sort({ createdAt: -1 }).lean();
+    return this.interestModel.find(q).populate('account', 'email role isActive mustChangePassword lastLoginAt').sort({ createdAt: -1 }).lean();
   }
 
   async update(id: string, dto: UpdateInterestDto) {
