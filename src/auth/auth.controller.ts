@@ -140,6 +140,7 @@ export class AuthController {
       phone   : user.phone ?? null,
       bio     : user.bio ?? null,
       tier    : user.tier ?? 1,
+      mustChangePassword: !!user.mustChangePassword,
     };
   }
 

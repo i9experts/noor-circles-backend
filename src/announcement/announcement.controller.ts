@@ -21,8 +21,10 @@ import { UserDocument, UserRole } from '../user/user.schema';
 export class AnnouncementController {
   constructor(private readonly announcementService: AnnouncementService) {}
 
-  /** GET /announcements — all authenticated users */
+  /** GET /announcements — the team (admins and murabbis), not parents */
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MURABBI)
   getAll() {
     return this.announcementService.getAll();
   }

@@ -6,6 +6,8 @@ export type UserDocument = User & Document;
 export enum UserRole {
   ADMIN = 'admin',
   MURABBI = 'murabbi',
+  /** A family member who signs in to follow their child's circle. */
+  PARENT = 'parent',
 }
 
 @Schema({ timestamps: true })
@@ -47,6 +49,13 @@ export class User {
 
   @Prop({ type: Number, enum: [1, 2, 3], default: 1 })
   tier: number;
+
+  /** Set when an admin issues a temporary password; the user must choose their own at next sign-in. */
+  @Prop({ type: Boolean, default: false })
+  mustChangePassword: boolean;
+
+  @Prop({ type: Date, default: null })
+  lastLoginAt: Date | null;
 
   @Prop({ type: [String], default: [], select: false })
   refreshTokens: string[];

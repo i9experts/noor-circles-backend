@@ -71,6 +71,7 @@ export class UsersService {
   async updatePassword(userId: string, hashedPassword: string) {
     await this.userModel.findByIdAndUpdate(userId, {
       password: hashedPassword,
+      mustChangePassword: false,
       refreshTokens: [], // Revoke all sessions on password change
     });
   }

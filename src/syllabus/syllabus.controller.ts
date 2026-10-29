@@ -147,6 +147,12 @@ export class FamilyController {
   @Roles(UserRole.ADMIN)
   rotate(@Param('id') id: string) { return this.family.rotateLink(id); }
 
+  /** GET /family/me — a signed-in parent's family page. */
+  @Get('family/me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PARENT)
+  mine(@CurrentUser() user: UserDocument) { return this.family.viewForAccount(user._id.toString(), user.fullName); }
+
   /** GET /family/:token — public, password-free family page data. */
   @Get('family/:token')
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
