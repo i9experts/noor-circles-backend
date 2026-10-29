@@ -555,7 +555,7 @@ export class TrainingService {
         doc.font('Times-Bold').fontSize(12);
         const bw = doc.widthOfString(label, { characterSpacing: 2 }) + 40;
         doc.roundedRect((W - bw) / 2, 318, bw, 28, 14).lineWidth(1.5).fillAndStroke('#fbf4e2', GOLD);
-        doc.fillColor(MAROON).text(label, 0, 326, { align: 'center', characterSpacing: 2 });
+        doc.fillColor(MAROON).text(label, 0, 328, { align: 'center', characterSpacing: 2 });
       }
 
       const issued = new Date(cert.issuedAt);
