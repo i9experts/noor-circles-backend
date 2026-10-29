@@ -452,7 +452,8 @@ export class TrainingService {
 
   // ── Certificates ─────────────────────────────────────────────────────────────
 
-  private async issueCertificateIfNeeded(userId: string, tier: number) {
+  /** Issues the tier certificate once (also used by the Asaas audio course). */
+  async issueCertificateIfNeeded(userId: string, tier: number) {
     const existing = await this.certificateModel.findOne({ user: new Types.ObjectId(userId), tier });
     if (existing) return existing;
 
@@ -471,6 +472,14 @@ export class TrainingService {
       }
     }
     throw new ConflictException('Could not issue certificate — please try again.');
+  }
+
+  /** Certificates for the given users (all users if omitted), optionally for one tier. */
+  certificatesFor(userIds?: Types.ObjectId[], tier?: number) {
+    return this.certificateModel
+      .find({ ...(userIds && { user: { $in: userIds } }), ...(tier !== undefined && { tier }) })
+      .select('user tier certificateNumber issuedAt')
+      .lean();
   }
 
   async getMyCertificates(userId: string) {
@@ -539,6 +548,15 @@ export class TrainingService {
           'demonstrating the knowledge and character required to lead a Noor Circle under EDUDEEN supervision.',
           80, 280, { align: 'center', width: W - 160 },
         );
+
+      if (tier === 1) {
+        // The badge earned with the Asaas course.
+        const label = 'CERTIFIED ASAAS MURABBI';
+        doc.font('Times-Bold').fontSize(12);
+        const bw = doc.widthOfString(label, { characterSpacing: 2 }) + 40;
+        doc.roundedRect((W - bw) / 2, 318, bw, 28, 14).lineWidth(1.5).fillAndStroke('#fbf4e2', GOLD);
+        doc.fillColor(MAROON).text(label, 0, 328, { align: 'center', characterSpacing: 2 });
+      }
 
       const issued = new Date(cert.issuedAt);
       const dateStr = issued.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });

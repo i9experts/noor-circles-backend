@@ -1,0 +1,427 @@
+[
+  {
+    "module": "Module 1: Foundations of Tarbiyah",
+    "sourceLesson": "M1-03",
+    "question": "Training کے مطابق ایک معلم اور ایک مربی کے کام میں بنیادی فرق کیا ہے؟",
+    "questionEn": "According to the training, what is the core difference between the work of a mu'allim (teacher) and a murabbi?",
+    "options": [
+      "معلم دنیاوی مضامین پڑھاتا ہے، جبکہ مربی صرف دینی مضامین پڑھاتا ہے",
+      "معلم وہ بدلتا ہے جو بچہ جانتا ہے، جبکہ مربی وہ بدلتا ہے جو بچہ ہے",
+      "مربی کا کام اتنا اہم ہے کہ اس کے ہوتے ہوئے معلم کی ضرورت باقی نہیں رہتی",
+      "مربی کا اصل کام بچوں کو امتحان کے لیے دینی معلومات اچھی طرح یاد کروانا ہے"
+    ],
+    "correctIndex": 1,
+    "explanation": "Trainer نے کہا کہ معلم وہ بدلتا ہے جو بچہ جانتا ہے اور مربی وہ جو بچہ ہے؛ دونوں اہم ہیں مگر یہ دو الگ کام ہیں، اور Noor Circle میں ہم دوسرا کام کرنے آئے ہیں۔"
+  },
+  {
+    "module": "Module 1: Foundations of Tarbiyah",
+    "sourceLesson": "M1-05",
+    "question": "ایک نیا مربی کہتا ہے: “میرا اصل کام ان بچوں کے اندر نیکی ڈالنا ہے۔” مالی اور گلاب کی مثال کی روشنی میں training اس بات کو کیسے درست کرتی ہے؟",
+    "questionEn": "A new murabbi says: 'My real job is to put goodness into these children.' In light of the gardener-and-rose analogy, how does the training correct this?",
+    "options": [
+      "یہ بات بالکل درست ہے، کیونکہ بچے خالی برتن کی طرح ہوتے ہیں جنہیں باہر سے بھرنا پڑتا ہے",
+      "مربی کا کام نیکی ڈالنا نہیں بلکہ بچوں کو سخت نگرانی میں رکھنا ہے تاکہ وہ کوئی غلطی نہ کریں",
+      "مربی کا کام صرف session guide پڑھ کر سنانا ہے، باقی تربیت گھر والوں کی ذمہ داری ہے",
+      "نیکی (فطرت) اللہ پہلے ہی بچے میں رکھ چکا ہے؛ مربی کا کام وہ ماحول بنانا ہے جس میں وہ اُگ سکے"
+    ],
+    "correctIndex": 3,
+    "explanation": "M1-05 میں کہا گیا کہ مالی گلاب میں خوشبو نہیں ڈالتا، خوشبو اللہ نے رکھی ہے؛ مالی بس مٹی نرم رکھتا، پانی دیتا، جڑی بوٹیاں نکالتا اور صبر کرتا ہے، اور یہی مربی کا کام ہے۔"
+  },
+  {
+    "module": "Module 1: Foundations of Tarbiyah",
+    "sourceLesson": "M1-06",
+    "question": "آپ کو پتہ چلتا ہے کہ circle کے ایک بچے نے گھر میں امی سے جھوٹ بولا تھا۔ فطرت کے پہلے دو اصولوں کے مطابق مربی کا رویہ کیسا ہونا چاہیے؟",
+    "questionEn": "You learn that a child in your circle lied to his mother at home. According to the first two principles of fitrah, how should the murabbi approach this?",
+    "options": [
+      "بچے کو شرمندہ کیے بغیر بات کرنا، اور اس اچھائی سے شروع کرنا جو اس میں پہلے سے موجود ہے",
+      "سب بچوں کے سامنے پوچھنا: “شرم نہیں آتی؟” تاکہ باقی بچے بھی اس سے سبق لیں",
+      "اس کا موازنہ کسی سچے بچے سے کرنا: “دیکھو فلاں کتنا اچھا اور لائق ہے”",
+      "اسے یاد دلانا کہ “لوگ کیا کہیں گے؟” تاکہ اس کے اندر حیا پیدا ہو"
+    ],
+    "correctIndex": 0,
+    "explanation": "پہلا اصول ہے کہ جو صحیح ہے اس پر بنائیں اور دوسرا یہ کہ شرمندہ کرنا کبھی نہیں، کیونکہ شرمندگی فطرت کو ظاہر نہیں کرتی بلکہ اور گہرا دفن کر دیتی ہے، اور حیا اندر سے آتی ہے جبکہ شرمندگی باہر سے تھوپی جاتی ہے۔"
+  },
+  {
+    "module": "Module 1: Foundations of Tarbiyah",
+    "sourceLesson": "M1-07",
+    "question": "تین sessions کے بعد ایک مربی مایوس ہے کیونکہ اسے بچوں میں کوئی تبدیلی نظر نہیں آ رہی۔ فطرت کے پانچویں اصول کی روشنی میں training کیا کہتی ہے؟",
+    "questionEn": "After three sessions a murabbi is discouraged because no change is visible in the children. In light of the fifth fitrah principle, what does the training say?",
+    "options": [
+      "اگر تیسرے session تک تبدیلی نہ آئے تو طریقہ ناکام ہے، اس لیے circle بند کر دینا چاہیے",
+      "بچوں پر زیادہ دباؤ ڈالیں اور ہر ہفتے ان کا test لے کر نتائج ناپیں",
+      "فطرت اپنی رفتار سے بڑھتی ہے؛ تبدیلی شاید بہت بعد میں نظر آئے، اس لیے کھجور لگانے والے کی طرح صبر سے ہر ہفتے پانی دیتے رہیں",
+      "تبدیلی صرف اچھے خاندانوں کے بچوں میں آتی ہے، باقی بچوں پر محنت کا زیادہ فائدہ نہیں"
+    ],
+    "correctIndex": 2,
+    "explanation": "پانچواں اصول “رفتار کے ساتھ صبر” ہے: trainer نے کہا کہ تبدیلی Session 3 میں نظر نہیں آئے گی، شاید Session 10 میں بھی نہیں، لیکن ان شاء اللہ نظر آئے گی۔"
+  },
+  {
+    "module": "Module 1: Foundations of Tarbiyah",
+    "sourceLesson": "M1-10",
+    "question": "ایک بچہ حضرت یوسفؑ کا پورا قصہ روانی سے سنا دیتا ہے، لیکن یہ نہیں بتا پاتا کہ انہوں نے اپنے بھائیوں کو معاف کیوں کیا، اور نہ یہ سوچتا ہے کہ جب اس کا اپنا بھائی اس کا کھلونا توڑے گا تو وہ کیا کرے گا۔ یہ تین خلاؤں میں سے کس خلا کی مثال ہے؟",
+    "questionEn": "A child fluently recites the whole story of Prophet Yusuf (AS) but cannot say why he forgave his brothers, nor thinks about what he himself would do when his own brother breaks his toy. Which of the three gaps does this illustrate?",
+    "options": [
+      "رشتے کا خلا (Relationship Gap)",
+      "تشکیل کا خلا (Formation Gap)",
+      "محلے کا خلا (Neighbourhood Gap)",
+      "یہ کوئی خلا نہیں، کیونکہ بچے کو پورا قصہ یاد ہے"
+    ],
+    "correctIndex": 1,
+    "explanation": "M1-10 میں یہی مثال تشکیل کے خلا کے لیے دی گئی: information اور formation ایک چیز نہیں، اور ان دونوں کے بیچ جو خلا ہے وہیں کردار بستا ہے۔"
+  },
+
+  {
+    "module": "Module 2: The Murabbi Identity",
+    "sourceLesson": "M2-08",
+    "question": "ایک بچہ آپ سے ایک دینی سوال پوچھتا ہے جس کا جواب آپ کو نہیں آتا۔ Training کے مطابق آپ کو کیا کرنا چاہیے؟",
+    "questionEn": "A child asks you a religious question whose answer you do not know. According to the training, what should you do?",
+    "options": [
+      "اندازے سے کوئی جواب دے دیں تاکہ بچوں کے سامنے آپ کا اختیار کم نہ ہو",
+      "بات بدل دیں اور خاموشی سے اگلے موضوع پر چلے جائیں",
+      "صاف کہیں: “مجھے نہیں پتہ بیٹا۔ چلو، مل کر پتہ کرتے ہیں”، پھر supervisor یا کسی مستند عالم سے پوچھ کر اگلے ہفتے بچے کو جواب بتائیں",
+      "بچے سے کہیں کہ ایسے سوال circle میں نہیں پوچھے جاتے، گھر جا کر کسی سے پوچھ لے"
+    ],
+    "correctIndex": 2,
+    "explanation": "M2-08 کے مطابق مربی امام یا عالم نہیں؛ جواب نہ آتا ہو تو صاف بتائے اور واقعی پتہ کر کے اگلے ہفتے جواب دے، اس طرح بچہ جواب بھی سیکھتا ہے اور ایمانداری بھی۔"
+  },
+  {
+    "module": "Module 2: The Murabbi Identity",
+    "sourceLesson": "M2-07",
+    "question": "ایک بچی اپنے مربی کو ایک ایسی بات بتاتی ہے جو اس نے اپنے امی ابو کو نہیں بتائی۔ Training اس کی کیا وجہ بتاتی ہے؟",
+    "questionEn": "A girl tells her murabbi something she has not told her parents. What reason does the training give for this?",
+    "options": [
+      "اس لیے نہیں کہ اسے ماں باپ پر کم بھروسہ ہے، بلکہ اس لیے کہ مربی کے ساتھ رشتے کا وزن مختلف ہے؛ یہ ایک تحفہ بھی ہے اور ذمہ داری بھی",
+      "کیونکہ مربی کا اختیار اور محبت ماں باپ سے زیادہ ہوتی ہے",
+      "کیونکہ اس کے گھر والے یقیناً اس کا خیال نہیں رکھتے اور اس کی بات نہیں سنتے",
+      "کیونکہ مربی دینی عالم ہوتا ہے اور بچے علماء سے زیادہ کھل کر بات کرتے ہیں"
+    ],
+    "correctIndex": 0,
+    "explanation": "M2-07 میں کہا گیا کہ مربی ایک بھروسے والا بڑا ہے جو ماں باپ نہیں، اس لیے بچے وہ باتیں کہہ دیتے ہیں جو ماں باپ سے نہیں کہہ پاتے، کم بھروسے کی وجہ سے نہیں بلکہ رشتے کے مختلف وزن کی وجہ سے۔"
+  },
+  {
+    "module": "Module 2: The Murabbi Identity",
+    "sourceLesson": "M2-03",
+    "question": "ایک volunteer کہتا ہے: “Circle تو اپنے محلے کا ہی ہے، کبھی آدھا گھنٹہ دیر سے پہنچ گیا یا کسی ہفتے نہ آ سکا تو کوئی بات نہیں۔” Training کے مطابق یہ سوچ کیوں نقصان دہ ہے؟",
+    "questionEn": "A volunteer says: 'It's just our neighbourhood circle; if I'm half an hour late or miss a week, no big deal.' According to the training, why is this attitude harmful?",
+    "options": [
+      "کیونکہ اس سے circle کا syllabus وقت پر مکمل نہیں ہو سکے گا",
+      "کیونکہ والدین ناراض ہو کر TDW سے شکایت کر دیں گے",
+      "کیونکہ دیر سے آنے والے مربی کو certificate نہیں دیا جاتا",
+      "کیونکہ جس بچے کو یہ پتہ نہ ہو کہ اس ہفتے مربی آئے گا یا نہیں، وہ کبھی پوری طرح relax نہیں ہو سکتا اور کھل نہیں سکتا"
+    ],
+    "correctIndex": 3,
+    "explanation": "M2-03 میں reliability کو وہ خوبی کہا گیا جو مربی کو نیک نیت volunteer سے الگ کرتی ہے، اور وہ برتن جس میں باقی ساری چیزیں رکھی جاتی ہیں، کیونکہ بے یقینی میں بچہ کھل نہیں سکتا۔"
+  },
+  {
+    "module": "Module 2: The Murabbi Identity",
+    "sourceLesson": "M2-10",
+    "question": "ایک مربی لوڈشیڈنگ کی وجہ سے رات بھر سو نہیں سکا، تیاری کم ہے، اور اسے لگ رہا ہے کہ اس کی محنت سے کوئی فرق نہیں پڑ رہا۔ مراقبہ کا تصور اسے کیا یاد دلاتا ہے؟",
+    "questionEn": "A murabbi couldn't sleep due to load-shedding, is under-prepared, and feels his effort makes no difference. What does the concept of muraqabah remind him?",
+    "options": [
+      "کہ اسے session منسوخ کر دینا چاہیے جب تک وہ پوری طرح تیار نہ ہو",
+      "کہ تبدیلی لانے والا وہ نہیں بلکہ اللہ ہے؛ وہ ذریعہ ہے، اور اس کا کام خلوص سے حاضر ہونا ہے",
+      "کہ آٹھ بچے اسے دیکھ رہے ہیں، اس لیے اسے ہر حال میں اچھی performance دکھانی ہے",
+      "کہ کمی پوری کرنے کے لیے اسے آج کا session معمول سے لمبا کر دینا چاہیے"
+    ],
+    "correctIndex": 1,
+    "explanation": "M2-10 میں کہا گیا کہ ایسے دنوں میں مراقبہ یاد دلاتا ہے کہ تبدیلی لانے والے آپ نہیں، اللہ ہے؛ آپ کا کام خلوص سے حاضر ہونا ہے اور جو اُگے گا وہ اللہ کا ہے۔"
+  },
+  {
+    "module": "Module 2: The Murabbi Identity",
+    "sourceLesson": "M2-11",
+    "question": "Deep Listening exercise میں جب آپ کا ساتھی تین منٹ بول رہا ہو تو سننے والے کے طور پر آپ کو کیا کرنا ہے؟",
+    "questionEn": "In the Deep Listening exercise, while your partner speaks for three minutes, what is your role as the listener?",
+    "options": [
+      "بیچ بیچ میں اپنا ملتا جلتا تجربہ بتانا تاکہ اسے لگے کہ آپ اس کی بات سمجھتے ہیں",
+      "غور سے سننا اور آخر میں اسے اس کے مسئلے کا حل اور مشورہ دینا",
+      "بغیر جواب، مشورے یا phone کے مکمل موجودگی سے سننا، اور آخر میں صرف ایک جملے میں بتانا کہ آپ نے کیا سنا",
+      "سنتے ہوئے ذہن میں اپنا جواب تیار کرتے رہنا تاکہ بات ختم ہوتے ہی بول سکیں"
+    ],
+    "correctIndex": 2,
+    "explanation": "M2-11 کے مطابق سننے والے کا کام صرف مکمل موجودگی ہے: نہ جواب، نہ مشورہ، نہ جواب کی تیاری؛ اور آخر میں صرف عکس: “جو میں نے سنا، وہ یہ تھا کہ…”"
+  },
+
+  {
+    "module": "Module 3: Child Development",
+    "sourceLesson": "M3-03",
+    "question": "سات سال کے بچوں کے circle میں ایک ہی activity کو پندرہ منٹ ہو گئے ہیں۔ کوئی دری کا دھاگہ کھینچ رہا ہے، کوئی چھت کا پنکھا گن رہا ہے۔ Training کے مطابق اس کا مطلب اور حل کیا ہے؟",
+    "questionEn": "In a circle of 7-year-olds, one activity has run for 15 minutes; one child is pulling threads from the rug, another is counting the ceiling fan. According to the training, what does this mean and what should you do?",
+    "options": [
+      "یہ بدتمیزی نہیں، اس عمر کی ضرورت ہے؛ activities کو دس بارہ منٹ کے چھوٹے حصوں میں توڑیں اور بیچ میں حرکت کا موقع دیں",
+      "یہ بدتمیزی ہے؛ Circle Covenant یاد دلا کر سب کو سختی سے سیدھا بٹھا دیں",
+      "Activity کو اور لمبا کر دیں تاکہ بچوں میں دیر تک بیٹھنے کی عادت بنے",
+      "جو بچے توجہ نہیں دے رہے انہیں کچھ دیر کے لیے circle سے باہر بٹھا دیں"
+    ],
+    "correctIndex": 0,
+    "explanation": "M3-03 کے مطابق Seedlings کی توجہ کسی ایک activity پر دس سے بارہ منٹ رہتی ہے؛ یہ بدتمیزی نہیں بلکہ عمر کی ضرورت ہے، اور کھڑے ہونا یا جگہ بدلنا خلل نہیں بلکہ نشوونما کی ضرورت ہے۔"
+  },
+  {
+    "module": "Module 3: Child Development",
+    "sourceLesson": "M3-08",
+    "question": "بارہ سال کا ایک بچہ circle میں پوچھتا ہے: “لیکن یہ ضروری کیوں ہے؟ فلاں uncle تو یہ نہیں کرتے…” Training کے مطابق بہترین جواب کون سا ہے؟",
+    "questionEn": "A 12-year-old asks in circle: 'But why is this necessary? So-and-so uncle doesn't do it...' According to the training, which response is best?",
+    "options": [
+      "“زیادہ زبان نہ چلاؤ، بڑوں سے بحث نہیں کرتے۔”",
+      "“یہ سوال circle کے بعد پوچھنا، ابھی ہمارے پاس وقت نہیں ہے۔”",
+      "“دوسروں کو مت دیکھو، بس جو کہا گیا ہے وہ کرو۔”",
+      "“یہ بہت اچھا سوال ہے۔ میں اس کے بارے میں ایسے سوچتا ہوں… تم کیا سوچتے ہو؟”"
+    ],
+    "correctIndex": 3,
+    "explanation": "M3-08 کے مطابق Growers کا authority کو آزمانا بغاوت نہیں بلکہ خود کو الگ پہچاننے کا عمل ہے، اس لیے defensive ہوئے بغیر سوال کا خیرمقدم کریں تاکہ آپ کا اختیار کردار سے آئے، عہدے سے نہیں۔"
+  },
+  {
+    "module": "Module 3: Child Development",
+    "sourceLesson": "M3-09",
+    "question": "آج کا موضوع سچائی ہے اور آپ کے circle میں دس سے تیرہ سال کے بچے (Noor Growers) ہیں۔ Training کے مطابق ان کے لیے کون سا سوال سب سے موزوں ہے؟",
+    "questionEn": "Today's theme is truthfulness and your circle is Noor Growers (10–13). According to the training, which question best suits them?",
+    "options": [
+      "“تمہاری چھوٹی بہن نے غلطی سے تمہاری پسندیدہ گاڑی توڑ دی۔ امی پوچھیں کہ یہ کس نے توڑی، تو تم کیا کہو گے؟”",
+      "“تمہارا پکا دوست کہتا ہے کہ اس کے گھر والوں کو بتا دو کہ وہ کل تمہارے ساتھ tuition پر تھا، حالانکہ وہ کہیں اور تھا۔ تم کیا کہو گے؟ اور سچ بولنے کی تمہیں کیا قیمت دینی پڑ سکتی ہے؟”",
+      "“سچ بولنا اچھی بات ہے نا؟”",
+      "“سچائی کے بارے میں جو کچھ پچھلے ہفتے بتایا تھا، وہ زبانی سناؤ۔”"
+    ],
+    "correctIndex": 1,
+    "explanation": "M3-09 کے مطابق یہ سوال Growers کی abstract سوچ کو جگاتا ہے، دوستی کی وفاداری اور سچائی کے بیچ کی کھینچا تانی چھیڑتا ہے اور سچ کی سماجی قیمت کو مانتا ہے، جبکہ بہن والی گاڑی کی مثال Seedlings کے لیے تھی۔"
+  },
+  {
+    "module": "Module 3: Child Development",
+    "sourceLesson": "M3-14",
+    "question": "آپ کے circle میں ایک ہی گھر سے آٹھ سال کی بہن اور بارہ سال کا بھائی دونوں آتے ہیں۔ کسی موضوع پر بات کرتے ہوئے training کیا طریقہ بتاتی ہے؟",
+    "questionEn": "Your circle has an 8-year-old sister and a 12-year-old brother from the same home. When discussing a theme, what approach does the training recommend?",
+    "options": [
+      "صرف بڑوں والا version استعمال کریں، چھوٹے بچے خود ہی ساتھ ساتھ سمجھ جائیں گے",
+      "بارہ سال والے بچے کو الگ بٹھا کر کہیں کہ آج کی بات اس کی عمر کے لیے نہیں ہے",
+      "پہلے ٹھوس version سے شروع کریں جو چھوٹوں تک پہنچے، پھر بڑوں کو دعوت دیں: “جو اور گہرائی میں جانا چاہیں… اگر ہم اس میں یہ بات بھی شامل کر دیں تو کیا ہوگا؟”",
+      "ہر سوال دو بار پوچھیں، پہلے چھوٹوں کا نام لے کر اور پھر بڑوں کا نام لے کر"
+    ],
+    "correctIndex": 2,
+    "explanation": "M3-14 کے مطابق اس طریقے سے فرق خود بخود پیدا ہو جاتا ہے اور کسی ایک بچے کو الگ کر کے نشانہ نہیں بنانا پڑتا، نہ چھوٹا شرمندہ ہوتا ہے نہ بڑا bore۔"
+  },
+  {
+    "module": "Module 3: Child Development",
+    "sourceLesson": "M3-10",
+    "question": "آپ کے Seedlings circle میں آٹھ سال کی ایک بچی اکثر بہت گہری باتیں سوچتی اور پوچھتی ہے۔ Training کے “room پڑھنے” والے اصول کے مطابق آپ کیا کریں گے؟",
+    "questionEn": "In your Seedlings circle, an 8-year-old girl often thinks and asks very deeply. According to the training's 'reading the room' principle, what will you do?",
+    "options": [
+      "عمر سے شروع کریں لیکن بچی کو دیکھیں؛ ضرورت ہو تو اسے گہرائی والا version بھی دیں، کیونکہ ہمیشہ عمر ہی سب کچھ نہیں بتاتی",
+      "اسے صرف چھ سے نو سال والے سوال ہی دیں، کیونکہ session guide عمر کے لحاظ سے بنی ہے",
+      "اس کے گہرے سوالوں کو ٹال دیں تاکہ باقی بچے پیچھے نہ رہ جائیں",
+      "اس سے کہیں کہ یہ سوال ابھی اس کی عمر کے نہیں، بڑی ہو کر پوچھنا"
+    ],
+    "correctIndex": 0,
+    "explanation": "M3-10 میں کہا گیا کہ کوئی آٹھ سال کی بچی بہت گہرا سوچ سکتی ہے اور کوئی بارہ سال کا لڑکا ابھی ٹھوس مثال مانگ سکتا ہے، اس لیے “عمر سے شروع کریں… لیکن بچے کو دیکھیں۔”"
+  },
+
+  {
+    "module": "Module 4: Circle Facilitation Skills",
+    "sourceLesson": "M4-11",
+    "question": "آپ نے circle میں ایک سوال پوچھا اور سب بچے خاموش ہو گئے۔ کوئی نہیں بول رہا۔ Training کے مطابق کیا کرنا چاہیے؟",
+    "questionEn": "You ask the circle a question and everyone goes silent; nobody speaks. According to the training, what should you do?",
+    "options": [
+      "فوراً خود ہی جواب بتا دیں تاکہ خاموشی ختم ہو اور وقت ضائع نہ ہو",
+      "خاموشی کو جگہ دیں کیونکہ خاموشی سوچ اور احساس ہے؛ اگر تیس سیکنڈ بعد بھی کوئی نہ بولے تو ہلکا سا دروازہ کھولیں: “چلو بس ایک لفظ… یہ سوال سن کر دل میں کیا آیا؟”",
+      "سب سے خاموش بچے کا نام لے کر اسے سب کے سامنے جواب دینے کو کہیں",
+      "سوال چھوڑ دیں اور سیدھا home card دے کر session ختم کر دیں"
+    ],
+    "correctIndex": 1,
+    "explanation": "M4-11 کے مطابق مربی کا دل خاموشی کو فوراً بھرنے کو کرتا ہے مگر اسے روکنا ہے، کیونکہ خاموشی وہ کمرہ ہے جو کچھ تھامے ہوئے ہے جسے ابھی لفظ نہیں ملے۔"
+  },
+  {
+    "module": "Module 4: Circle Facilitation Skills",
+    "sourceLesson": "M4-07",
+    "question": "Session کے آخر میں آپ بچوں سے جاننا چاہتے ہیں کہ آج انہوں نے کیا سیکھا۔ Training کے مطابق ان میں سے کون سا سوال سب سے اچھا کھلا سوال ہے؟",
+    "questionEn": "At the end of a session you want to know what the children learned today. According to the training, which of these is the best open question?",
+    "options": [
+      "“آج کچھ سیکھا؟”",
+      "“سمجھ آیا سب کو؟”",
+      "“آج کا سبق یاد ہو گیا نا؟”",
+      "“آج کی کونسی بات تم گھر جا کر امی یا دادی کو بتاؤ گے؟”"
+    ],
+    "correctIndex": 3,
+    "explanation": "M4-07 میں “آج کچھ سیکھا؟” جیسے بند سوال کو اسی طرح بدلا گیا، کیونکہ بند سوال “جی” یا “نہیں” لاتا ہے جبکہ کھلا سوال test نہیں بلکہ سچے تجسس جیسا لگتا ہے۔"
+  },
+  {
+    "module": "Module 4: Circle Facilitation Skills",
+    "sourceLesson": "M4-09",
+    "question": "ایک بچہ ہر سوال پر سب سے پہلے “میں! میں! میں بتاؤں؟” کہتا ہے اور دوسرے بچوں کو بولنے کا موقع نہیں ملتا۔ Training کے مطابق کون سا جواب بہترین ہے؟",
+    "questionEn": "One child jumps in first on every question ('Me! Me! Can I answer?') and others get no chance to speak. According to the training, which response is best?",
+    "options": [
+      "“ماشاءاللہ… مجھے تمہاری energy بہت پسند ہے! اس round میں، میں کسی ایسے سے سننا چاہتا ہوں جس نے ابھی تک بات نہیں کی۔ کیا تم اگلے کچھ منٹ کے لیے ہمارے سننے والے بن سکتے ہو؟”",
+      "“شش! ہر بار تم ہی بولتے ہو، اب کچھ دیر چپ بیٹھو۔”",
+      "اسے مسلسل نظر انداز کرتے رہیں تاکہ وہ خود ہی سمجھ جائے",
+      "سب کے سامنے بتائیں کہ اس کی وجہ سے دوسروں کو بولنے کا موقع نہیں مل رہا"
+    ],
+    "correctIndex": 0,
+    "explanation": "M4-09 کے مطابق اس بچے کی نیت اچھی ہے، اس لیے اسے “شش” یا شرمندہ نہیں کرنا، بلکہ اس کی energy کی تعریف کر کے اسے سننے والے کا کردار دینا ہے تاکہ باقیوں کو جگہ ملے۔"
+  },
+  {
+    "module": "Module 4: Circle Facilitation Skills",
+    "sourceLesson": "M4-10",
+    "question": "ایک بچی کئی sessions سے خاموش بیٹھتی ہے اور کچھ share نہیں کرتی، لیکن غور سے سنتی لگتی ہے۔ Training کیا مشورہ دیتی ہے؟",
+    "questionEn": "A girl has sat silently for several sessions and shares nothing, though she seems to listen closely. What does the training advise?",
+    "options": [
+      "سب کے سامنے اس سے کہیں: “ہاں بھئی، تم بتاؤ، تم کیا سوچتی ہو؟” تاکہ اس کی جھجک ختم ہو",
+      "اسے نظر انداز کر دیں، کیونکہ خاموش بچہ عام طور پر لاتعلق ہوتا ہے",
+      "وقفے میں یا home card دیتے وقت اکیلے میں بات کریں: “میں نے دیکھا تم اس بات کو بہت غور سے سن رہی تھیں۔ تمہیں کیا لگا؟”",
+      "اس کے والدین کو بتائیں کہ وہ circle میں بالکل حصہ نہیں لیتی"
+    ],
+    "correctIndex": 2,
+    "explanation": "M4-10 کے مطابق خاموش ہونے کا مطلب لاتعلق ہونا نہیں، اور سب کے سامنے نشانہ بنانا سب سے نقصان دہ ہے؛ اکیلے میں پوچھا گیا ایک سوال سب کے سامنے پوچھے گئے دس سوالوں سے زیادہ دروازے کھولتا ہے۔"
+  },
+  {
+    "module": "Module 4: Circle Facilitation Skills",
+    "sourceLesson": "M4-11",
+    "question": "Activity کے دوران ایک چھوٹا بچہ ہل رہا ہے، بول رہا ہے اور ساتھ والے کو کہنی مار رہا ہے۔ Training کے مطابق مناسب قدم کیا ہے؟",
+    "questionEn": "During an activity a young child is fidgeting, talking and elbowing the child next to him. According to the training, what is the appropriate step?",
+    "options": [
+      "سب کے سامنے ڈانٹ دیں تاکہ باقی بچے بھی سبق لیں",
+      "جسمانی طور پر اس کے قریب چلے جائیں اور اسے کوئی ذمہ داری دے دیں، جیسے activity کے لیے کاغذ اکٹھے کرنا",
+      "اسے session کے باقی حصے کے لیے circle سے باہر بٹھا دیں",
+      "اس کی شرارت کو نظر انداز کریں، کیونکہ بچوں کی شرارت کا کوئی خاص مطلب نہیں ہوتا"
+    ],
+    "correctIndex": 1,
+    "explanation": "M4-11 کے مطابق شرارت تقریباً ہمیشہ کوئی پیغام ہوتی ہے اور سب کے سامنے ڈانٹ شرمندگی جگاتی ہے، جبکہ قریب جانے سے چھوٹے بچوں کی شرارت ٹھنڈی ہو جاتی ہے اور ذمہ داری energy کا رخ بدل دیتی ہے۔"
+  },
+
+  {
+    "module": "Module 5: Safeguarding, Parent Relations & Difficult Moments",
+    "sourceLesson": "M5-15",
+    "question": "Circle کے بعد ایک بچہ آپ کو ایسی بات بتاتا ہے جس سے لگتا ہے کہ اسے نقصان پہنچایا جا رہا ہے، اور کہتا ہے: “وعدہ کریں آپ کسی کو نہیں بتائیں گے۔” Training کے مطابق صحیح طریقہ کیا ہے؟",
+    "questionEn": "After circle, a child tells you something suggesting he is being harmed, and says: 'Promise you won't tell anyone.' According to the training, what is the correct approach?",
+    "options": [
+      "بچے کا بھروسہ قائم رکھنے کے لیے رازداری کا وعدہ کر لیں اور یہ بات کسی کو نہ بتائیں",
+      "پُرسکون رہیں، بغیر ٹوکے سنیں، رازداری کا وعدہ نہ کریں، شکریہ کہیں کہ اس نے بتایا، اور چوبیس گھنٹوں کے اندر TDW Safeguarding Lead کو report کریں",
+      "اسی وقت بچے کے گھر جا کر والدین سے خود تفتیش کریں کہ اصل میں کیا ہوا",
+      "بچے سے تفصیلی سوال کریں کہ کس نے کیا کیا، اور پوچھیں: “تمہیں پکا یقین ہے؟”"
+    ],
+    "correctIndex": 1,
+    "explanation": "Safeguarding Quick Reference کے سات قدموں کے مطابق پُرسکون رہنا، بغیر ٹوکے سننا، رازداری کا وعدہ نہ کرنا، جواب منہ میں ڈالنے والے سوال نہ پوچھنا، شکریہ کہنا اور چوبیس گھنٹوں میں report کرنا ضروری ہے، کیونکہ مربی تفتیش نہیں کرتا۔"
+  },
+  {
+    "module": "Module 5: Safeguarding, Parent Relations & Difficult Moments",
+    "sourceLesson": "M5-05",
+    "question": "آپ دیکھتے ہیں کہ ایک بچے کے بازو پر بار بار نیل کے نشان ہوتے ہیں جن کی کوئی واضح وجہ نہیں۔ Training کیا کہتی ہے؟",
+    "questionEn": "You notice repeated bruises on a child's arm with no clear explanation. What does the training say?",
+    "options": [
+      "اسی دن safeguarding report کریں؛ انتظار نہ کریں",
+      "دو تین sessions تک انتظار کریں کہ نشان دوبارہ نظر آتے ہیں یا نہیں",
+      "چونکہ بچے نے خود کچھ نہیں بتایا، اس لیے فی الحال کچھ نہ کریں",
+      "بچے سے سب کے سامنے پوچھیں کہ یہ نشان کیسے لگے"
+    ],
+    "correctIndex": 0,
+    "explanation": "M5-05 کے مطابق جسم پر بغیر وجہ کے نشان یا چوٹوں کی صورت میں اسی دن safeguarding report کرنی ہے اور انتظار نہیں کرنا۔"
+  },
+  {
+    "module": "Module 5: Safeguarding, Parent Relations & Difficult Moments",
+    "sourceLesson": "M5-07",
+    "question": "ایک دن ایک بچہ circle میں بہت بھوکا اور تھکا ہوا آتا ہے۔ Training کے مطابق مربی کو کیا سمجھنا اور کرنا چاہیے؟",
+    "questionEn": "One day a child arrives at circle very hungry and tired. According to the training, how should the murabbi interpret and respond to this?",
+    "options": [
+      "یہ یقینی طور پر غفلت ہے، اس لیے اسی وقت report کر دیں",
+      "Parent handover پر والدین سے سب کے سامنے پوچھیں کہ بچے کو کھانا کیوں نہیں دیا",
+      "ایک دن کی بھوک غربت یا مشکل حالات کی وجہ سے ہو سکتی ہے؛ pattern پر نظر رکھیں، اور اگر یہ بار بار ہر ہفتے ہو تو safeguarding lead کو بتائیں",
+      "یہ مربی کا معاملہ نہیں، اسے بالکل نظر انداز کر دیں"
+    ],
+    "correctIndex": 2,
+    "explanation": "M5-07 میں احتیاط کا کہا گیا کہ ایک دن کی بھوک غفلت نہیں بلکہ مشکل حالات ہو سکتے ہیں، لیکن اگر یہ بار بار کا pattern ہو تو لاپرواہی کی نشانی ہو سکتی ہے اور safeguarding lead کو بتانا ہے۔"
+  },
+  {
+    "module": "Module 5: Safeguarding, Parent Relations & Difficult Moments",
+    "sourceLesson": "M5-08",
+    "question": "گیارہ سال کا ایک بچہ آپ سے کہتا ہے: “مجھے اپنا WhatsApp number دے دیں، میں آپ سے ذاتی بات کیا کروں گا۔” صحت مند حدود کے مطابق کیا درست ہے؟",
+    "questionEn": "An 11-year-old says: 'Give me your WhatsApp number, I'll talk to you privately.' According to the healthy-boundaries guidance, what is right?",
+    "options": [
+      "Number دے دیں، کیونکہ اس سے بچے کے ساتھ رشتہ مضبوط ہوگا",
+      "Number دے دیں لیکن کہیں: “یہ ہمارا راز ہے، کسی کو مت بتانا”",
+      "اسے سختی سے ڈانٹ دیں اور آئندہ اس سے فاصلہ رکھیں",
+      "بچوں سے ذاتی WhatsApp یا social media پر بات نہ کریں؛ جو بھی رابطہ ہو وہ والدین کے ذریعے یا circle کے official group میں ہو"
+    ],
+    "correctIndex": 3,
+    "explanation": "M5-08 کے مطابق بچوں سے ذاتی WhatsApp پر بات نہیں کرنی اور “یہ ہمارا راز ہے” کبھی نہیں کہنا؛ یہ حدود دیوار نہیں بلکہ وہ باڑ ہیں جس کے اندر بچے اور مربی دونوں کا بھروسہ محفوظ رہتا ہے۔"
+  },
+  {
+    "module": "Module 5: Safeguarding, Parent Relations & Difficult Moments",
+    "sourceLesson": "M5-10",
+    "question": "Parent handover کے وقت آپ کو ایک ماں کو ان کے بچے کے بارے میں ایک فکر کی بات بتانی ہے، اور آس پاس دوسرے والدین بھی کھڑے ہیں۔ Training کے مطابق بہترین طریقہ کیا ہے؟",
+    "questionEn": "At parent handover you need to share a concern about a child with his mother, and other parents are standing nearby. According to the training, what is the best approach?",
+    "options": [
+      "پہلے بچے کے بارے میں کوئی سچی اچھی بات بتائیں، اور حساس بات کے لیے کہیں: “کیا میں آپ سے دو منٹ الگ سے بات کر سکتا ہوں؟” پھر باقی سب کے جانے کا انتظار کریں",
+      "وقت بچانے کے لیے وہیں سب کے سامنے فکر کی بات صاف صاف بتا دیں",
+      "فکر کی بات بالکل نہ بتائیں اور بس کہہ دیں: “آج وہ بہت اچھا تھا”",
+      "یہ بات circle کے WhatsApp group میں لکھ دیں تاکہ سب والدین آگاہ رہیں"
+    ],
+    "correctIndex": 0,
+    "explanation": "M5-10 کے تین اصول ہیں: specific اور سچی بات، اچھی خبر پہلے اور فکر بعد میں، اور کسی بچے کی منفی بات کبھی دوسرے والدین کے سامنے نہیں۔"
+  },
+
+  {
+    "module": "Module 6: The Year Ahead",
+    "sourceLesson": "M6-03",
+    "question": "Circle کو پانچ مہینے ہو گئے ہیں۔ نیا پن ختم ہو چکا ہے اور مربی کو لگتا ہے کہ کچھ خاص نہیں ہو رہا۔ سال کے سفر کے بارے میں training کیا کہتی ہے؟",
+    "questionEn": "The circle is five months old; the novelty has worn off and the murabbi feels nothing special is happening. What does the training say about this stage of the year?",
+    "options": [
+      "یہ ناکامی کی نشانی ہے، اس لیے circle چھوڑ دینا بہتر ہے",
+      "یہ “درمیانی حصہ” ہے جہاں زیادہ تر programmes ناکام ہوتے ہیں، لیکن سب سے اہم کام درمیان میں ہی ہوتا ہے؛ عمل پر بھروسہ رکھیں، گاڑی چل رہی ہے",
+      "اب ہر session میں نئی سرگرمیاں اور انعامات ڈال کر honeymoon والا جوش ہر حال میں واپس لانا ضروری ہے",
+      "اس مرحلے پر session guide چھوڑ کر اپنا نیا curriculum بنانا چاہیے"
+    ],
+    "correctIndex": 1,
+    "explanation": "M6-03 کے مطابق مہینہ پانچ اور چھ کا خاموش درمیانی حصہ ریل گاڑی کے لمبے سفر جیسا ہے؛ یہی بغیر چمک دمک والی consistency سب سے گہری تربیت بناتی ہے۔"
+  },
+  {
+    "module": "Module 6: The Year Ahead",
+    "sourceLesson": "M6-06",
+    "question": "ایک perfectionist مربی ہر session کی تیاری میں رات دو بجے تک chart بناتا اور رنگین کاغذ کاٹتا رہتا ہے۔ Training اسے کیا مشورہ دیتی ہے؟",
+    "questionEn": "A perfectionist murabbi stays up till 2 a.m. making charts and cutting coloured paper to prepare each session. What does the training advise?",
+    "options": [
+      "یہ بہترین رویہ ہے، جتنی زیادہ تیاری ہوگی اتنا ہی اچھا circle ہوگا",
+      "تیاری بالکل نہ کرے، موقع پر جو سمجھ آئے وہی کرے",
+      "تیاری تیس سے پینتالیس منٹ کی ہو، گھنٹوں کی نہیں؛ guide پر بھروسہ کرے، کیونکہ اس کا کام تیار ہو کر آنا اور موجود رہنا ہے",
+      "ہر ہفتے session guide کو خود بہتر بنا کر نئی شکل میں supervisor کو بھیجے"
+    ],
+    "correctIndex": 2,
+    "explanation": "M6-06 میں sustainability کی پہلی شرط یہی ہے کہ تیاری session سے بڑی نہ ہو جائے؛ مربی کا کام ہر ہفتے guide بہتر بنانا نہیں بلکہ تیار ہو کر آنا اور موجود رہنا ہے۔"
+  },
+  {
+    "module": "Module 6: The Year Ahead",
+    "sourceLesson": "M6-07",
+    "question": "ایک مربی محسوس کرتا ہے کہ وہ آج کل بچوں پر جلدی چڑ جاتا ہے اور circle کا دن قریب آتے ہی اس کا دل بیٹھنے لگتا ہے۔ Training کے مطابق اسے کیا کرنا چاہیے؟",
+    "questionEn": "A murabbi notices he gets irritated with the children easily lately and his heart sinks as circle day approaches. According to the training, what should he do?",
+    "options": [
+      "انہیں خطرے کی گھنٹیاں سمجھے؛ peer group پہلا فون ہے: supervisor کو بتائے یا کسی ساتھی مربی کو فون کرے",
+      "کسی کو نہ بتائے اور خود کو مزید سختی سے مجبور کرے، کیونکہ تھکا ہوا ہونا محنتی ہونے کی نشانی ہے",
+      "بغیر کسی کو بتائے کچھ ہفتوں کے لیے circle چھوڑ دے",
+      "Peer group meeting میں جانا بند کر دے تاکہ آرام کے لیے زیادہ وقت ملے"
+    ],
+    "correctIndex": 0,
+    "explanation": "M6-07 کے مطابق بچوں پر جلدی چڑنا اور session کے دن سے ڈر لگنا تھکن کی ابتدائی نشانیاں ہیں، اور ان کے نظر آنے پر peer group پہلا فون ہے۔"
+  },
+  {
+    "module": "Module 6: The Year Ahead",
+    "sourceLesson": "M6-11",
+    "question": "آپ کا پہلا session کل ہے۔ Training کے مطابق ان میں سے کون سی تیاری سب سے زیادہ اثر رکھتی ہے؟",
+    "questionEn": "Your first session is tomorrow. According to the training, which of these preparations has the greatest impact?",
+    "options": [
+      "بچوں کو متاثر کرنے کے لیے ایک لمبا اور شاندار lecture تیار کرنا",
+      "Session 1 کی guide اسی صبح جلدی جلدی پڑھ لینا",
+      "پہلے session میں سب بچوں کا ایک test لینے کی تیاری کرنا تاکہ ان کا level معلوم ہو",
+      "Enrollment list پڑھ کر ہر بچے کا نام پہلے سے یاد کرنا، اور دروازے پر کھڑے ہو کر ہر بچے کو نام لے کر خوش آمدید کہنا"
+    ],
+    "correctIndex": 3,
+    "explanation": "M6-11 کے مطابق جس لمحے بچے کو پتہ چلتا ہے کہ آپ کو پہلے سے اس کا نام معلوم ہے، اسے کچھ ثابت کیے بغیر پہچانا جاتا ہے؛ اور guide پہلے والی رات پڑھنی ہے، اسی صبح نہیں۔"
+  },
+  {
+    "module": "Module 6: The Year Ahead",
+    "sourceLesson": "M6-13",
+    "question": "Tier 2 یعنی “متقن” کے لیے کب apply کیا جا سکتا ہے؟",
+    "questionEn": "When can a murabbi apply for Tier 2 ('Mutqin')?",
+    "options": [
+      "Tier 1 training مکمل ہوتے ہی فوراً",
+      "پانچ سال کا تجربہ مکمل کرنے کے بعد",
+      "دو مکمل circles چلانے کے بعد",
+      "ایک پورا سال بطور certified Tier 1 مربی مکمل کرنے کے بعد"
+    ],
+    "correctIndex": 3,
+    "explanation": "M6-13 کے مطابق ایک پورا سال بطور certified Tier 1 مربی مکمل کرنے کے بعد Tier 2 کے لیے apply کیا جا سکتا ہے، جبکہ دو مکمل circles کی شرط Tier 3 (مدرب) کے لیے ہے۔"
+  }
+]
