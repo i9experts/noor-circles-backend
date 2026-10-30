@@ -171,6 +171,56 @@ describe('Asaas audio training: assign, listen, assess, certify', () => {
     });
   });
 
+  describe('flip charts', () => {
+    const Flips = () => ctx.db.collection('flipchartviews');
+
+    it('the course lists the 11 flip charts with their lessons; they open with those lessons', async () => {
+      const me = (await mA().get(`course/${KEY}/me`)).body.data;
+      expect(me.flipCharts).toHaveLength(11);
+      expect(me.flipCharts[0]).toMatchObject({ key: 'fc-01', number: 1, module: 'Module 1', live: true, locked: true, studied: false });
+      expect(me.flipCharts[0].lessons.map((l: any) => l.code)).toEqual(['M1-02', 'M1-03']);
+      expect(me.flipCharts[10].lessons.map((l: any) => l.code)).toEqual(['M6-01', 'M6-02', 'M6-03', 'M6-04']);
+    });
+
+    it('time on screen is credited no faster than real time; 20s counts as studied', async () => {
+      let r = await mA().post(`course/${KEY}/flip-charts/fc-02/view`, { seconds: 600 });
+      expect(r.status).toBe(201);
+      expect(r.body.data).toMatchObject({ seconds: 60, studied: true, justStudied: true });
+
+      r = await mA().post(`course/${KEY}/flip-charts/fc-03/view`, { seconds: 12 });
+      expect(r.body.data).toMatchObject({ seconds: 12, studied: false });
+      r = await mA().post(`course/${KEY}/flip-charts/fc-03/view`, { seconds: 15 }); // only ~0s have passed
+      expect(r.body.data.seconds).toBeLessThan(20);
+      expect(r.body.data.studied).toBe(false);
+      await Flips().updateOne({ chart: 'fc-03' }, { $set: { lastViewedAt: new Date(Date.now() - 20_000) } });
+      r = await mA().post(`course/${KEY}/flip-charts/fc-03/view`, { seconds: 15 });
+      expect(r.body.data).toMatchObject({ studied: true, justStudied: true });
+    });
+
+    it('only assigned murabbis are tracked; unknown charts are refused', async () => {
+      expect((await mB().post(`course/${KEY}/flip-charts/fc-02/view`, { seconds: 10 })).status).toBe(403);
+      expect((await mA().post(`course/${KEY}/flip-charts/fc-99/view`, { seconds: 10 })).status).toBe(404);
+      expect((await mA().post(`course/${KEY}/flip-charts/fc-02/view`, { seconds: -1 })).status).toBe(400);
+      const admin = await adm().post(`course/${KEY}/flip-charts/fc-02/view`, { seconds: 30 });
+      expect(admin.body.data.studied).toBe(false);
+    });
+
+    it('admin sees flip charts per murabbi and per chart', async () => {
+      const r = (await adm().get(`course/${KEY}/progress`)).body.data;
+      expect(r.rows.find((x: any) => x.user._id === w.A.id).flipCharts).toEqual({ studied: 2, total: 11 });
+      expect(r.flipCharts).toHaveLength(11);
+      expect(r.flipCharts.find((c: any) => c.key === 'fc-02')).toMatchObject({ studied: 1, opened: 1, number: 2 });
+      expect(r.flipCharts.find((c: any) => c.key === 'fc-01')).toMatchObject({ studied: 0, opened: 0 });
+
+      const d = (await adm().get(`course/${KEY}/progress/${w.A.id}`)).body.data;
+      expect(d.flipCharts.find((c: any) => c.key === 'fc-03')).toMatchObject({ studied: true, opens: 1 });
+      expect(d.flipCharts.filter((c: any) => c.studied)).toHaveLength(2);
+
+      const me = (await mA().get(`course/${KEY}/me`)).body.data;
+      expect(me.flipCharts.find((c: any) => c.key === 'fc-02').studied).toBe(true);
+    });
+  });
+
   describe('assessment, reflection and certificate', () => {
     let answers: number[] = [];
 

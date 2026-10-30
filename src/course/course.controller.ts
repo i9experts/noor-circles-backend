@@ -14,7 +14,7 @@ import { CurrentUser }  from '../auth/decorators/current-user.decorator';
 import { UserDocument, UserRole } from '../user/user.schema';
 import { CourseService } from './course.service';
 import {
-  AssignCourseDto, HeartbeatDto, PracticalDto, ReflectionDto, ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto,
+  AssignCourseDto, FlipChartViewDto, HeartbeatDto, PracticalDto, ReflectionDto, ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto,
   UpdateCourseSettingsDto,
 } from './course.dto';
 
@@ -88,6 +88,15 @@ export class CourseController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.MURABBI, UserRole.ADMIN)
   myCourse(@Param('key') key: string, @CurrentUser() user: UserDocument) { return this.service.myCourse(key, who(user)); }
+
+  /** POST /course/:key/flip-charts/:chart/view — how long a flip chart was on screen. */
+  @Post(':key/flip-charts/:chart/view')
+  @SkipThrottle()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  flipChart(@Param('key') key: string, @Param('chart') chart: string, @CurrentUser() user: UserDocument, @Body() dto: FlipChartViewDto) {
+    return this.service.viewFlipChart(key, chart, who(user), dto);
+  }
 
   @Get(':key/assessment')
   @UseGuards(JwtAuthGuard, RolesGuard)

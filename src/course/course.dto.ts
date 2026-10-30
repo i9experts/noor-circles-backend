@@ -105,6 +105,12 @@ export class ReviewReflectionDto {
   feedback?: string;
 }
 
+export class FlipChartViewDto {
+  /** Seconds the chart was on screen since the last report. */
+  @IsNumber() @Min(0) @Max(600)
+  seconds: number;
+}
+
 export class PracticalDto {
   @IsArray() @ArrayMinSize(6) @ArrayMaxSize(6) @IsInt({ each: true }) @Min(1, { each: true }) @Max(3, { each: true })
   scores: number[];

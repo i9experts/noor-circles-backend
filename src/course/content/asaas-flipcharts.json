@@ -1,0 +1,149 @@
+[
+ {
+  "key": "fc-01",
+  "number": 1,
+  "module": "Module 1",
+  "title": "تربیت آپ کے لیے کیا ہے؟",
+  "subtitle": "“In your own words…”",
+  "when": "Live لکھیں: participants کے جواب سنتے ہوئے",
+  "live": true,
+  "lessonCodes": [
+   "M1-02",
+   "M1-03"
+  ]
+ },
+ {
+  "key": "fc-02",
+  "number": 2,
+  "module": "Module 1",
+  "title": "بیج، مالی، مٹی اور پانی",
+  "subtitle": "The fitrah garden",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M1-05"
+  ]
+ },
+ {
+  "key": "fc-03",
+  "number": 3,
+  "module": "Module 1",
+  "title": "تین خلا",
+  "subtitle": "The Three Gaps, and one answer in the middle",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M1-08",
+   "M1-09",
+   "M1-10"
+  ]
+ },
+ {
+  "key": "fc-04",
+  "number": 4,
+  "module": "Module 1",
+  "title": "میری نیت",
+  "subtitle": "Personal purpose statement, Noor Journal page 1",
+  "when": "پہلے سے تیار کریں · 8 منٹ خاموش لکھائی میں سامنے رہے",
+  "live": false,
+  "lessonCodes": [
+   "M1-13"
+  ]
+ },
+ {
+  "key": "fc-05",
+  "number": 5,
+  "module": "Module 2",
+  "title": "مربی کی چھ خوبیاں",
+  "subtitle": "A mirror, not a checklist",
+  "when": "Live لکھیں: ہر خوبی کا نام بتاتے ہوئے",
+  "live": true,
+  "lessonCodes": [
+   "M2-01",
+   "M2-02",
+   "M2-03",
+   "M2-04",
+   "M2-05"
+  ]
+ },
+ {
+  "key": "fc-06",
+  "number": 6,
+  "module": "Module 3",
+  "title": "Noor Seedlings · 6 تا 9 سال",
+  "subtitle": "How they think, and what the Murabbi does",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M3-03",
+   "M3-04"
+  ]
+ },
+ {
+  "key": "fc-07",
+  "number": 7,
+  "module": "Module 3",
+  "title": "Noor Growers · 10 تا 13 سال",
+  "subtitle": "How they think, and what the Murabbi does",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M3-07",
+   "M3-08"
+  ]
+ },
+ {
+  "key": "fc-08",
+  "number": 8,
+  "module": "Module 4",
+  "title": "سوالوں کی چار قسمیں",
+  "subtitle": "From a closed door to an open one",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M4-05"
+  ]
+ },
+ {
+  "key": "fc-09",
+  "number": 9,
+  "module": "Module 4",
+  "title": "بند سوال کو کھولیں",
+  "subtitle": "Question transformation",
+  "when": "پہلے سے تیار کریں · 5 منٹ کی activity میں سامنے رہے",
+  "live": false,
+  "lessonCodes": [
+   "M4-06",
+   "M4-07"
+  ]
+ },
+ {
+  "key": "fc-10",
+  "number": 10,
+  "module": "Module 5",
+  "title": "چھ علامات: کب کیا کرنا ہے",
+  "subtitle": "Signs a child needs support",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M5-05",
+   "M5-06",
+   "M5-07"
+  ]
+ },
+ {
+  "key": "fc-11",
+  "number": 11,
+  "module": "Module 6",
+  "title": "سال کا سفر",
+  "subtitle": "Karachi to Peshawar on the Khyber Mail",
+  "when": "پہلے سے تیار کریں",
+  "live": false,
+  "lessonCodes": [
+   "M6-01",
+   "M6-02",
+   "M6-03",
+   "M6-04"
+  ]
+ }
+]
