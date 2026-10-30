@@ -141,6 +141,10 @@ describe('Clusters and cluster supervisors', () => {
       });
       await mk('hina@e2e.test', 'gulshan block 13');
       await mk('far@e2e.test', 'Clifton');
+      // Same neighbourhood name, different city.
+      await ctx.http().post(`${API}/interest`).send({
+        role: 'parent', firstName: 'Omar', lastName: 'Raza', email: 'lahore@e2e.test', phone: '03004445556', city: 'Lahore', neighbourhood: 'Gulshan',
+      });
       await ctx.db.collection('interests').updateOne({ email: 'hina@e2e.test' }, { $set: { profile: { secret: 'family answers' } } });
       const r = await me().get('supervisor/interest');
       expect(r.body.data.requests.map((x: any) => x.email)).toEqual(['hina@e2e.test']);

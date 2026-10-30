@@ -372,11 +372,12 @@ export class ClusterService {
     return this.parentModel.countDocuments({ students: { $in: students.map((s) => s._id) } });
   }
 
-  /** Website interest whose neighbourhood text names one of the scope's neighbourhoods. */
+  /** Website interest whose neighbourhood text names one of the scope's neighbourhoods (in the same city, when it has one). */
   private async interestFilter(scope: Scope) {
-    const names = (await this.nbhModel.find({ _id: { $in: scope.neighbourhoodIds } }).select('name').lean()).map((n) => n.name).filter(Boolean);
-    if (!names.length) return null;
-    return { neighbourhood: { $regex: names.map((n) => escapeRegex(n.trim())).join('|'), $options: 'i' } };
+    const nbhs = (await this.nbhModel.find({ _id: { $in: scope.neighbourhoodIds } }).select('name city').lean()).filter((n) => n.name?.trim());
+    if (!nbhs.length) return null;
+    const like = (text: string) => ({ $regex: escapeRegex(text.trim()), $options: 'i' });
+    return { $or: nbhs.map((n) => ({ neighbourhood: like(n.name), ...(n.city?.trim() && { city: like(n.city) }) })) };
   }
 
   private async waitingInterest(scope: Scope) {
