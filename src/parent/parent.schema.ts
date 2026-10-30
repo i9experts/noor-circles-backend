@@ -53,6 +53,10 @@ export class Parent {
   @Prop({ type: Date, default: null })
   familyLinkLastViewedAt: Date | null;
 
+  /** Optional "about your family" answers (admin-only, never shown to murabbis). */
+  @Prop({ type: Object, default: null })
+  profile: Record<string, unknown> | null;
+
   /** The parent's sign-in account, if one has been created. */
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   account: Types.ObjectId | null;

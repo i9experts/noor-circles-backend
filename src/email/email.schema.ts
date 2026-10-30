@@ -53,7 +53,7 @@ export const EmailPreferenceSchema = SchemaFactory.createForClass(EmailPreferenc
 // ── Group emails written by admins ───────────────────────────────────────────
 
 export const AUDIENCE_TYPES = [
-  'murabbis', 'murabbis-tier', 'murabbis-training', 'parents', 'parents-circle', 'parents-neighbourhood',
+  'murabbis', 'murabbis-tier', 'murabbis-training', 'parents', 'parents-circle', 'parents-neighbourhood', 'families',
 ] as const;
 export type AudienceType = (typeof AUDIENCE_TYPES)[number];
 
@@ -63,7 +63,7 @@ export type EmailCampaignDocument = EmailCampaign & Document;
 export class EmailCampaign {
   @Prop({ required: true, trim: true, maxlength: 200 }) subject: string;
   @Prop({ required: true, maxlength: 20000 }) body: string;
-  @Prop({ type: Object, required: true }) audience: { type: AudienceType; ids?: string[]; tier?: number; status?: string };
+  @Prop({ type: Object, required: true }) audience: { type: AudienceType; ids?: string[]; tier?: number; status?: string; families?: string[] };
   @Prop({ trim: true, default: '' }) audienceLabel: string;
   @Prop({ type: Types.ObjectId, ref: 'User', required: true }) createdBy: Types.ObjectId;
   @Prop({ type: Date, default: null }) scheduledFor: Date | null;

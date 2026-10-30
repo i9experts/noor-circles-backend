@@ -44,6 +44,10 @@ export class Interest {
   @Prop({ trim: true, maxlength: 1000, default: '' })
   notes: string;
 
+  /** Parents' optional "about your family" answers (admin-only). */
+  @Prop({ type: Object, default: null })
+  profile: Record<string, unknown> | null;
+
   /** The portal account created from this request (murabbi or parent). */
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   account: Types.ObjectId | null;

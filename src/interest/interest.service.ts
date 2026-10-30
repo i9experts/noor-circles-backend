@@ -6,6 +6,7 @@ import { CreateInterestDto, UpdateInterestDto } from './interest.dto';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
 import { EmailService } from '../email/email.service';
+import { cleanProfile } from '../insights/family-profile';
 
 const ROLE_LABEL: Record<string, string> = { parent: 'parent', mentor: 'mentor', host: 'host' };
 
@@ -36,6 +37,7 @@ export class InterestService {
       city         : dto.city,
       neighbourhood: dto.neighbourhood,
       roleDetail   : dto.roleDetail ?? '',
+      profile      : dto.role === 'parent' && dto.profile ? cleanProfile(dto.profile, 'website') : null,
     });
 
     const name = `${interest.firstName} ${interest.lastName}`;

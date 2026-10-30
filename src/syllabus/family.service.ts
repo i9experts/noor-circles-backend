@@ -15,6 +15,7 @@ import {
 import { SyllabusService } from './syllabus.service';
 import { addDays, pkToday } from './schedule.util';
 import { EmailService } from '../email/email.service';
+import { FamilyProfileDto, cleanProfile } from '../insights/family-profile';
 
 const AWARD_LABELS: Record<string, string> = {
   'noor-star'       : 'Noor Star',
@@ -88,7 +89,7 @@ export class FamilyService {
     const [, id, v, sig] = m;
     const expected = Buffer.from(this.sign(id, Number(v)));
     if (expected.length !== sig.length || !timingSafeEqual(expected, Buffer.from(sig))) throw invalid;
-    const parent = await this.parentModel.findById(id).select('fullName students familyLinkVersion').lean();
+    const parent = await this.parentModel.findById(id).select('fullName students familyLinkVersion profile').lean();
     if (!parent || (parent.familyLinkVersion ?? 1) !== Number(v)) throw invalid;
     return parent;
   }
@@ -133,13 +134,24 @@ export class FamilyService {
 
   /** The same page for a parent signed in with their own account. */
   async viewForAccount(userId: string, accountName: string) {
-    const parent = await this.parentModel.findOne({ account: new Types.ObjectId(userId) }).select('fullName students').lean();
+    const parent = await this.parentModel.findOne({ account: new Types.ObjectId(userId) }).select('fullName students profile').lean();
     if (!parent) throw new NotFoundException('We couldn’t find your family record. Please contact the Noor Circles team.');
     // Greet them by their own name (the record may have been entered as e.g. "Parent of Ahmed").
     return this.build({ ...parent, fullName: accountName || parent.fullName });
   }
 
-  private async build(parent: { _id: Types.ObjectId; fullName: string; students: Types.ObjectId[] }) {
+  /** A family saves its "about your family" answers (private link or own account). */
+  async saveProfile(by: { token?: string; userId?: string }, dto: FamilyProfileDto) {
+    const parent = by.token
+      ? await this.parentFromToken(by.token)
+      : await this.parentModel.findOne({ account: new Types.ObjectId(by.userId) }).select('_id').lean();
+    if (!parent) throw new NotFoundException('We couldn’t find your family record. Please contact the Noor Circles team.');
+    const profile = cleanProfile(dto, 'family-page');
+    await this.parentModel.updateOne({ _id: parent._id }, { $set: { profile } });
+    return { message: 'JazakAllah khair. Your answers are saved.', profile };
+  }
+
+  private async build(parent: { _id: Types.ObjectId; fullName: string; students: Types.ObjectId[]; profile?: unknown }) {
 
     const students = await this.studentModel.find({ _id: { $in: parent.students }, isActive: true })
       .populate({ path: 'circle', populate: [{ path: 'murabbi', select: 'fullName' }, { path: 'track', select: 'name ageGroup' }, { path: 'neighbourhood', select: 'name' }] })
@@ -213,7 +225,7 @@ export class FamilyService {
     }));
 
     return {
-      family  : { name: parent.fullName },
+      family  : { name: parent.fullName, profile: parent.profile ?? null },
       children,
       calendar: calendar.map((i) => ({
         type: i.type, date: i.date, endDate: i.endDate, time: i.time, title: i.title, circleName: i.circleName,

@@ -1,7 +1,8 @@
 import {
-  IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength,
+  IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateNested,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { FamilyProfileDto } from '../insights/family-profile';
 import { safeEmail, safeTrim } from '../common/utils/transform.util';
 import { INTEREST_ROLES, INTEREST_STATUSES } from './interest.schema';
 
@@ -30,6 +31,10 @@ export class CreateInterestDto {
 
   @IsOptional() @IsString() @MaxLength(80) @Transform(safeTrim)
   roleDetail?: string;
+
+  /** Parents only: the optional "about your family" answers. */
+  @IsOptional() @ValidateNested() @Type(() => FamilyProfileDto)
+  profile?: FamilyProfileDto;
 
   /**
    * Honeypot. Hidden from people on the landing page, so it should always
