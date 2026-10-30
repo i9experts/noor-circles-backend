@@ -33,5 +33,6 @@ import { Performance, PerformanceSchema }     from '../performance/performance.s
   ],
   controllers: [AdminController],
   providers  : [AdminService],
+  exports    : [AdminService],
 })
 export class AdminModule {}

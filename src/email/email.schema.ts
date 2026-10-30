@@ -54,6 +54,7 @@ export const EmailPreferenceSchema = SchemaFactory.createForClass(EmailPreferenc
 
 export const AUDIENCE_TYPES = [
   'murabbis', 'murabbis-tier', 'murabbis-training', 'parents', 'parents-circle', 'parents-neighbourhood', 'families',
+  'cluster-murabbis', 'cluster-parents',
 ] as const;
 export type AudienceType = (typeof AUDIENCE_TYPES)[number];
 
