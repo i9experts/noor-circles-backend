@@ -160,12 +160,21 @@ export class AccountService {
     return { message: `Account created. Share the sign-in details with ${parent.fullName}.`, ...this.credentials(user, password, emailed), parentId };
   }
 
-  // ── Any murabbi or parent account ───────────────────────────────────────────
+  // ── Cluster supervisors ─────────────────────────────────────────────────────
+
+  async createSupervisor(dto: { fullName: string; email: string; phone?: string }) {
+    const email = dto.email.trim().toLowerCase();
+    const { user, password, emailed } = await this.createUser({ fullName: dto.fullName.trim(), email, role: UserRole.SUPERVISOR, phone: dto.phone?.trim() || null });
+    this.logger.log(`Supervisor account created → ${email}`);
+    return { message: `Supervisor account created. Share the sign-in details with ${user.fullName}.`, ...this.credentials(user, password, emailed) };
+  }
+
+  // ── Any murabbi, parent or supervisor account ───────────────────────────────
 
   private async managedUser(userId: string) {
     if (!Types.ObjectId.isValid(userId)) throw new BadRequestException('Invalid id.');
     const user = await this.userModel.findById(userId);
-    if (!user || ![UserRole.MURABBI, UserRole.PARENT].includes(user.role)) throw new NotFoundException('Account not found.');
+    if (!user || ![UserRole.MURABBI, UserRole.PARENT, UserRole.SUPERVISOR].includes(user.role)) throw new NotFoundException('Account not found.');
     return user;
   }
 

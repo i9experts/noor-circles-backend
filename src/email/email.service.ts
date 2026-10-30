@@ -12,6 +12,7 @@ import { Parent, ParentDocument } from '../parent/parent.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Interest, InterestDocument } from '../interest/interest.schema';
+import { Cluster, ClusterDocument } from '../cluster/cluster.schema';
 import { Course, CourseAssignment, CourseAssignmentDocument, CourseDocument, LessonProgress, LessonProgressDocument } from '../course/course.schema';
 import {
   AudienceType, EmailCampaign, EmailCampaignDocument, EmailLog, EmailLogDocument, EmailPreference,
@@ -73,6 +74,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     @InjectModel(CourseAssignment.name) private readonly assignmentModel: Model<CourseAssignmentDocument>,
     @InjectModel(LessonProgress.name)   private readonly progressModel:   Model<LessonProgressDocument>,
     @InjectModel(Interest.name)         private readonly interestModel:   Model<InterestDocument>,
+    @InjectModel(Cluster.name)          private readonly clusterModel:    Model<ClusterDocument>,
     private readonly mail: MailService,
     private readonly moduleRef: ModuleRef,
     config: ConfigService,
@@ -293,6 +295,27 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           withoutEmail: parents.length - withEmail.length,
         };
       }
+      case 'cluster-murabbis':
+      case 'cluster-parents': {
+        if (!ids.length) throw new BadRequestException('Choose at least one cluster.');
+        const clusters = await this.clusterModel.find({ _id: { $in: ids } }).select('name neighbourhoods').lean();
+        const circles = await this.circleModel.find({ neighbourhood: { $in: clusters.flatMap((c) => c.neighbourhoods) }, isActive: true })
+          .select('_id murabbi').lean();
+        const names = clusters.map((c) => c.name).join(', ');
+        if (a.type === 'cluster-murabbis') {
+          const users = await this.userModel.find({ ...murabbiFilter, _id: { $in: circles.map((c) => c.murabbi).filter(Boolean) } })
+            .select('fullName email').lean();
+          return { label: `Murabbis in ${names}`, recipients: fromUsers(users), withoutEmail: 0 };
+        }
+        const students = await this.studentModel.find({ circle: { $in: circles.map((c) => c._id) }, isActive: true }).select('_id').lean();
+        const parents = await this.parentModel.find({ students: { $in: students.map((s) => s._id) } }).select('fullName email account').lean();
+        const withEmail = parents.filter((p) => p.email);
+        return {
+          label: `Parents in ${names}`,
+          recipients: withEmail.map((p) => ({ email: p.email, name: p.fullName, userId: p.account ?? null })),
+          withoutEmail: parents.length - withEmail.length,
+        };
+      }
       case 'families': {
         const ids = a.families ?? [];
         if (!ids.length) throw new BadRequestException('Choose at least one family.');
@@ -477,6 +500,8 @@ const SAMPLES: { kind: string; title: string; when: string; audience: string; da
     data: { name: 'Sara Ahmed', role: 'parent' } },
   { kind: 'interest.alert', title: 'New interest (to the team)', when: 'Someone submits “Find your place”', audience: 'support@',
     data: { name: 'Sara Ahmed', role: 'parent', email: 'sara@example.com', phone: '0300 1234567', neighbourhood: 'Gulshan', city: 'Karachi', roleDetail: '6–8 years', adminUrl: `${L}/` } },
+  { kind: 'cluster.safeguarding', title: 'Safeguarding concern (to the team)', when: 'A cluster supervisor marks a safeguarding concern on a visit', audience: 'support@',
+    data: { cluster: 'Gulshan Cluster', circle: 'Noor Circle Block 13', murabbi: 'Bilal Khan', supervisor: 'Ayesha Siddiqui', date: '2026-10-28', concerns: 'Only one adult was present and the room door was locked.', url: `${L}/` } },
   { kind: 'training.assigned', title: 'Training assigned', when: 'An admin assigns the Asaas training', audience: 'Murabbis',
     data: { name: 'Bilal Khan', courseTitle: 'Asaas Murabbi Training', lessons: 119, minutes: 108, badge: 'Certified Asaas Murabbi', dueDate: '2026-12-15', url: `${L}/murabbi` } },
   { kind: 'training.reminder', title: 'Training reminders', when: 'Not started after 3 days · no listening for 7 days · due in 7 days and 1 day · overdue', audience: 'Murabbis',

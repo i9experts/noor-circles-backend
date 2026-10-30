@@ -12,5 +12,6 @@ import { NotificationModule } from '../notification/notification.module';
   ],
   controllers: [InterestController],
   providers  : [InterestService],
+  exports    : [InterestService],
 })
 export class InterestModule {}

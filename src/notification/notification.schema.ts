@@ -14,6 +14,7 @@ export enum NotificationType {
   CONTRIBUTION        = 'contribution',         // website pledge / Stripe payment → admin (no sender)
   REWARD              = 'reward',               // admin → murabbi (reward paid)
   TRAINING            = 'training',             // admin → murabbi (training assigned / reviewed / certified)
+  CLUSTER             = 'cluster',              // supervisor ↔ admin (visit reports, cluster changes)
 }
 
 export enum NotificationStatus {

@@ -9,7 +9,7 @@ export class AudienceDto {
   @IsIn(AUDIENCE_TYPES as unknown as string[], { message: 'Choose who to send to.' })
   type: string;
 
-  /** Circle or neighbourhood ids. */
+  /** Circle, neighbourhood or cluster ids. */
   @IsOptional() @IsArray() @IsMongoId({ each: true })
   ids?: string[];
 

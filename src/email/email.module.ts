@@ -6,6 +6,7 @@ import { Parent, ParentSchema } from '../parent/parent.schema';
 import { Student, StudentSchema } from '../student/student.schema';
 import { Circle, CircleSchema } from '../circle/circle.schema';
 import { Interest, InterestSchema } from '../interest/interest.schema';
+import { Cluster, ClusterSchema } from '../cluster/cluster.schema';
 import {
   Course, CourseAssignment, CourseAssignmentSchema, CourseSchema, LessonProgress, LessonProgressSchema,
 } from '../course/course.schema';
@@ -32,6 +33,7 @@ import { EmailController } from './email.controller';
       { name: CourseAssignment.name, schema: CourseAssignmentSchema },
       { name: LessonProgress.name,   schema: LessonProgressSchema   },
       { name: Interest.name,         schema: InterestSchema         },
+      { name: Cluster.name,          schema: ClusterSchema          },
     ]),
   ],
   controllers: [EmailController],

@@ -8,6 +8,8 @@ export enum UserRole {
   MURABBI = 'murabbi',
   /** A family member who signs in to follow their child's circle. */
   PARENT = 'parent',
+  /** Looks after the circles in one or more clusters (groups of neighbourhoods). */
+  SUPERVISOR = 'supervisor',
 }
 
 @Schema({ timestamps: true })

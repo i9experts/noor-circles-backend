@@ -116,13 +116,17 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       en: [
         d.role === 'parent'
           ? 'Your family now has a Noor Circles account. Once you sign in you can follow your child’s circle: attendance, this week’s topic and home activity, the calendar and notes from the murabbi.'
-          : 'Your murabbi account is ready. Sign in to see your circles, your weekly agenda and your training.',
+          : d.role === 'supervisor'
+            ? 'Your cluster supervisor account is ready. Sign in to see the circles in your cluster, log your visits and support the murabbis and families.'
+            : 'Your murabbi account is ready. Sign in to see your circles, your weekly agenda and your training.',
         `Your sign-in name is **${d.email}**. Use the button below to choose your password (the link works for ${d.expiresHours} hours). If the team has already given you a temporary password, you can use that instead.`,
       ],
       ur: [
         d.role === 'parent'
           ? 'آپ کے خاندان کا Noor Circles اکاؤنٹ بن گیا ہے۔ سائن اِن کر کے آپ اپنے بچے کے circle کی حاضری، اس ہفتے کا موضوع، گھر کی سرگرمی، کیلنڈر اور مربی کے نوٹس دیکھ سکتے ہیں۔'
-          : 'آپ کا مربی اکاؤنٹ تیار ہے۔ سائن اِن کر کے اپنے circles، ہفتہ وار ایجنڈا اور تربیت دیکھیں۔',
+          : d.role === 'supervisor'
+            ? 'آپ کا کلسٹر سپروائزر اکاؤنٹ تیار ہے۔ سائن اِن کر کے اپنے کلسٹر کے circles دیکھیں، وزٹ رپورٹ لکھیں اور مربیوں اور خاندانوں کا ساتھ دیں۔'
+            : 'آپ کا مربی اکاؤنٹ تیار ہے۔ سائن اِن کر کے اپنے circles، ہفتہ وار ایجنڈا اور تربیت دیکھیں۔',
         'نیچے دیے گئے بٹن سے اپنا پاس ورڈ بنائیں۔',
       ],
       button: { label: 'Set my password', labelUr: 'پاس ورڈ بنائیں', url: d.setPasswordUrl },
@@ -310,6 +314,22 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       en: ['Someone used “Find your place” on the website.'],
       facts: [['Name', d.name], ['Role', d.role], ['Email', d.email], ['Phone', d.phone], ['Area', `${d.neighbourhood}, ${d.city}`], ...(d.roleDetail ? [['Detail', d.roleDetail] as [string, string]] : [])],
       button: { label: 'Open Interest Requests', url: d.adminUrl },
+    }),
+  },
+
+  // 9. Safeguarding concern from a supervisor's visit
+  'cluster.safeguarding': {
+    lang: () => 'en-first',
+    build: (d) => ({
+      subject: `Safeguarding concern: ${d.circle} (${d.cluster})`,
+      preheader: 'A cluster supervisor raised a safeguarding concern on a visit.',
+      heading: 'A safeguarding concern was raised',
+      en: [
+        `${d.supervisor} visited **${d.circle}** on ${fmtDate(d.date)} and marked a safeguarding concern. Please follow it up today.`,
+        ...(d.concerns ? [`What they wrote: ${d.concerns}`] : []),
+      ],
+      facts: [['Cluster', d.cluster], ['Circle', d.circle], ['Murabbi', d.murabbi || '—'], ['Supervisor', d.supervisor], ['Visit date', fmtDate(d.date)]],
+      button: { label: 'Open the visit report', url: d.url },
     }),
   },
 
