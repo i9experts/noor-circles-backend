@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { API, bearer, createApp, E2EContext, MISSING_ID, seedWorld } from './helpers';
 import { addDays, pkToday, weekdayOf } from '../../src/syllabus/schedule.util';
 
@@ -49,9 +50,16 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
       const r = await mA().get(`syllabus/tracks/${track68}/sessions`);
       expect(r.status).toBe(200);
       const [first, second] = r.body.data.sessions;
-      expect(first).toMatchObject({ number: 1, month: 1, title: 'Identity · Part 1' });
+      // Little Lights comes with the written (Urdu) sessions; the other tracks start as an outline.
+      expect(first).toMatchObject({ number: 1, month: 1, title: 'اللہ نے مجھے بنایا' });
       expect(first.parts.map((p: any) => p.key)).toEqual(['welcome', 'quran', 'tarbiyah', 'activity', 'dhikr', 'closing']);
-      expect(first.homeActivity).toMatch(/identity/);
+      expect(first.parts.map((p: any) => p.minutes)).toEqual([20, 25, 30, 35, 20, 20]);
+      expect(first.parts.every((p: any) => p.title && p.details)).toBe(true);
+      expect(first.objectives.length).toBeGreaterThan(0);
+      expect(first.homeActivity).toMatch(/بسم اللہ/);
+      const outline = (await mA().get(`syllabus/tracks/${track910}/sessions`)).body.data.sessions;
+      expect(outline[0]).toMatchObject({ number: 1, title: 'Identity · Part 1' });
+      expect(outline[0].homeActivity).toMatch(/identity/);
       s1 = first._id;
       s2 = second._id;
     });
@@ -70,6 +78,30 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
       expect((await mA().patch(`syllabus/sessions/${s1}`, { title: 'x' })).status).toBe(403);
       // duplicate number within the track
       expect((await adm().post(`syllabus/tracks/${track68}/sessions`, { number: 2, month: 1, title: 'Dup' })).status).toBe(409);
+    });
+
+    it('loading the written sessions fills only unwritten ones and never overwrites an admin’s work', async () => {
+      const tracks = (await adm().get('syllabus/tracks')).body.data;
+      expect(tracks.map((t: any) => t.writtenContent)).toEqual([40, 0, 0]);
+      // Session 3 and 4 back to blank, session 5 deleted (as on a portal set up before the content existed).
+      const sessions = ctx.db.collection('syllabussessions');
+      const blank = { objectives: [], 'parts.$[].title': '', 'parts.$[].details': '', title: 'Placeholder' };
+      await sessions.updateMany({ track: new Types.ObjectId(track68), number: { $in: [3, 4] } }, { $set: blank });
+      await sessions.deleteOne({ track: new Types.ObjectId(track68), number: 5 });
+
+      expect((await mA().post(`syllabus/tracks/${track68}/load-content`)).status).toBe(403);
+      expect((await adm().post(`syllabus/tracks/${track910}/load-content`)).status).toBe(400);
+      const r = await adm().post(`syllabus/tracks/${track68}/load-content`);
+      expect(r.status).toBe(201);
+      expect(r.body.data).toMatchObject({ filled: 2, added: 1 });
+      expect(r.body.data.kept).toHaveLength(37);
+
+      const list = (await adm().get(`syllabus/tracks/${track68}/sessions`)).body.data.sessions;
+      expect(list).toHaveLength(40);
+      expect(list[0].title).toBe('Who am I? My name and my faith'); // the admin's edit is kept
+      expect(list[2].title).not.toBe('Placeholder');
+      expect(list[2].parts.every((p: any) => p.details)).toBe(true);
+      expect(list[4]).toMatchObject({ number: 5, month: 2 });
     });
   });
 
