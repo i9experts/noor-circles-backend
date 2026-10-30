@@ -35,6 +35,11 @@ export class SyllabusController {
   @Roles(UserRole.ADMIN)
   defaults() { return this.service.setupDefaults(); }
 
+  /** POST /syllabus/tracks/:id/load-content — fill unwritten sessions with the Noor Circles content. */
+  @Post('tracks/:id/load-content')
+  @Roles(UserRole.ADMIN)
+  loadContent(@Param('id') id: string) { return this.service.loadWrittenContent(id); }
+
   @Patch('tracks/:id')
   @Roles(UserRole.ADMIN)
   updateTrack(@Param('id') id: string, @Body() dto: UpdateTrackDto) { return this.service.updateTrack(id, dto); }

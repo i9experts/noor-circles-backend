@@ -13,6 +13,7 @@ import {
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { UserRole } from '../user/user.schema';
+import { WRITTEN_CONTENT, SeedSession } from './content';
 import { Closure, addDays, expectedSessions, meetingDates, nextMeeting, pkInstant, pkToday } from './schedule.util';
 
 const TRACK_NAMES: Record<AgeGroup, string> = {
@@ -29,6 +30,22 @@ export function defaultPlan(): { month: number; theme: string; part: number }[] 
     for (let p = 1; p <= n; p++) plan.push({ month: i + 1, theme, part: p });
   });
   return plan;
+}
+
+/** A session nobody has started writing: no objectives and no part text. */
+function isBlank(s: { objectives?: string[]; parts?: { title?: string; details?: string }[] }) {
+  return !s.objectives?.length && !(s.parts ?? []).some((p) => p.title?.trim() || p.details?.trim());
+}
+
+/** A written session as stored: the six parts in order with their usual minutes. */
+function seedToDoc(seed: SeedSession) {
+  return {
+    month       : seed.month,
+    title       : seed.title,
+    objectives  : seed.objectives,
+    parts       : SESSION_PARTS.map((p) => ({ key: p.key, title: seed.parts[p.key].title, details: seed.parts[p.key].details, minutes: p.minutes })),
+    homeActivity: seed.homeActivity,
+  };
 }
 
 /** All six parts in order, filled from whatever the admin supplied. */
@@ -99,7 +116,50 @@ export class SyllabusService {
       rows.find((r) => r._id?.toString() === id.toString())?.n ?? 0;
     return tracks
       .sort((a, b) => AGE_GROUPS.indexOf(a.ageGroup) - AGE_GROUPS.indexOf(b.ageGroup))
-      .map((t) => ({ ...t, sessionCount: count(sessionCounts, t._id), circleCount: count(circleCounts, t._id) }));
+      .map((t) => ({
+        ...t,
+        sessionCount: count(sessionCounts, t._id),
+        circleCount : count(circleCounts, t._id),
+        /** How many written Noor Circles sessions exist for this age group (0 = none yet). */
+        writtenContent: WRITTEN_CONTENT[t.ageGroup]?.length ?? 0,
+      }));
+  }
+
+  /**
+   * Fills a track with the written Noor Circles sessions for its age group.
+   * Only sessions nobody has started writing are filled (no objectives and no
+   * part text), and missing session numbers are added. Anything an admin has
+   * written is left exactly as it is.
+   */
+  async loadWrittenContent(trackId: string) {
+    const track = await this.trackModel.findById(trackId).lean();
+    if (!track) throw new NotFoundException('Track not found.');
+    const content = WRITTEN_CONTENT[track.ageGroup];
+    if (!content?.length) throw new BadRequestException('Written sessions for this age group aren’t ready yet.');
+
+    const existing = await this.sessionModel.find({ track: track._id }).lean();
+    const byNumber = new Map(existing.map((s) => [s.number, s]));
+    let filled = 0, added = 0;
+    const kept: number[] = [];
+    for (const seed of content) {
+      const doc = seedToDoc(seed);
+      const s = byNumber.get(seed.number);
+      if (!s) {
+        await this.sessionModel.create({ track: track._id, number: seed.number, ...doc });
+        added++;
+      } else if (isBlank(s)) {
+        await this.sessionModel.updateOne({ _id: s._id }, { $set: doc });
+        filled++;
+      } else {
+        kept.push(seed.number);
+      }
+    }
+    const parts = [
+      filled && `${filled} session${filled === 1 ? '' : 's'} filled`,
+      added && `${added} added`,
+      kept.length && `${kept.length} kept as you wrote ${kept.length === 1 ? 'it' : 'them'}`,
+    ].filter(Boolean);
+    return { message: `${parts.join(', ')}.`, filled, added, kept };
   }
 
   async createTrack(dto: CreateTrackDto) {
@@ -137,6 +197,11 @@ export class SyllabusService {
         created.push(track.name);
       }
       if (await this.sessionModel.exists({ track: track._id })) continue;
+      const written = WRITTEN_CONTENT[ageGroup];
+      if (written?.length) {
+        await this.sessionModel.insertMany(written.map((seed) => ({ track: track._id, number: seed.number, ...seedToDoc(seed) })));
+        continue;
+      }
       await this.sessionModel.insertMany(defaultPlan().map((p, i) => ({
         track       : track._id,
         number      : i + 1,
