@@ -26,6 +26,7 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
   const start = addDays(today, -21); // four meetings so far: -21, -14, -7 and today
   let track68: string;
   let track910: string;
+  let track1113: string;
   let s1: string;
   let s2: string;
 
@@ -42,6 +43,7 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
       expect(tracks.every((t: any) => t.sessionCount === 40)).toBe(true);
       track68 = tracks[0]._id;
       track910 = tracks[1]._id;
+      track1113 = tracks[2]._id;
       const again = await adm().post('syllabus/tracks/defaults');
       expect(again.body.message).toMatch(/already exist/);
     });
@@ -50,14 +52,17 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
       const r = await mA().get(`syllabus/tracks/${track68}/sessions`);
       expect(r.status).toBe(200);
       const [first, second] = r.body.data.sessions;
-      // Little Lights comes with the written (Urdu) sessions; the other tracks start as an outline.
+      // Little Lights and Growing Lights come with the written (Urdu) sessions; Guiding Lights starts as an outline.
       expect(first).toMatchObject({ number: 1, month: 1, title: 'اللہ نے مجھے بنایا' });
       expect(first.parts.map((p: any) => p.key)).toEqual(['welcome', 'quran', 'tarbiyah', 'activity', 'dhikr', 'closing']);
       expect(first.parts.map((p: any) => p.minutes)).toEqual([20, 25, 30, 35, 20, 20]);
       expect(first.parts.every((p: any) => p.title && p.details)).toBe(true);
       expect(first.objectives.length).toBeGreaterThan(0);
       expect(first.homeActivity).toMatch(/بسم اللہ/);
-      const outline = (await mA().get(`syllabus/tracks/${track910}/sessions`)).body.data.sessions;
+      const growing = (await mA().get(`syllabus/tracks/${track910}/sessions`)).body.data.sessions;
+      expect(growing[0]).toMatchObject({ number: 1, month: 1, title: 'ہم کون ہیں؟ جعفرؓ کا جواب' });
+      expect(growing.every((x: any) => x.objectives.length && x.parts.every((p: any) => p.details))).toBe(true);
+      const outline = (await mA().get(`syllabus/tracks/${track1113}/sessions`)).body.data.sessions;
       expect(outline[0]).toMatchObject({ number: 1, title: 'Identity · Part 1' });
       expect(outline[0].homeActivity).toMatch(/identity/);
       s1 = first._id;
@@ -82,7 +87,7 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
 
     it('loading the written sessions fills only unwritten ones and never overwrites an admin’s work', async () => {
       const tracks = (await adm().get('syllabus/tracks')).body.data;
-      expect(tracks.map((t: any) => t.writtenContent)).toEqual([40, 0, 0]);
+      expect(tracks.map((t: any) => t.writtenContent)).toEqual([40, 40, 0]);
       // Session 3 and 4 back to blank, session 5 deleted (as on a portal set up before the content existed).
       const sessions = ctx.db.collection('syllabussessions');
       const blank = { objectives: [], 'parts.$[].title': '', 'parts.$[].details': '', title: 'Placeholder' };
@@ -90,7 +95,7 @@ describe('Syllabus, Murabbi agenda, calendar and family links', () => {
       await sessions.deleteOne({ track: new Types.ObjectId(track68), number: 5 });
 
       expect((await mA().post(`syllabus/tracks/${track68}/load-content`)).status).toBe(403);
-      expect((await adm().post(`syllabus/tracks/${track910}/load-content`)).status).toBe(400);
+      expect((await adm().post(`syllabus/tracks/${track1113}/load-content`)).status).toBe(400);
       const r = await adm().post(`syllabus/tracks/${track68}/load-content`);
       expect(r.status).toBe(201);
       expect(r.body.data).toMatchObject({ filled: 2, added: 1 });
