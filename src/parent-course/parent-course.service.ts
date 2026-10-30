@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -8,6 +8,7 @@ import {
 } from '../course/course.schema';
 import { CourseService, dayIndex, sectionOpen } from '../course/course.service';
 import { User, UserDocument, UserRole } from '../user/user.schema';
+import { EmailService } from '../email/email.service';
 import {
   PARENT_QUIZZES, ParentQuizAttempt, ParentQuizAttemptDocument, ParentQuizKey, ParentSelfCheck, ParentSelfCheckDocument,
   ParentTarget, ParentTargetDocument,
@@ -36,7 +37,7 @@ const pkDate = (d: Date) => new Date(d.getTime() + 5 * 3600_000).toISOString().s
 const addDays = (d: Date, n: number) => new Date(new Date(d).getTime() + n * 24 * 3600_000);
 
 @Injectable()
-export class ParentCourseService implements OnModuleInit {
+export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ParentCourseService.name);
 
   constructor(
@@ -52,14 +53,71 @@ export class ParentCourseService implements OnModuleInit {
     @InjectModel(ParentTarget.name)      private readonly targetModel:     Model<ParentTargetDocument>,
     @InjectModel(User.name)              private readonly userModel:       Model<UserDocument>,
     courses: CourseService,
+    private readonly email: EmailService,
   ) {
     courses.registerSeeder(PARENT_COURSE_KEY, () => this.seed());
   }
+
+  private emailTimer: NodeJS.Timeout | null = null;
 
   // ══ Seeding ════════════════════════════════════════════════════════════════
 
   async onModuleInit() {
     try { await this.seed(); } catch (err) { this.logger.error(`Could not seed Asaas for Parents: ${(err as Error).message}`); }
+    // "A new module is open" emails: checked every hour; each one goes once.
+    if (process.env.NODE_ENV !== 'test') {
+      this.emailTimer = setInterval(() => { this.sendModuleEmails().catch((e) => this.logger.error(`Module emails: ${(e as Error).message}`)); }, 3600_000);
+      this.emailTimer.unref?.();
+    }
+  }
+
+  onModuleDestroy() {
+    if (this.emailTimer) clearInterval(this.emailTimer);
+  }
+
+  // ══ Emails ═════════════════════════════════════════════════════════════════
+
+  /**
+   * Emails each enrolled parent when their latest part opens: the start
+   * (Welcome + Module 1), each new module, the Closing, or (once) when an
+   * admin opens everything. Only the current part is sent, never a backlog,
+   * and each goes once (dedupe key per enrolment and part).
+   */
+  async sendModuleEmails(now = new Date(), userIds?: string[]) {
+    const course = await this.course();
+    const [sections, lessons] = await Promise.all([
+      this.sections(course._id),
+      this.lessonModel.find({ course: course._id }).select('section durationSec').lean(),
+    ]);
+    const filter: Record<string, unknown> = { course: course._id };
+    if (userIds) filter.user = { $in: userIds.map((id) => new Types.ObjectId(id)) };
+    const assignments = await this.assignmentModel.find(filter).populate('user', 'fullName email isActive role').lean();
+    const url = this.email.link('/parent/asaas');
+    let queued = 0;
+    for (const a of assignments as any[]) {
+      const u = a.user;
+      if (!u?.isActive || u.role !== UserRole.PARENT) continue;
+      const to = { email: u.email, name: u.fullName, userId: u._id };
+      if (a.allOpen) {
+        if (await this.email.queue('parent-course.module-open', to, { variant: 'all', url }, { dedupeKey: `pc-open:${a._id}:all` }) === 'queued') queued++;
+        continue;
+      }
+      const day = dayIndex(a.createdAt, now);
+      const current = sections.filter((s) => s.key !== 'welcome' && (s.unlockDay ?? 0) <= day).sort((x, y) => (y.unlockDay ?? 0) - (x.unlockDay ?? 0))[0];
+      if (!current) continue;
+      const clips = lessons.filter((l) => l.section.toString() === current._id.toString());
+      const number = /^m(\d)$/.exec(current.key)?.[1];
+      const data = {
+        variant: current.key === 'm1' ? 'start' : current.key === 'closing' ? 'closing' : 'module',
+        number: number ? Number(number) : null,
+        module: current.title.replace(/^Module \d+:\s*/, ''), moduleUr: current.titleUr,
+        clips: clips.length, minutes: Math.max(1, Math.round(clips.reduce((t, l) => t + l.durationSec, 0) / 60)),
+        checkOpens: number ? addDays(a.createdAt, (current.unlockDay ?? 0) + QUIZ_AFTER_DAYS).toISOString() : null,
+        url,
+      };
+      if (await this.email.queue('parent-course.module-open', to, data, { dedupeKey: `pc-open:${a._id}:${current.key}` }) === 'queued') queued++;
+    }
+    return queued;
   }
 
   /** Creates the course, its ten sections and 52 clips the first time; fills in anything missing later. */
@@ -412,6 +470,7 @@ export class ParentCourseService implements OnModuleInit {
       );
       if (r.upsertedCount) added++;
     }
+    void this.sendModuleEmails(new Date(), parents.map((p) => p._id.toString())).catch(() => {});
     return { message: added ? `Opened for ${added} parent${added === 1 ? '' : 's'}. Their first fortnight starts today.` : 'Every chosen parent already has it.', added };
   }
 
@@ -423,12 +482,14 @@ export class ParentCourseService implements OnModuleInit {
       { $setOnInsert: { assignedBy: new Types.ObjectId(byId) } },
       { upsert: true },
     );
+    await this.sendModuleEmails(new Date(), [userId]);
   }
 
   async setAccess(userId: string, allOpen: boolean) {
     const course = await this.course();
     const r = await this.assignmentModel.updateOne({ course: course._id, user: new Types.ObjectId(userId) }, { $set: { allOpen } });
     if (!r.matchedCount) throw new NotFoundException('This parent isn’t enrolled.');
+    if (allOpen) void this.sendModuleEmails(new Date(), [userId]).catch(() => {});
     return { message: allOpen ? 'Every module is now open for this parent.' : 'Modules open fortnight by fortnight again.' };
   }
 

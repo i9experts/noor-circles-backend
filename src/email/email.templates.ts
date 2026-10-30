@@ -239,6 +239,68 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       };
     },
   },
+  // 7b. Asaas for Parents: the course started, a module opened, everything opened, the closing
+  'parent-course.module-open': {
+    lang: () => 'ur-first',
+    build: (d) => {
+      const name = first(d.name);
+      const facts: [string, string][] = [];
+      if (d.clips) facts.push(['Clips · کلپس', `${d.clips} · about ${d.minutes} minutes`]);
+      if (d.checkOpens) facts.push(['Knowledge check · سوالات', fmtDate(d.checkOpens)]);
+      const button = { label: 'Open Asaas for Parents', labelUr: 'Asaas کھولیں', url: d.url };
+      if (d.variant === 'start') {
+        return {
+          subject: 'Your Asaas for Parents has started · والدین کا Asaas شروع',
+          heading: `Welcome to Asaas for Parents, ${name}`, headingUr: 'والدین کا Asaas: خوش آمدید',
+          ur: [
+            `السلام علیکم ${name}۔ آپ کا "والدین کا Asaas" شروع ہو گیا ہے۔ خوش آمدید اور پہلا module **"${d.moduleUr}"** ابھی کھلا ہے۔`,
+            'چھوٹی چھوٹی audio clips ہیں: کھانا پکاتے ہوئے، یا بچوں کے سونے کے بعد، جب وقت ملے سن لیں۔ ہر دو ہفتے بعد ایک نیا module کھلے گا، اور ہم آپ کو ای میل کر دیں گے۔',
+            'شروع میں اپنا self-check پُر کرنا نہ بھولیں۔',
+          ],
+          en: [
+            `Assalam-o-Alaikum ${name}. Your 16-week Asaas for Parents course has started: the Welcome and Module 1, **${d.module}**, are open now.`,
+            'The clips are short; listen whenever you have a moment. A new module opens every fortnight and we’ll email you each time. Please fill in the self-check at the start.',
+          ],
+          facts, button,
+        };
+      }
+      if (d.variant === 'all') {
+        return {
+          subject: 'Every module of Asaas for Parents is open · تمام modules کھل گئے',
+          heading: `${name}, every module is open`, headingUr: 'تمام modules کھل گئے',
+          ur: [`السلام علیکم ${name}۔ Noor Circles team نے آپ کے لیے "والدین کا Asaas" کے تمام modules کھول دیے ہیں۔ اپنی رفتار سے سنیں، اور ہر module کے بعد اس کے سوالات اور target ضرور کریں۔`],
+          en: [`Assalam-o-Alaikum ${name}. The Noor Circles team has opened every module of Asaas for Parents for you. Listen at your own pace, and do each module’s knowledge check and target as you go.`],
+          button,
+        };
+      }
+      if (d.variant === 'closing') {
+        return {
+          subject: 'The last part of Asaas for Parents is open · اختتام',
+          heading: `${name}, the closing is open`, headingUr: 'اختتام: والدین کا وعدہ',
+          ur: [
+            `ماشاءاللہ ${name}، سولہ ہفتوں کا سفر مکمل ہونے کو ہے۔ آخری حصہ **"${d.moduleUr}"** کھل گیا ہے۔`,
+            'پہلی clip سننے کے بعد آخری knowledge check اور self-check کھلیں گے، پھر آخری clip میں ہم سب مل کر والدین کا وعدہ کریں گے۔ ہو سکے تو اپنے بچے کو پاس بٹھا لیں۔',
+          ],
+          en: [
+            `MashaAllah ${name}, the last part of Asaas for Parents is open. After the first closing clip, the final knowledge check and the self-check open; the last clip is the parents’ pledge. If you can, have your child beside you.`,
+          ],
+          facts, button,
+        };
+      }
+      return {
+        subject: `Module ${d.number} is open: ${d.module} · نیا module`,
+        heading: `${name}, Module ${d.number} is open`, headingUr: `نیا module: ${d.moduleUr}`,
+        ur: [
+          `السلام علیکم ${name}۔ "والدین کا Asaas" کا module ${d.number}، **"${d.moduleUr}"**، آج کھل گیا ہے۔`,
+          'اس کی clips جب وقت ملے سن لیں۔ دوسرے ہفتے کے شروع میں دس سوالوں کا knowledge check کھلے گا، اور اس fortnight کا target card بچے کے ساتھ شروع کریں۔',
+        ],
+        en: [
+          `Assalam-o-Alaikum ${name}. Module ${d.number} of Asaas for Parents, **${d.module}**, opened today. Listen when you can; its knowledge check opens at the start of the second week, and this fortnight’s target card is ready for your child to tick.`,
+        ],
+        facts, button,
+      };
+    },
+  },
   // 8. Alert to the team
   'interest.alert': {
     lang: () => 'en-first',

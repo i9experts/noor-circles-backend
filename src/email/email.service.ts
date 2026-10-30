@@ -23,6 +23,7 @@ import { CampaignDto, AudienceDto } from './email.dto';
 /** Which kinds people can switch off (everything else always goes). */
 const CATEGORY: Record<string, OptionalCategory> = {
   'training.reminder': 'training-reminders',
+  'parent-course.module-open': 'training-reminders',
   campaign: 'announcements',
 };
 
@@ -490,6 +491,8 @@ const SAMPLES: { kind: string; title: string; when: string; audience: string; da
     data: { name: 'Bilal Khan', total: 13, band: 'pass', url: `${L}/murabbi` } },
   { kind: 'training.certified', title: 'Certified (with the certificate PDF)', when: 'Everything is complete', audience: 'Murabbis',
     data: { name: 'Bilal Khan', badge: 'Certified Asaas Murabbi', courseTitle: 'Asaas Murabbi Training', number: 'NC-T1-482913', url: `${L}/murabbi` } },
+  { kind: 'parent-course.module-open', title: 'Asaas for Parents: new module open', when: 'The course starts (Welcome + Module 1) · each new module every fortnight · the Closing · or once when an admin opens every module', audience: 'Parents',
+    data: { name: 'Hafsa Ahmed', variant: 'module', number: 3, module: 'Screens and the Stolen Attention', moduleUr: 'موبائل اور چوری ہوتی توجہ', clips: 6, minutes: 9, checkOpens: '2026-11-20', url: `${L}/parent/asaas` } },
   { kind: 'family.welcome', title: 'Welcome to Noor Circles', when: 'A parent with an email is registered or a child is added', audience: 'Parents',
     data: { name: 'Hafsa Ahmed', children: [{ name: 'Ahmed', circle: 'Circle of Light', murabbi: 'Usman Farooq', schedule: 'Fridays, 5:00 pm' }], familyUrl: `${L}/family/…`, hasAccount: false, loginUrl: `${L}/signin` } },
   { kind: 'contribution.pledge', title: 'Pledge thank-you', when: 'A pledge is made on the website', audience: 'Contributors',
