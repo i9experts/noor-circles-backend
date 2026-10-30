@@ -53,8 +53,12 @@ export class Parent {
   @Prop({ type: Date, default: null })
   familyLinkLastViewedAt: Date | null;
 
-  /** Optional "about your family" answers (admin-only, never shown to murabbis). */
-  @Prop({ type: Object, default: null })
+  /**
+   * Optional "about your family" answers (admin-only, never shown to murabbis).
+   * Hidden from every query unless selected by name, so parent lists and
+   * records that murabbis can read never include it.
+   */
+  @Prop({ type: Object, default: null, select: false })
   profile: Record<string, unknown> | null;
 
   /** The parent's sign-in account, if one has been created. */

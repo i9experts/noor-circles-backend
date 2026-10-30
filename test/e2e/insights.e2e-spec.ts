@@ -122,6 +122,17 @@ describe('Family profiles and Parent Insights', () => {
   });
 
   describe('Parent Insights dashboard', () => {
+    it('murabbis never see the answers in parent records', async () => {
+      const list = await as(w.A.token).get('parents');
+      expect(list.status).toBe(200);
+      const all = list.body.data.parents ?? list.body.data;
+      expect(all.length).toBeGreaterThan(0);
+      expect(JSON.stringify(list.body)).not.toMatch(/livesWith|"profile"/);
+      const one = await as(w.A.token).get(`parents/${all[0]._id}`);
+      expect(one.status).toBe(200);
+      expect(JSON.stringify(one.body)).not.toMatch(/livesWith|"profile"/);
+    });
+
     it('is for admins only: never murabbis or parents', async () => {
       expect((await as(w.A.token).get('insights/parents')).status).toBe(403);
       expect((await ctx.http().get(`${API}/insights/parents`)).status).toBe(401);
