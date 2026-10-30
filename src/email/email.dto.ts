@@ -1,5 +1,5 @@
 import {
-  IsArray, IsBoolean, IsIn, IsInt, IsMongoId, IsNotEmpty, IsObject, IsOptional, IsString, Max, MaxLength, Min,
+  ArrayMaxSize, IsArray, IsBoolean, IsIn, IsInt, IsMongoId, IsNotEmpty, IsObject, IsOptional, IsString, Matches, Max, MaxLength, Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -19,6 +19,10 @@ export class AudienceDto {
   /** Asaas training status: not-started | in-progress | not-certified | certified. */
   @IsOptional() @IsIn(['not-started', 'in-progress', 'not-certified', 'certified'])
   status?: string;
+
+  /** Chosen families (Parent Insights): "p:<parentId>" or "i:<interestId>". */
+  @IsOptional() @IsArray() @ArrayMaxSize(2000) @Matches(/^[pi]:[a-f\d]{24}$/i, { each: true, message: 'Invalid family.' })
+  families?: string[];
 }
 
 export class EmailPreviewDto {

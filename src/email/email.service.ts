@@ -11,6 +11,7 @@ import { User, UserDocument, UserRole } from '../user/user.schema';
 import { Parent, ParentDocument } from '../parent/parent.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
+import { Interest, InterestDocument } from '../interest/interest.schema';
 import { Course, CourseAssignment, CourseAssignmentDocument, CourseDocument, LessonProgress, LessonProgressDocument } from '../course/course.schema';
 import {
   AudienceType, EmailCampaign, EmailCampaignDocument, EmailLog, EmailLogDocument, EmailPreference,
@@ -70,6 +71,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     @InjectModel(Course.name)           private readonly courseModel:     Model<CourseDocument>,
     @InjectModel(CourseAssignment.name) private readonly assignmentModel: Model<CourseAssignmentDocument>,
     @InjectModel(LessonProgress.name)   private readonly progressModel:   Model<LessonProgressDocument>,
+    @InjectModel(Interest.name)         private readonly interestModel:   Model<InterestDocument>,
     private readonly mail: MailService,
     private readonly moduleRef: ModuleRef,
     config: ConfigService,
@@ -289,6 +291,20 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           recipients: withEmail.map((p) => ({ email: p.email, name: p.fullName, userId: p.account ?? null })),
           withoutEmail: parents.length - withEmail.length,
         };
+      }
+      case 'families': {
+        const ids = a.families ?? [];
+        if (!ids.length) throw new BadRequestException('Choose at least one family.');
+        const pick = (k: string) => ids.filter((x) => x.startsWith(`${k}:`)).map((x) => new Types.ObjectId(x.slice(2)));
+        const [parents, requests] = await Promise.all([
+          this.parentModel.find({ _id: { $in: pick('p') } }).select('fullName email account').lean(),
+          this.interestModel.find({ _id: { $in: pick('i') } }).select('firstName lastName email').lean(),
+        ]);
+        const recipients: Recipient[] = [
+          ...parents.filter((p) => p.email).map((p) => ({ email: p.email, name: p.fullName, userId: p.account ?? null })),
+          ...requests.map((r) => ({ email: r.email, name: `${r.firstName} ${r.lastName}`.trim() })),
+        ];
+        return { label: `${ids.length} chosen famil${ids.length === 1 ? 'y' : 'ies'} (Parent Insights)`, recipients, withoutEmail: parents.filter((p) => !p.email).length };
       }
       default:
         throw new BadRequestException('Unknown audience.');

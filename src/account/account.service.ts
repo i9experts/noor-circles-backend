@@ -105,7 +105,7 @@ export class AccountService {
       // A parent may already be on file (e.g. their child was enrolled first): link to that record.
       const key = phoneKey(interest.phone);
       const candidates = await this.parentModel.find({ $or: [{ email: interest.email }, ...(key ? [{ phone: { $regex: `${key}$` } }] : [])] })
-        .select('phone email account').lean();
+        .select('phone email account profile').lean();
       const existing = candidates.find((p) => p.email === interest.email) ?? candidates.find((p) => phoneKey(p.phone) === key);
       if (existing?.account) {
         throw new ConflictException('This parent already has an account. Use “Reset password” on the Parents page.');
@@ -113,12 +113,15 @@ export class AccountService {
       const { user, password, emailed } = await this.createUser({ fullName, email: interest.email, role: UserRole.PARENT, phone: interest.phone });
       let parentId: string;
       if (existing) {
-        await this.parentModel.updateOne({ _id: existing._id }, { $set: { account: user._id, ...(!existing.email && { email: interest.email }) } });
+        await this.parentModel.updateOne({ _id: existing._id }, { $set: {
+          account: user._id, ...(!existing.email && { email: interest.email }),
+          ...(!(existing as any).profile && interest.profile && { profile: interest.profile }),
+        } });
         parentId = existing._id.toString();
       } else {
         const parent = await this.parentModel.create({
           fullName: fullName.slice(0, 100), phone: interest.phone.slice(0, 20), email: interest.email,
-          whatsappNumber: interest.phone.slice(0, 20), account: user._id,
+          whatsappNumber: interest.phone.slice(0, 20), account: user._id, profile: interest.profile ?? null,
           notes: `From the website: ${interest.neighbourhood}, ${interest.city}${interest.roleDetail ? ` · child's age ${interest.roleDetail}` : ''}`.slice(0, 300),
         });
         parentId = parent._id.toString();

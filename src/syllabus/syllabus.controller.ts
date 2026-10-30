@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }   from '../auth/guards/roles.guard';
@@ -7,6 +7,7 @@ import { CurrentUser }  from '../auth/decorators/current-user.decorator';
 import { UserDocument, UserRole } from '../user/user.schema';
 import { SyllabusService } from './syllabus.service';
 import { FamilyService } from './family.service';
+import { FamilyProfileDto } from '../insights/family-profile';
 import {
   CreateEventDto, CreateSessionDto, CreateTrackDto, RecordCoverageDto, StudentNoteDto, UpdateEventDto,
   UpdateSessionDto, UpdateTrackDto,
@@ -152,6 +153,17 @@ export class FamilyController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PARENT)
   mine(@CurrentUser() user: UserDocument) { return this.family.viewForAccount(user._id.toString(), user.fullName); }
+
+  /** PUT /family/me/profile — a signed-in parent's "about your family" answers. */
+  @Put('family/me/profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PARENT)
+  myProfile(@CurrentUser() user: UserDocument, @Body() dto: FamilyProfileDto) { return this.family.saveProfile({ userId: user._id.toString() }, dto); }
+
+  /** PUT /family/:token/profile — the same, from the private family link. */
+  @Put('family/:token/profile')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  linkProfile(@Param('token') token: string, @Body() dto: FamilyProfileDto) { return this.family.saveProfile({ token }, dto); }
 
   /** GET /family/:token — public, password-free family page data. */
   @Get('family/:token')
