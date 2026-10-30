@@ -7,6 +7,7 @@ import { User, UserDocument, UserRole } from '../user/user.schema';
 import { Parent, ParentDocument } from '../parent/parent.schema';
 import { Interest, InterestDocument } from '../interest/interest.schema';
 import { CourseService, ASAAS_KEY } from '../course/course.service';
+import { ParentCourseService } from '../parent-course/parent-course.service';
 import { UsersService } from '../user/user.service';
 import { EmailService } from '../email/email.service';
 import { ConvertInterestDto, CreateParentAccountDto } from './account.dto';
@@ -32,6 +33,7 @@ export class AccountService {
     @InjectModel(Parent.name)   private readonly parentModel:   Model<ParentDocument>,
     @InjectModel(Interest.name) private readonly interestModel: Model<InterestDocument>,
     private readonly course: CourseService,
+    private readonly parentCourse: ParentCourseService,
     private readonly users: UsersService,
     private readonly email: EmailService,
     config: ConfigService,
@@ -68,6 +70,11 @@ export class AccountService {
         mustChangePassword: true,
       });
       const emailed = await this.users.emailSetPasswordLink(user, 'account.welcome');
+      // Asaas for Parents opens with the account (the Welcome straight away, a module every fortnight).
+      if (data.role === UserRole.PARENT) {
+        await this.parentCourse.enrol(user._id.toString(), user._id.toString())
+          .catch((e) => this.logger.warn(`Could not open Asaas for Parents for ${data.email}: ${(e as Error).message}`));
+      }
       return { user, password, emailed };
     } catch (err: any) {
       if (err?.code === 11000) throw new ConflictException(`${data.email} already has a Noor Circles account.`);

@@ -1,0 +1,314 @@
+[
+ {
+  "key": "pfc-1-1",
+  "number": 1.1,
+  "module": "Module 1",
+  "title": "بچے کے لیے · بچے کے ساتھ",
+  "subtitle": "Doing for, being with",
+  "when": "Portal میں P1-03 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P1-03"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-1-2",
+  "number": 1.2,
+  "module": "Module 1",
+  "title": "فطرت کا باغ",
+  "subtitle": "The fitrah garden, the same chart Murabbis use",
+  "when": "Portal میں P1-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P1-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-1-3",
+  "number": 1.3,
+  "module": "Module 1",
+  "title": "جڑیں اور شاخیں",
+  "subtitle": "Roots and branches",
+  "when": "Portal میں P1-05 کے ساتھ · Parent Journal میں خود بنائیں",
+  "live": false,
+  "lessonCodes": [
+   "P1-05"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-2-1",
+  "number": 2.1,
+  "module": "Module 2",
+  "title": "سننے کے تین قدم",
+  "subtitle": "Listen, name the feeling, then guide",
+  "when": "Portal میں P2-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P2-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-2-2",
+  "number": 2.2,
+  "module": "Module 2",
+  "title": "ایک منظر، دو انجام",
+  "subtitle": "Zainab comes home: “Sab mujh par hanse”",
+  "when": "Portal میں P2-03 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P2-03"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-3-1",
+  "number": 3.1,
+  "module": "Module 3",
+  "title": "App کا جال",
+  "subtitle": "How an app keeps a child watching",
+  "when": "Portal میں P3-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P3-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-3-2",
+  "number": 3.2,
+  "module": "Module 3",
+  "title": "چھ نشانیاں",
+  "subtitle": "When the phone has gone past a habit",
+  "when": "Portal میں P3-03 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P3-03"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-3-3",
+  "number": 3.3,
+  "module": "Module 3",
+  "title": "Family media plan",
+  "subtitle": "For the whole house, parents included",
+  "when": "Portal میں P3-05 کے ساتھ · Print بھی کریں",
+  "live": false,
+  "lessonCodes": [
+   "P3-05"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-3-4",
+  "number": 3.4,
+  "module": "Module 3",
+  "title": "Swap list",
+  "subtitle": "Not just less phone: something better instead",
+  "when": "Portal میں P3-05 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P3-05"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-4-1",
+  "number": 4.1,
+  "module": "Module 4",
+  "title": "عطر والا اور بھٹی والا",
+  "subtitle": "Good company, bad company",
+  "when": "Portal میں P4-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P4-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-4-2",
+  "number": 4.2,
+  "module": "Module 4",
+  "title": "اپنے بچے کے دوستوں کو جانیں",
+  "subtitle": "Three closest friends",
+  "when": "Portal میں P4-02 کے ساتھ · Print بھی کریں (fortnight target)",
+  "live": false,
+  "lessonCodes": [
+   "P4-02"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-4-3",
+  "number": 4.3,
+  "module": "Module 4",
+  "title": "سچ لے کر گھر آؤ",
+  "subtitle": "The parent's promise",
+  "when": "Portal میں P4-03 کے ساتھ · fridge پر لگائیں",
+  "live": false,
+  "lessonCodes": [
+   "P4-03"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-5-1",
+  "number": 5.1,
+  "module": "Module 5",
+  "title": "جو ہم کہتے ہیں، جو بچہ سنتا ہے",
+  "subtitle": "What we say, what the child hears",
+  "when": "Portal میں P5-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P5-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-5-2",
+  "number": 5.2,
+  "module": "Module 5",
+  "title": "ہر بیج الگ ہے",
+  "subtitle": "One garden, different seeds",
+  "when": "Portal میں P5-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P5-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-5-3",
+  "number": 5.3,
+  "module": "Module 5",
+  "title": "خوبیوں کا card",
+  "subtitle": "Three strengths, each with this week's example",
+  "when": "Portal میں P5-05 کے ساتھ · Parent Journal میں بنائیں",
+  "live": false,
+  "lessonCodes": [
+   "P5-05"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-6-1",
+  "number": 6.1,
+  "module": "Module 6",
+  "title": "دھمکی کی جگہ پُرسکون حد",
+  "subtitle": "Rewrite the threat",
+  "when": "Portal میں P6-04 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P6-04"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-6-2",
+  "number": 6.2,
+  "module": "Module 6",
+  "title": "رکنے کا plan",
+  "subtitle": "My pause plan",
+  "when": "Portal میں P6-03 کے ساتھ · fridge پر لگائیں",
+  "live": false,
+  "lessonCodes": [
+   "P6-03"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-6-3",
+  "number": 6.3,
+  "module": "Module 6",
+  "title": "کم اصول، سب کے ایک جیسے",
+  "subtitle": "Few rules, the same from every adult",
+  "when": "Portal میں P6-05 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P6-05"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-7-1",
+  "number": 7.1,
+  "module": "Module 7",
+  "title": "سات سے دس: نماز پہلے محبت سے",
+  "subtitle": "Three years, 5,000 loving reminders",
+  "when": "Portal میں P7-02 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P7-02"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-7-2",
+  "number": 7.2,
+  "module": "Module 7",
+  "title": "قرآن کا راستہ",
+  "subtitle": "Start where your child is",
+  "when": "Portal میں P7-03 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P7-03"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-7-3",
+  "number": 7.3,
+  "module": "Module 7",
+  "title": "گھر کا routine card",
+  "subtitle": "Our week, made together",
+  "when": "Portal میں P7-05 کے ساتھ · بچے کے ساتھ بنائیں، دیوار پر لگائیں",
+  "live": false,
+  "lessonCodes": [
+   "P7-05"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-8-1",
+  "number": 8.1,
+  "module": "Module 8",
+  "title": "ہمارے گھر کا نقشہ",
+  "subtitle": "Everyone who cares for my child",
+  "when": "Portal میں P8-01 کے ساتھ · Parent Journal میں اپنا بنائیں",
+  "live": false,
+  "lessonCodes": [
+   "P8-01"
+  ],
+  "printable": true
+ },
+ {
+  "key": "pfc-8-2",
+  "number": 8.2,
+  "module": "Module 8",
+  "title": "دور رہ کر بھی پاس",
+  "subtitle": "Dubai, Riyadh, Doha, Muscat… still close",
+  "when": "Portal میں P8-03 کے ساتھ",
+  "live": false,
+  "lessonCodes": [
+   "P8-03"
+  ],
+  "printable": false
+ },
+ {
+  "key": "pfc-8-3",
+  "number": 8.3,
+  "module": "Module 8",
+  "title": "تیس دن کا plan",
+  "subtitle": "One goal from the eight modules",
+  "when": "Portal میں P8-06 کے ساتھ · Print بھی کریں",
+  "live": false,
+  "lessonCodes": [
+   "P8-06"
+  ],
+  "printable": true
+ }
+]
