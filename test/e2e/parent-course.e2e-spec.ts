@@ -211,4 +211,60 @@ describe('Asaas for Parents', () => {
       expect((await parent().get('parent-course/me')).status).toBe(403);
     });
   });
+
+  describe('module emails', () => {
+    let rabiaId: string;
+    const svc = async () => ctx.app.get((await import('../../src/parent-course/parent-course.service')).ParentCourseService);
+    const sent = (re: RegExp) => ctx.emails.filter((e) => e.to === 'rabia@e2e.test' && re.test(e.subject));
+    const shift = async (days: number) => {
+      const c = await course();
+      await ctx.db.collection('courseassignments').updateOne({ course: c!._id, user: oid(rabiaId) }, { $set: { createdAt: new Date(Date.now() - days * DAY) } });
+    };
+
+    it('the course start is emailed when the account is created', async () => {
+      await ctx.http().post(`${API}/interest`).send({
+        role: 'parent', firstName: 'Rabia', lastName: 'Khan', email: 'rabia@e2e.test', phone: '03005550002',
+        city: 'Karachi', neighbourhood: 'Gulshan', roleDetail: '9–10 years',
+      });
+      const id = (await adm().get('interest')).body.data.find((i: any) => i.email === 'rabia@e2e.test')._id;
+      rabiaId = (await adm().post(`interest/${id}/account`)).body.data.account.id;
+      const e = await ctx.waitForEmail((m) => m.to === 'rabia@e2e.test' && /Asaas for Parents has started/.test(m.subject));
+      expect(e.html).toContain('پہلا مربی');
+      expect(e.html).toContain('/parent/asaas');
+      expect(e.headers?.['List-Unsubscribe'] ?? e.html).toBeTruthy();
+    });
+
+    it('each new module is emailed once, on the day it opens; never a backlog', async () => {
+      const s = await svc();
+      expect(await s.sendModuleEmails(new Date(), [rabiaId])).toBe(0); // the start email already went
+      await shift(14);
+      expect(await s.sendModuleEmails(new Date(), [rabiaId])).toBe(1);
+      await ctx.waitForEmail((m) => m.to === 'rabia@e2e.test' && /Module 2 is open/.test(m.subject));
+      expect(await s.sendModuleEmails(new Date(), [rabiaId])).toBe(0);
+      // Three fortnights on with no run in between: only the current module, not 3 and 4.
+      await shift(45);
+      expect(await s.sendModuleEmails(new Date(), [rabiaId])).toBe(1);
+      const m4 = await ctx.waitForEmail((m) => m.to === 'rabia@e2e.test' && /Module 4 is open/.test(m.subject));
+      expect(m4.html).toContain('دوست اور دوستوں کا دباؤ');
+      expect(sent(/Module 3 is open/)).toHaveLength(0);
+    });
+
+    it('the closing, and one email when an admin opens everything', async () => {
+      const s = await svc();
+      await shift(112);
+      expect(await s.sendModuleEmails(new Date(), [rabiaId])).toBe(1);
+      await ctx.waitForEmail((m) => m.to === 'rabia@e2e.test' && /last part of Asaas for Parents/.test(m.subject));
+      expect((await adm().patch(`parent-course/admin/parents/${rabiaId}`, { allOpen: true })).status).toBe(200);
+      await ctx.waitForEmail((m) => m.to === 'rabia@e2e.test' && /Every module of Asaas for Parents is open/.test(m.subject));
+      expect(await s.sendModuleEmails(new Date(), [rabiaId])).toBe(0);
+      expect(sent(/Every module/)).toHaveLength(1);
+    });
+
+    it('parents who switched off training emails don’t get them', async () => {
+      await ctx.db.collection('emailpreferences').updateOne({ email: 'rabia@e2e.test' }, { $set: { optOut: ['training-reminders'] } }, { upsert: true });
+      await ctx.db.collection('courseassignments').updateOne({ user: oid(rabiaId) }, { $set: { allOpen: false, createdAt: new Date(Date.now() - 28 * DAY) } });
+      await ctx.db.collection('emaillogs').deleteMany({ to: 'rabia@e2e.test', dedupeKey: /:m3$/ });
+      expect(await (await svc()).sendModuleEmails(new Date(), [rabiaId])).toBe(0);
+    });
+  });
 });
