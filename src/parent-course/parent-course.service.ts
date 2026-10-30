@@ -503,7 +503,9 @@ export class ParentCourseService implements OnModuleInit {
     ]);
     return {
       user, startedOn: pkDate((a as any).createdAt), allOpen: !!a.allOpen,
-      certificate: a.certificateNumber ? { number: a.certificateNumber, issuedOn: a.certifiedAt ? pkDate(a.certifiedAt) : null } : null,
+      certificate: a.certificateNumber
+        ? { ...extras.certificate, name: user?.fullName ?? '', number: a.certificateNumber, issuedOn: a.certifiedAt ? pkDate(a.certifiedAt) : null }
+        : null,
       sections: sections.map((s) => ({
         key: s.key, title: s.title, titleUr: s.titleUr, open: sectionOpen(s, a as any),
         lessons: lessons.filter((l) => l.section.toString() === s._id.toString()).map((l) => {
