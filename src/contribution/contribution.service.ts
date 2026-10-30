@@ -27,6 +27,12 @@ export interface LedgerRow {
   state   : MonthState;
 }
 
+import { EmailService } from '../email/email.service';
+
+const METHOD_LABELS: Record<string, string> = {
+  cash: 'Cash', bank_transfer: 'Bank transfer', jazzcash: 'JazzCash', easypaisa: 'Easypaisa', stripe: 'Card', gift: 'Gift', voucher: 'Voucher', other: 'Other',
+};
+
 @Injectable()
 export class ContributionService {
   private readonly logger = new Logger(ContributionService.name);
@@ -38,7 +44,22 @@ export class ContributionService {
     @InjectModel(Parent.name)       private readonly parentModel:       Model<ParentDocument>,
     private readonly stripe       : StripeService,
     private readonly notifService : NotificationService,
+    private readonly email        : EmailService,
   ) {}
+
+  /** Emails the receipt for a successful payment (once per receipt). */
+  private async emailReceipt(payment: { _id: any; contributor: any; amount: number; month: string; method: string; receiptNumber: string; receivedAt: Date; status: string }) {
+    if (payment.status !== 'succeeded') return;
+    const c = await this.contributorModel.findById(payment.contributor).select('fullName email parent').lean();
+    if (!c) return;
+    const to = c.email ?? (c.parent ? (await this.parentModel.findById(c.parent).select('email').lean())?.email : null);
+    const [y, m] = payment.month.split('-').map(Number);
+    await this.email.queue('contribution.receipt', { email: to, name: c.fullName }, {
+      amount: payment.amount, receiptNumber: payment.receiptNumber, receivedAt: payment.receivedAt,
+      monthLabel: new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
+      method: METHOD_LABELS[payment.method] ?? payment.method,
+    }, { dedupeKey: `receipt:${payment.receiptNumber}` });
+  }
 
   // ══ Helpers ════════════════════════════════════════════════════════════════
 
@@ -245,6 +266,7 @@ export class ContributionService {
       c.startMonth = dto.month < c.startMonth ? dto.month : c.startMonth;
       await c.save();
     }
+    void this.emailReceipt(payment);
     return { message: `Payment recorded — receipt ${payment.receiptNumber}.`, payment };
   }
 
@@ -384,6 +406,7 @@ export class ContributionService {
       message: `${dto.fullName} pledged PKR ${dto.amount.toLocaleString('en-PK')} ${dto.frequency === 'monthly' ? 'per month' : '(one-time)'} on the website. Contact them with payment details.`,
       payload: { contributorId: contributor._id.toString(), amount: dto.amount, frequency: dto.frequency },
     }).catch(() => {});
+    void this.email.queue('contribution.pledge', { email: dto.email, name: dto.fullName }, { amount: dto.amount, frequency: dto.frequency });
     return {
       message: 'Jazak Allahu khayran! Your pledge is recorded — the Noor Circles team will contact you with payment details.',
       mode   : 'pledge' as const,
@@ -501,12 +524,15 @@ export class ContributionService {
       existing.amount = data.amount;
       if (data.stripePaymentIntentId) existing.stripePaymentIntentId = data.stripePaymentIntentId;
       await existing.save();
+      void this.emailReceipt(existing);
       return existing;
     }
     try {
-      return await this.contributionModel.create({
+      const created = await this.contributionModel.create({
         ...key, ...data, method: 'stripe', receiptNumber: await this.nextReceiptNumber(data.month), receivedAt: new Date(),
       });
+      void this.emailReceipt(created);
+      return created;
     } catch (err: any) {
       if (err?.code === 11000) return this.contributionModel.findOne(key); // concurrent retry
       throw err;

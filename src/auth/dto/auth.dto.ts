@@ -97,3 +97,11 @@ export class ResendOtpDto {
   @Transform(safeEmail)
   email: string;
 }
+
+// ─── Set password from an emailed link ───────────────────────────────────────
+export class SetPasswordDto extends ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty({ message: 'This link is missing its code.' })
+  @MaxLength(100)
+  token: string;
+}

@@ -30,11 +30,25 @@ export interface SentMail {
   type: 'signup' | 'reset';
 }
 
+/** An email sent through the queue (MailService.send). */
+export interface SentEmail {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  attachments?: { filename: string; content: Buffer }[];
+  headers?: Record<string, string>;
+}
+
 export interface E2EContext {
   app: INestApplication;
   http: () => ReturnType<typeof request>;
   db: Connection;
   mails: SentMail[];
+  /** Everything else the app emailed. */
+  emails: SentEmail[];
+  /** Waits until an email matching `match` has been sent (the queue is async). */
+  waitForEmail: (match: (e: SentEmail) => boolean, timeoutMs?: number) => Promise<SentEmail>;
   lastOtp: (email: string) => string | undefined;
   /** Makes the fake mailer throw, as if SMTP were down. */
   setMailFailing: (failing: boolean) => void;
@@ -86,6 +100,7 @@ export async function createApp(
     await import('../../src/common/interceptors/response.interceptor');
 
   const mails: SentMail[] = [];
+  const emails: SentEmail[] = [];
   let mailFailing = false;
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(MailService)
@@ -93,6 +108,11 @@ export async function createApp(
       sendOtp: (to: string, otp: string, type: 'signup' | 'reset') => {
         if (mailFailing) return Promise.reject(new Error('SMTP down'));
         mails.push({ to, otp, type });
+        return Promise.resolve();
+      },
+      send: (msg: SentEmail) => {
+        if (mailFailing) return Promise.reject(new Error('SMTP down'));
+        emails.push({ ...msg, to: msg.to.replace(/^.*<([^>]+)>$/, '$1') });
         return Promise.resolve();
       },
     });
@@ -137,6 +157,16 @@ export async function createApp(
     app,
     db,
     mails,
+    emails,
+    waitForEmail: async (match, timeoutMs = 3000) => {
+      const until = Date.now() + timeoutMs;
+      for (;;) {
+        const found = emails.find(match);
+        if (found) return found;
+        if (Date.now() > until) throw new Error(`No matching email. Sent: ${emails.map((e) => `${e.to} · ${e.subject}`).join(' | ') || 'none'}`);
+        await new Promise((r) => setTimeout(r, 25));
+      }
+    },
     http: () => request(app.getHttpServer()),
     lastOtp: (email) => [...mails].reverse().find((m) => m.to === email)?.otp,
     setMailFailing: (failing) => { mailFailing = failing; },

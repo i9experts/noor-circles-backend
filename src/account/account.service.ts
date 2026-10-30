@@ -7,6 +7,8 @@ import { User, UserDocument, UserRole } from '../user/user.schema';
 import { Parent, ParentDocument } from '../parent/parent.schema';
 import { Interest, InterestDocument } from '../interest/interest.schema';
 import { CourseService, ASAAS_KEY } from '../course/course.service';
+import { UsersService } from '../user/user.service';
+import { EmailService } from '../email/email.service';
 import { ConvertInterestDto, CreateParentAccountDto } from './account.dto';
 import { tempPassword } from './temp-password';
 
@@ -30,6 +32,8 @@ export class AccountService {
     @InjectModel(Parent.name)   private readonly parentModel:   Model<ParentDocument>,
     @InjectModel(Interest.name) private readonly interestModel: Model<InterestDocument>,
     private readonly course: CourseService,
+    private readonly users: UsersService,
+    private readonly email: EmailService,
     config: ConfigService,
   ) {
     const portal = (config.get<string>('PORTAL_URL')
@@ -37,10 +41,12 @@ export class AccountService {
     this.loginUrl = `${portal}/signin`;
   }
 
-  private credentials(user: { _id: any; fullName: string; email: string; role: string; phone?: string | null }, password: string) {
+  private credentials(user: { _id: any; fullName: string; email: string; role: string; phone?: string | null }, password: string, emailed = false) {
     return {
       account: { id: user._id.toString(), fullName: user.fullName, email: user.email, role: user.role, phone: user.phone ?? null },
       credentials: { email: user.email, password, loginUrl: this.loginUrl },
+      /** A welcome / reset email with a set-password link was queued too. */
+      emailed,
     };
   }
 
@@ -61,7 +67,8 @@ export class AccountService {
         isActive: true,
         mustChangePassword: true,
       });
-      return { user, password };
+      const emailed = await this.users.emailSetPasswordLink(user, 'account.welcome');
+      return { user, password, emailed };
     } catch (err: any) {
       if (err?.code === 11000) throw new ConflictException(`${data.email} already has a Noor Circles account.`);
       throw err;
@@ -83,7 +90,7 @@ export class AccountService {
 
     let result: ReturnType<AccountService['credentials']> & { parentId?: string; linkedExisting?: boolean; training?: string | null };
     if (interest.role === 'mentor') {
-      const { user, password } = await this.createUser({
+      const { user, password, emailed } = await this.createUser({
         fullName, email: interest.email, role: UserRole.MURABBI, phone: interest.phone,
         address: `${interest.neighbourhood}, ${interest.city}`.slice(0, 200),
       });
@@ -93,7 +100,7 @@ export class AccountService {
           .then(() => 'Asaas training assigned.')
           .catch((err) => { this.logger.warn(`Could not assign training: ${(err as Error).message}`); return null; });
       }
-      result = { ...this.credentials(user, password), training };
+      result = { ...this.credentials(user, password, emailed), training };
     } else {
       // A parent may already be on file (e.g. their child was enrolled first): link to that record.
       const key = phoneKey(interest.phone);
@@ -103,7 +110,7 @@ export class AccountService {
       if (existing?.account) {
         throw new ConflictException('This parent already has an account. Use “Reset password” on the Parents page.');
       }
-      const { user, password } = await this.createUser({ fullName, email: interest.email, role: UserRole.PARENT, phone: interest.phone });
+      const { user, password, emailed } = await this.createUser({ fullName, email: interest.email, role: UserRole.PARENT, phone: interest.phone });
       let parentId: string;
       if (existing) {
         await this.parentModel.updateOne({ _id: existing._id }, { $set: { account: user._id, ...(!existing.email && { email: interest.email }) } });
@@ -116,7 +123,7 @@ export class AccountService {
         });
         parentId = parent._id.toString();
       }
-      result = { ...this.credentials(user, password), parentId, linkedExisting: !!existing };
+      result = { ...this.credentials(user, password, emailed), parentId, linkedExisting: !!existing };
     }
 
     interest.account = new Types.ObjectId(result.account.id);
@@ -136,11 +143,11 @@ export class AccountService {
     }
     const email = dto.email ?? parent.email;
     if (!email) throw new BadRequestException('Add the parent’s email address first: it’s their sign-in name.');
-    const { user, password } = await this.createUser({ fullName: parent.fullName.slice(0, 60), email, role: UserRole.PARENT, phone: parent.phone });
+    const { user, password, emailed } = await this.createUser({ fullName: parent.fullName.slice(0, 60), email, role: UserRole.PARENT, phone: parent.phone });
     parent.account = user._id;
     if (!parent.email) parent.email = email;
     await parent.save();
-    return { message: `Account created. Share the sign-in details with ${parent.fullName}.`, ...this.credentials(user, password), parentId };
+    return { message: `Account created. Share the sign-in details with ${parent.fullName}.`, ...this.credentials(user, password, emailed), parentId };
   }
 
   // ── Any murabbi or parent account ───────────────────────────────────────────
@@ -161,14 +168,20 @@ export class AccountService {
     user.refreshTokens = [];
     if (!user.isEmailVerified) user.isEmailVerified = true;
     await user.save();
-    return { message: `New temporary password for ${user.fullName}. Their old password no longer works.`, ...this.credentials(user, password) };
+    const emailed = await this.users.emailSetPasswordLink(user, 'account.reset');
+    return { message: `New temporary password for ${user.fullName}. Their old password no longer works.`, ...this.credentials(user, password, emailed) };
   }
 
   async setAccess(userId: string, active: boolean) {
     const user = await this.managedUser(userId);
+    const changed = user.isActive !== active;
     user.isActive = active;
     if (!active) user.refreshTokens = [];
     await user.save();
+    if (changed) {
+      void this.email.queue(active ? 'account.restored' : 'account.blocked', { email: user.email, name: user.fullName, userId: user._id },
+        { role: user.role, loginUrl: this.loginUrl });
+    }
     return { message: active ? `${user.fullName} can sign in again.` : `${user.fullName} can no longer sign in.`, isActive: active };
   }
 }

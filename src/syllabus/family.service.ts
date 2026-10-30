@@ -14,6 +14,7 @@ import {
 } from './syllabus.schema';
 import { SyllabusService } from './syllabus.service';
 import { addDays, pkToday } from './schedule.util';
+import { EmailService } from '../email/email.service';
 
 const AWARD_LABELS: Record<string, string> = {
   'noor-star'       : 'Noor Star',
@@ -46,6 +47,7 @@ export class FamilyService {
     @InjectModel(SessionCoverage.name) private readonly coverageModel:   Model<SessionCoverageDocument>,
     @InjectModel(StudentNote.name)     private readonly noteModel:       Model<StudentNoteDocument>,
     private readonly syllabus: SyllabusService,
+    private readonly email: EmailService,
   ) {
     // A dedicated secret if set; otherwise one derived from the JWT secret.
     this.secret = config.get<string>('FAMILY_LINK_SECRET')
@@ -89,6 +91,37 @@ export class FamilyService {
     const parent = await this.parentModel.findById(id).select('fullName students familyLinkVersion').lean();
     if (!parent || (parent.familyLinkVersion ?? 1) !== Number(v)) throw invalid;
     return parent;
+  }
+
+  /**
+   * The welcome email for a family: their child(ren)'s circle, murabbi and
+   * meeting time, and the private family page link. Sent once per address.
+   */
+  async sendWelcome(parentId: string) {
+    const p = await this.parentModel.findById(parentId).select('fullName email students familyLinkVersion account').lean();
+    if (!p?.email) return 'skipped';
+    const students = await this.studentModel.find({ _id: { $in: p.students }, isActive: true })
+      .populate({ path: 'circle', select: 'name meetingDay meetingTime murabbi', populate: { path: 'murabbi', select: 'fullName' } })
+      .select('fullName circle').lean();
+    if (!students.length) return 'skipped';
+    const DAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+    const time = (t?: string | null) => {
+      if (!t) return '';
+      const [h, m] = t.split(':').map(Number);
+      return `, ${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+    };
+    const children = students.map((s) => {
+      const c = s.circle as any;
+      return {
+        name: s.fullName.split(' ')[0],
+        circle: c?.name ?? '',
+        murabbi: c?.murabbi?.fullName ?? '',
+        schedule: c?.meetingDay != null ? `${DAYS[c.meetingDay]}${time(c.meetingTime)}` : '',
+      };
+    });
+    return this.email.queue('family.welcome', { email: p.email, name: p.fullName, userId: p.account ?? null }, {
+      children, familyUrl: this.urlFor(p._id.toString(), p.familyLinkVersion ?? 1), hasAccount: !!p.account, loginUrl: this.email.link('/signin'),
+    }, { dedupeKey: `family-welcome:${p._id.toString()}:${p.email}` });
   }
 
   /** Everything a family sees on their page. */

@@ -5,6 +5,7 @@ import { Interest, InterestDocument } from './interest.schema';
 import { CreateInterestDto, UpdateInterestDto } from './interest.dto';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
+import { EmailService } from '../email/email.service';
 
 const ROLE_LABEL: Record<string, string> = { parent: 'parent', mentor: 'mentor', host: 'host' };
 
@@ -15,6 +16,7 @@ export class InterestService {
   constructor(
     @InjectModel(Interest.name) private readonly interestModel: Model<InterestDocument>,
     private readonly notifService: NotificationService,
+    private readonly email: EmailService,
   ) {}
 
   async create(dto: CreateInterestDto) {
@@ -43,6 +45,12 @@ export class InterestService {
       message: `${name} (${interest.neighbourhood}, ${interest.city}) wants to join as a ${ROLE_LABEL[interest.role]}.`,
       payload: { interestId: interest._id.toString(), role: interest.role, name, city: interest.city },
     }).catch(() => {});
+
+    void this.email.queue('interest.thanks', { email: interest.email, name }, { role: interest.role });
+    void this.email.queue('interest.alert', { email: this.email.supportEmail, name: 'Noor Circles team' }, {
+      name, role: interest.role, email: interest.email, phone: interest.phone, city: interest.city,
+      neighbourhood: interest.neighbourhood, roleDetail: interest.roleDetail, adminUrl: this.email.link('/'),
+    });
 
     this.logger.log(`Interest received → ${interest.role} · ${interest.email}`);
     return thanks;

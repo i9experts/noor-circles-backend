@@ -205,8 +205,10 @@ export class AdminService {
     });
 
     this.logger.log(`Admin created murabbi → ${murabbi.email}`);
+    const emailed = await this.usersService.emailSetPasswordLink(murabbi, 'account.welcome');
     return {
-      message : 'Murabbi account created successfully.',
+      message : `Murabbi account created successfully.${emailed ? ' A welcome email is on its way.' : ''}`,
+      emailed,
       murabbi : { id: murabbi._id, fullName: murabbi.fullName, email: murabbi.email, role: murabbi.role },
     };
   }
