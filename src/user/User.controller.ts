@@ -45,7 +45,8 @@ export class UsersController {
     const match = await bcrypt.compare(currentPassword, userWithPw.password);
     if (!match) throw new UnauthorizedException('Current password is incorrect.');
     const hashed = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-    await this.usersService.updatePassword(user._id.toString(), hashed);
+    // The first change after a temporary password isn't news to the user.
+    await this.usersService.updatePassword(user._id.toString(), hashed, !user.mustChangePassword);
     return { message: 'Password updated successfully.' };
   }
 

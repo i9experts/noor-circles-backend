@@ -5,11 +5,13 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import {
   SignupRequestOtpDto,
@@ -19,6 +21,7 @@ import {
   VerifyOtpDto,
   ResetPasswordDto,
   ResendOtpDto,
+  SetPasswordDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
@@ -71,6 +74,21 @@ export class AuthController {
   }
 
   /** POST /api/v1/auth/reset-password  (Authorization: Bearer <resetToken>) */
+  /** GET /auth/set-password/:token — who an emailed "set your password" link is for. */
+  @Get('set-password/:token')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  setPasswordInfo(@Param('token') token: string) {
+    return this.authService.setPasswordInfo(token);
+  }
+
+  /** POST /auth/set-password — choose a password from an emailed link; signs in. */
+  @Post('set-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  setPassword(@Body() dto: SetPasswordDto) {
+    return this.authService.setPasswordWithToken(dto);
+  }
+
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   resetPassword(

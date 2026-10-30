@@ -4,6 +4,7 @@ import { User, UserSchema } from '../user/user.schema';
 import { Parent, ParentSchema } from '../parent/parent.schema';
 import { Interest, InterestSchema } from '../interest/interest.schema';
 import { CourseModule } from '../course/course.module';
+import { UsersModule } from '../user/user.module';
 import { AccountService } from './account.service';
 import { AccountController } from './account.controller';
 
@@ -15,6 +16,7 @@ import { AccountController } from './account.controller';
       { name: Interest.name, schema: InterestSchema },
     ]),
     CourseModule,
+    UsersModule,
   ],
   controllers: [AccountController],
   providers  : [AccountService],

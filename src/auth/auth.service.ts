@@ -25,6 +25,7 @@ import {
   ForgotPasswordDto,
   VerifyOtpDto,
   ResetPasswordDto,
+  SetPasswordDto,
 } from './dto/auth.dto';
 import { AuthTokens, AuthUser } from './interface/auth.interface';
 
@@ -262,6 +263,39 @@ export class AuthService {
     );
 
     return { message: 'OTP verified successfully!', resetToken };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SET PASSWORD (from the link in a welcome / reset email)
+  // ═══════════════════════════════════════════════════════════════
+
+  private async userForSetPasswordToken(token: string) {
+    const hash = createHash('sha256').update(String(token ?? '')).digest('hex');
+    const user = await this.userModel.findOne({ setPasswordToken: hash, setPasswordExpires: { $gt: new Date() } })
+      .select('+refreshTokens');
+    if (!user) throw new BadRequestException('This link has expired or was already used. Ask the Noor Circles team for a new one.');
+    return user;
+  }
+
+  /** Who the link is for (shown on the "choose your password" page). */
+  async setPasswordInfo(token: string) {
+    const user = await this.userForSetPasswordToken(token);
+    return { fullName: user.fullName, email: user.email, role: user.role };
+  }
+
+  /** Sets the password and signs the person straight in. */
+  async setPasswordWithToken(dto: SetPasswordDto) {
+    const user = await this.userForSetPasswordToken(dto.token);
+    if (!user.isActive) throw new UnauthorizedException('Your account has been deactivated. Please contact the admin.');
+    if (user.pendingApproval) throw new UnauthorizedException('Your account is awaiting admin approval. You will be able to sign in once it is approved.');
+    await this.usersService.updatePassword(user._id.toString(), await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS), false);
+    await this.userModel.updateOne({ _id: user._id }, { $set: { isEmailVerified: true, setPasswordExpires: null } });
+    const fresh = await this.userModel.findById(user._id);
+    const tokens = await this.generateTokens(user._id.toString(), user.email, user.role);
+    await this.usersService.addRefreshToken(user._id.toString(), this.hashToken(tokens.refreshToken));
+    await this.userModel.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
+    this.logger.log(`Password set from link → ${user.email}`);
+    return { message: 'Password saved. Welcome to Noor Circles!', ...tokens, user: this.sanitize(fresh!) };
   }
 
   async resetPassword(resetToken: string, dto: ResetPasswordDto) {

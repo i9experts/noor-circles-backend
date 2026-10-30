@@ -29,6 +29,7 @@ import { RewardsModule }       from './rewards/rewards.module';
 import { SyllabusModule }      from './syllabus/syllabus.module';
 import { CourseModule }        from './course/course.module';
 import { AccountModule }       from './account/account.module';
+import { EmailModule }         from './email/email.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { AccountModule }       from './account/account.module';
     SyllabusModule,
     CourseModule,
     AccountModule,
+    EmailModule,
   ],
   providers: [
     // Apply rate limiting globally

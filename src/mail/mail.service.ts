@@ -23,6 +23,25 @@ export class MailService {
     });
   }
 
+  /**
+   * Sends one email. Throws if the mail server refuses it, so the caller (the
+   * email queue) can retry. Replies go to MAIL_REPLY_TO (default: the sender).
+   */
+  async send(msg: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    attachments?: { filename: string; content: Buffer; contentType?: string }[];
+    headers?: Record<string, string>;
+  }): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.config.getOrThrow('MAIL_FROM'),
+      replyTo: this.config.get('MAIL_REPLY_TO') || undefined,
+      ...msg,
+    });
+  }
+
   async sendOtp(
     toEmail: string,
     otp: string,

@@ -30,6 +30,6 @@ import { FamilyController, SyllabusController } from './syllabus.controller';
   ],
   controllers: [SyllabusController, FamilyController],
   providers  : [SyllabusService, FamilyService],
-  exports    : [SyllabusService, MongooseModule],
+  exports    : [SyllabusService, FamilyService, MongooseModule],
 })
 export class SyllabusModule {}

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { SyllabusModule } from '../syllabus/syllabus.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { ParentController } from './parent.controller';
@@ -11,6 +12,7 @@ import { User, UserSchema }                               from '../user/user.sch
 @Module({
   imports: [
     JwtModule.register({}),
+    SyllabusModule,
     MongooseModule.forFeature([
       { name: Parent.name,           schema: ParentSchema           },
       { name: Student.name,          schema: StudentSchema          },

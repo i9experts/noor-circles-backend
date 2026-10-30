@@ -1,6 +1,6 @@
 import {
   BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, Logger, NotFoundException,
-  OnModuleInit,
+  OnModuleDestroy, OnModuleInit,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -21,6 +21,7 @@ import { User, UserDocument, UserRole } from '../user/user.schema';
 import { TrainingService } from '../training/training.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
+import { EmailService } from '../email/email.service';
 import asaasContent from './content/asaas-tier1.json';
 import asaasQuestions from './content/asaas-questions.json';
 import asaasFlipCharts from './content/asaas-flipcharts.json';
@@ -32,7 +33,7 @@ const DAY_MS = 24 * 3600_000;
 type Requester = { id: string; role: string };
 
 @Injectable()
-export class CourseService implements OnModuleInit {
+export class CourseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CourseService.name);
 
   constructor(
@@ -50,9 +51,12 @@ export class CourseService implements OnModuleInit {
     private readonly audio: AudioStoreService,
     private readonly training: TrainingService,
     private readonly notif: NotificationService,
+    private readonly email: EmailService,
   ) {}
 
   // ══ Seeding ════════════════════════════════════════════════════════════════
+
+  private reminderTimer: NodeJS.Timeout | null = null;
 
   /** Creates the Asaas course (sections, lessons, transcripts) the first time the app starts. */
   async onModuleInit() {
@@ -61,6 +65,15 @@ export class CourseService implements OnModuleInit {
     } catch (err) {
       this.logger.error(`Could not seed the Asaas course: ${(err as Error).message}`);
     }
+    // Training reminders: checked every hour; each one is sent once.
+    if (process.env.NODE_ENV !== 'test') {
+      this.reminderTimer = setInterval(() => { this.sendReminders().catch((e) => this.logger.error(`Reminders: ${(e as Error).message}`)); }, 3600_000);
+      this.reminderTimer.unref?.();
+    }
+  }
+
+  onModuleDestroy() {
+    if (this.reminderTimer) clearInterval(this.reminderTimer);
   }
 
   async seedAsaas() {
@@ -254,9 +267,12 @@ export class CourseService implements OnModuleInit {
   async assign(key: string, adminId: string, dto: AssignCourseDto) {
     const course = await this.course(key);
     const ids = [...new Set(dto.userIds)].map((id) => new Types.ObjectId(id));
-    const murabbis = await this.userModel.find({ _id: { $in: ids }, role: UserRole.MURABBI }).select('_id').lean();
+    const murabbis = await this.userModel.find({ _id: { $in: ids }, role: UserRole.MURABBI }).select('_id fullName email').lean();
     if (murabbis.length !== ids.length) throw new BadRequestException('Training can only be assigned to murabbi accounts.');
     const existing = new Set((await this.assignmentModel.find({ course: course._id, user: { $in: ids } }).select('user').lean()).map((a) => a.user.toString()));
+    const lessonDocs = await this.lessonModel.find({ course: course._id }).select('durationSec').lean();
+    const lessonCount = lessonDocs.length;
+    const totalSec = lessonDocs.reduce((s, l) => s + l.durationSec, 0);
     for (const m of murabbis) {
       await this.assignmentModel.updateOne(
         { course: course._id, user: m._id },
@@ -267,6 +283,10 @@ export class CourseService implements OnModuleInit {
         this.notify(m._id.toString(), adminId, `New training: ${course.title}`,
           `You've been assigned the ${course.title}${dto.dueDate ? `, to complete by ${dto.dueDate}` : ''}. Open Training to start listening.`,
           { courseKey: course.key });
+        void this.email.queue('training.assigned', { email: m.email, name: m.fullName, userId: m._id }, {
+          courseTitle: course.title, badge: course.badge, dueDate: dto.dueDate ?? null, note: dto.note ?? '',
+          lessons: lessonCount, minutes: Math.round(totalSec / 60), url: this.email.link('/murabbi'),
+        });
       }
     }
     const added = murabbis.length - existing.size;
@@ -421,6 +441,7 @@ export class CourseService implements OnModuleInit {
       dto.status === 'approved' ? 'Your reflection was approved' : 'Please revise your reflection',
       dto.status === 'approved' ? 'Jazak Allahu khayran. Your training reflection has been approved.' : `Feedback: ${dto.feedback}`,
       { courseKey: course?.key });
+    void this.emailMurabbi(r.user.toString(), 'training.reflection', { approved: dto.status === 'approved', feedback: dto.feedback ?? '' });
     const certificate = course && dto.status === 'approved' ? await this.checkCertification(course, r.user.toString(), adminId) : null;
     return { message: dto.status === 'approved' ? 'Reflection approved.' : 'Sent back for revision.', certificate };
   }
@@ -435,8 +456,65 @@ export class CourseService implements OnModuleInit {
       { upsert: true },
     );
     const band = practicalBand(total);
+    void this.emailMurabbi(userId, 'training.practical', { total, band, notes: dto.notes ?? '' });
     const certificate = await this.checkCertification(course, userId, adminId);
     return { message: `Practical score saved: ${total}/18 (${band === 'pass' ? 'pass' : band === 'conditional' ? 'conditional pass' : 'one more practice session'}).`, total, band, certificate };
+  }
+
+  // ══ Emails ═════════════════════════════════════════════════════════════════
+
+  private async emailMurabbi(userId: string, kind: string, data: Record<string, unknown>, opts: { dedupeKey?: string; attachment?: any } = {}) {
+    const u = await this.userModel.findById(userId).select('fullName email').lean();
+    if (!u) return;
+    await this.email.queue(kind, { email: u.email, name: u.fullName, userId: u._id }, {
+      courseTitle: 'Asaas Murabbi Training', url: this.email.link('/murabbi'), ...data,
+    }, opts);
+  }
+
+  /**
+   * Reminders for murabbis who haven't certified yet, each sent once:
+   * not started 3 days after assignment; no listening for 7 days; due in
+   * 7 days and in 1 day; overdue.
+   */
+  async sendReminders(now = new Date()) {
+    const today = new Date(now.getTime() + 5 * 3600_000).toISOString().slice(0, 10);
+    const dayDiff = (a: string, b: string) => Math.round((Date.parse(a) - Date.parse(b)) / DAY_MS);
+    let sent = 0;
+    for (const course of await this.courseModel.find().select('title').lean()) {
+      const total = await this.lessonModel.countDocuments({ course: course._id });
+      const assignments = await this.assignmentModel.find({ course: course._id, certifiedAt: null }).populate('user', 'fullName email isActive').lean();
+      for (const a of assignments) {
+        const u = a.user as any;
+        if (!u?.isActive) continue;
+        const [done, last] = await Promise.all([
+          this.progressModel.countDocuments({ course: course._id, user: u._id, completed: true }),
+          this.progressModel.findOne({ course: course._id, user: u._id }).sort({ lastBeatAt: -1 }).select('lastBeatAt').lean(),
+        ]);
+        if (done === total) continue; // listening is done; results emails take over
+        const id = String(a._id);
+        const candidates: [string, string, Record<string, unknown>][] = [];
+        if (a.dueDate) {
+          const left = dayDiff(a.dueDate, today);
+          if (left < 0) candidates.push(['overdue', `rem:overdue:${id}:${a.dueDate}`, {}]);
+          else if (left <= 1) candidates.push(['due-soon', `rem:due1:${id}:${a.dueDate}`, { days: 1 }]);
+          else if (left <= 7) candidates.push(['due-soon', `rem:due7:${id}:${a.dueDate}`, { days: 7 }]);
+        }
+        const assignedAt = new Date((a as any).createdAt);
+        if (!last && now.getTime() - assignedAt.getTime() >= 3 * DAY_MS) candidates.push(['not-started', `rem:start:${id}`, {}]);
+        if (last?.lastBeatAt && now.getTime() - new Date(last.lastBeatAt).getTime() >= 7 * DAY_MS) {
+          candidates.push(['idle', `rem:idle:${id}:${new Date(last.lastBeatAt).toISOString().slice(0, 10)}`, {}]);
+        }
+        // At most one reminder per person per run: the most pressing first.
+        for (const [variant, dedupeKey, extra] of candidates) {
+          const r = await this.email.queue('training.reminder', { email: u.email, name: u.fullName, userId: u._id }, {
+            variant, courseTitle: course.title, dueDate: a.dueDate, done, total, url: this.email.link('/murabbi'), ...extra,
+          }, { dedupeKey });
+          if (r === 'queued') { sent++; break; }
+          if (r === 'skipped') break;
+        }
+      }
+    }
+    return sent;
   }
 
   // ══ Certification ══════════════════════════════════════════════════════════
@@ -466,6 +544,9 @@ export class CourseService implements OnModuleInit {
       this.notify(userId, actorId, `MashaAllah! You are a ${course.badge}`,
         `You've completed the ${course.title}. Your certificate (${cert.certificateNumber}) is ready to download, and the ${course.badge} badge is now on your profile.`,
         { courseKey: course.key, certificateNumber: cert.certificateNumber });
+      void this.emailMurabbi(userId, 'training.certified', { badge: course.badge, courseTitle: course.title, number: cert.certificateNumber }, {
+        dedupeKey: `certified:${String(course._id)}:${userId}`, attachment: { type: 'certificate', userId, tier: course.tier },
+      });
     }
     return { number: cert.certificateNumber, issuedAt: cert.issuedAt };
   }
@@ -639,6 +720,15 @@ export class CourseService implements OnModuleInit {
         sectionDone = true;
         await this.award(user.id, 'section', lesson.section.toString(), course.points?.section ?? 25, 'Completed a module');
       }
+      const [total, done] = await Promise.all([
+        this.lessonModel.countDocuments({ course: course._id }),
+        this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
+      ]);
+      if (done === total) {
+        void this.emailMurabbi(user.id, 'training.lessons-done', {
+          courseTitle: course.title, total, questions: course.questions.length, passingScore: course.passingScore,
+        }, { dedupeKey: `lessons-done:${String(course._id)}:${user.id}` });
+      }
     }
     return { percent, completed: nowCompleted, justCompleted, sectionCompleted: sectionDone };
   }
@@ -746,6 +836,14 @@ export class CourseService implements OnModuleInit {
     if (passed) {
       await this.award(user.id, 'assessment', course._id.toString(), course.points?.assessment ?? 100, `Passed the ${course.title} assessment`);
       certificate = await this.checkCertification(course, user.id);
+    }
+    if (!alreadyPassed) {
+      const left = passed ? null : Math.max(0, course.maxFailedAttemptsPerDay - failures.length - 1);
+      const retry = !passed && !left ? new Date((failures[0]?.createdAt ?? new Date()).getTime() + DAY_MS) : null;
+      void this.emailMurabbi(user.id, 'training.assessment', {
+        passed, score: scorePercent, passingScore: course.passingScore, certified: !!certificate, attemptsLeft: left,
+        retryAt: retry?.toLocaleString('en-GB', { timeZone: 'Asia/Karachi', dateStyle: 'medium', timeStyle: 'short' }),
+      });
     }
     return {
       scorePercent, passed, correct, total: course.questions.length, passingScore: course.passingScore, certificate,

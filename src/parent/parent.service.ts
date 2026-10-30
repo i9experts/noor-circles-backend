@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger, MessageEvent, NotFoundExceptio
 import { randomBytes } from 'crypto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
+import { FamilyService } from '../syllabus/family.service';
 import { Model, Types } from 'mongoose';
 import { Observable } from 'rxjs';
 import {
@@ -117,6 +118,7 @@ export class ParentService {
     @InjectModel(EngagementConfig.name) private readonly engagementModel:       Model<EngagementConfigDocument>,
     @InjectModel(User.name)             private readonly userModel:             Model<UserDocument>,
     private readonly config: ConfigService,
+    private readonly family: FamilyService,
   ) {}
 
   // ── WhatsApp stream tickets ──────────────────────────────────────────────────
@@ -511,7 +513,8 @@ export class ParentService {
       notes         : dto.notes ?? '',
     });
 
-    return { message: 'Parent registered successfully.', parent };
+    void this.family.sendWelcome(parent._id.toString()).catch(() => {});
+    return { message: `Parent registered successfully.${parent.email ? ' A welcome email is on its way.' : ''}`, parent };
   }
 
   async getAll(requesterId?: string, requesterRole?: string) {
@@ -570,6 +573,8 @@ export class ParentService {
       .findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
       .lean();
     if (!parent) throw new NotFoundException('Parent not found.');
+    // An email added later still gets the welcome (once per address).
+    if (dto.email) void this.family.sendWelcome(id).catch(() => {});
     return { message: 'Parent updated successfully.', parent };
   }
 

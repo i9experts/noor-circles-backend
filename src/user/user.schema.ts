@@ -57,6 +57,13 @@ export class User {
   @Prop({ type: Date, default: null })
   lastLoginAt: Date | null;
 
+  /** One-time "set your password" link (sha256 of the token) and when it expires. */
+  @Prop({ type: String, default: null, select: false })
+  setPasswordToken: string | null;
+
+  @Prop({ type: Date, default: null, select: false })
+  setPasswordExpires: Date | null;
+
   @Prop({ type: [String], default: [], select: false })
   refreshTokens: string[];
 
