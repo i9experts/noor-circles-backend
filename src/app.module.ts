@@ -28,6 +28,7 @@ import { EngagementModule }    from './engagement/engagement.module';
 import { RewardsModule }       from './rewards/rewards.module';
 import { SyllabusModule }      from './syllabus/syllabus.module';
 import { CourseModule }        from './course/course.module';
+import { ParentCourseModule }  from './parent-course/parent-course.module';
 import { AccountModule }       from './account/account.module';
 import { EmailModule }         from './email/email.module';
 import { InsightsModule }      from './insights/insights.module';
@@ -73,6 +74,7 @@ import { InsightsModule }      from './insights/insights.module';
     RewardsModule,
     SyllabusModule,
     CourseModule,
+    ParentCourseModule,
     AccountModule,
     EmailModule,
     InsightsModule,

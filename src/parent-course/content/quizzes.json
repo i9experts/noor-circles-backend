@@ -1,0 +1,1420 @@
+{
+ "m1": [
+  {
+   "question": "وسیم صاحب کی کہانی میں، اس رات حمزہ کو اصل میں کس چیز کی ضرورت تھی؟",
+   "questionEn": "In Waseem's story, what did Hamza really need that night?",
+   "options": [
+    "school کی fees، نئی کتابیں اور اگلے سال کے داخلے کا انتظام",
+    "پانچ منٹ، اور ابو کی آنکھیں جو اس کی کہانی سنیں",
+    "homework میں ابو کی مدد اور نگرانی",
+    "دیر تک جاگنے کی اجازت اور کچھ کھانے کو"
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio میں کہا گیا کہ اس رات حمزہ کو fees نہیں چاہیے تھی، اسے پانچ منٹ چاہیے تھے: ابو کی آنکھیں جو اس کی کہانی سنیں۔",
+   "sourceLesson": "P1-01",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "\"راعی\" یعنی چرواہے کی مثال سے ہم اپنے بچوں کے بارے میں کیا سیکھتے ہیں؟",
+   "questionEn": "What does the example of the shepherd (raa'i) teach us about our children?",
+   "options": [
+    "بچے ہماری ملکیت ہیں، اس لیے ہر فیصلہ ہمارا ہے",
+    "بچوں کی دیکھ بھال صرف ماں کی ذمہ داری ہے",
+    "ہم نگہبان ہیں، اور بچے اللہ کی امانت ہیں",
+    "چرواہے کی طرح بچوں کو سختی سے قابو رکھنا ہے"
+   ],
+   "correctIndex": 2,
+   "explanation": "چرواہا بکریوں کا مالک نہیں، نگہبان ہوتا ہے۔ اسی طرح ہمارے بچے ہماری ملکیت نہیں، اللہ کی امانت ہیں، اور ہر نگہبان سے سوال ہوگا۔",
+   "sourceLesson": "P1-02",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "Course کے مطابق \"تربیت\" کا اصل مطلب کیا ہے؟",
+   "questionEn": "According to the course, what does tarbiyah really mean?",
+   "options": [
+    "بچے کو آہستہ آہستہ، پیار سے، اس کی بہترین شکل تک پہنچانا",
+    "بچے کو جلدی جلدی زیادہ سے زیادہ سورتیں اور سبق یاد کروا دینا",
+    "بچے پر حکم چلانا تاکہ وہ ہر بات فوراً مانے",
+    "بچے کو اچھے school میں داخل کروا دینا"
+   ],
+   "correctIndex": 0,
+   "explanation": "تربیت کا لفظ \"رب\" سے نکلا ہے: جو آہستہ آہستہ کسی چیز کو کمال تک پہنچائے۔ یعنی حکم چلانا نہیں، پیار سے پروان چڑھانا۔",
+   "sourceLesson": "P1-02",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "\"فطرت کا باغ\" (flip chart 1.2) میں مٹی کس چیز کی علامت ہے؟",
+   "questionEn": "In the \"fitrah garden\" (flip chart 1.2), what does the soil stand for?",
+   "options": [
+    "بچے کی اپنی فطرت اور اچھائی کا بیج",
+    "والدین، جو باغ کے مالی ہیں",
+    "والدین کی محبت اور ان کا وقت",
+    "آپ کے گھر کا ماحول"
+   ],
+   "correctIndex": 3,
+   "explanation": "Chart میں بیج بچے کی فطرت ہے، مالی آپ ہیں، مٹی آپ کے گھر کا ماحول ہے، اور پانی اور دھوپ آپ کی محبت اور آپ کا وقت ہیں۔",
+   "sourceLesson": "P1-02",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "Journal میں \"جڑیں اور شاخیں\" والا درخت بناتے ہوئے کوئی پرانا دکھ یاد آ جائے تو course کیا کہتا ہے؟",
+   "questionEn": "While drawing the roots-and-branches tree, an old hurt comes back. What does the course say?",
+   "options": [
+    "یہ activity چھوڑ دیں، یہ آپ کے لیے نہیں ہے",
+    "یہ بالکل فطری ہے؛ اپنے ماں باپ کے لیے دعا کریں",
+    "درخت مربی کو دکھائیں تاکہ وہ مشورہ دیں",
+    "وہ دکھ درخت کی شاخوں پر لکھیں تاکہ بچے کو بھی وہی بات ملے"
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio میں کہا گیا کہ پرانا دکھ یاد آنا فطری ہے۔ اپنے ماں باپ کے لیے دعا کریں، چاہے وہ زندہ ہوں یا نہ ہوں۔ یہ درخت صرف آپ کا ہے، کسی کو دکھانا نہیں۔",
+   "sourceLesson": "P1-05",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "آپ بچے کے پاس بیٹھے ہیں، مگر آنکھیں موبائل پر ہیں۔ Course کے مطابق یہ کیسا \"ساتھ\" ہے؟",
+   "questionEn": "You are sitting next to your child, but your eyes are on your phone. According to the course, what kind of \"being with\" is this?",
+   "options": [
+    "پورا ساتھ، کیونکہ آپ کمرے میں موجود ہیں",
+    "اچھا ساتھ، اگر بچہ خاموشی سے کھیل رہا ہو",
+    "جسم سے ساتھ ہیں، دل سے نہیں، اور بچہ فرق پہچان لیتا ہے",
+    "کافی ساتھ ہے، کیونکہ آپ دن بھر اسی کے لیے محنت اور کام کرتے ہیں"
+   ],
+   "correctIndex": 2,
+   "explanation": "\"ساتھ ہونا\" کا مطلب ہے کہ دھیان بچے پر ہو۔ آنکھیں موبائل پر ہوں تو آپ جسم سے ساتھ ہیں، دل سے نہیں، اور بچے یہ فرق فوراً پہچان لیتے ہیں۔",
+   "sourceLesson": "P1-03",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "Flip chart 1.1 کے \"بچے کے ساتھ\" والے کالم میں ان میں سے کون سی چیز آتی ہے؟",
+   "questionEn": "Which of these belongs in the \"with the child\" column of flip chart 1.1?",
+   "options": [
+    "school کی fees اور uniform",
+    "Eid کے نئے کپڑے، جوتے اور تحفے دلانا",
+    "tuition اور کتابوں کا خرچ",
+    "کہانی سنانا اور ساتھ دعا مانگنا"
+   ],
+   "correctIndex": 3,
+   "explanation": "پہلا کالم \"بچے کے لیے\" ہے: کھانا، fees، uniform، tuition، جوتے، Eid کے کپڑے۔ دوسرا \"بچے کے ساتھ\": بات کرنا، کھیلنا، ساتھ دعا، ساتھ بازار، کہانی سنانا۔",
+   "sourceLesson": "P1-03",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "ایک ماں اکیلے دونوں کردار اٹھا رہی ہیں۔ Course ایسے گھر کے بارے میں کیا کہتا ہے؟",
+   "questionEn": "A mother is carrying both roles alone. What does the course say about such a home?",
+   "options": [
+    "کردار ایک طرح کی دیکھ بھال ہے، شخص نہیں؛ اللہ دونوں کا اجر لکھ رہا ہے",
+    "یہ ایک ادھورا گھر ہے، اور بچے کی یہ کمی آگے چل کر کبھی پوری نہیں ہو سکتی",
+    "انہیں باپ کا کردار جلد سے جلد کسی بڑے رشتے دار کے حوالے کر دینا چاہیے",
+    "اس گھر کے بچوں کو حلقے میں الگ رکھنا چاہیے"
+   ],
+   "correctIndex": 0,
+   "explanation": "ہم اسے \"ادھورا گھر\" نہیں کہتے۔ کردار ایک طرح کی دیکھ بھال ہے، شخص نہیں۔ جو اکیلے دونوں کردار اٹھائے، اللہ دونوں کو دیکھ رہا ہے اور دونوں کا اجر لکھ رہا ہے۔",
+   "sourceLesson": "P1-04",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "نبی ﷺ کی مثالوں (اُمامہ کو اٹھانا، حسن کو چومنا) کے بعد course باپ کا کردار کیا بتاتا ہے؟",
+   "questionEn": "After the Prophet's ﷺ examples (carrying Umamah, kissing Hasan), how does the course describe a father's role?",
+   "options": [
+    "کمانا، اور گھر میں ڈانٹ کا ڈر قائم رکھنا",
+    "صرف بڑے فیصلے کرنا، باقی کام ماں کے",
+    "حفاظت، رہنمائی، ذمہ داری، اور موجودگی",
+    "بچوں سے فاصلہ رکھنا تاکہ رعب قائم رہے"
+   ],
+   "correctIndex": 2,
+   "explanation": "Course کے مطابق باپ کا کردار ہے: حفاظت، رہنمائی، ذمہ داری اور موجودگی۔ قوّامیت کا مطلب ذمہ داری اٹھانا ہے، صرف حکم چلانا نہیں۔",
+   "sourceLesson": "P1-04",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "اس fortnight کے روز کے دس منٹ میں کیا کرنا ہے، یہ کون طے کرے گا؟",
+   "questionEn": "During this fortnight's daily ten minutes, who decides what to do?",
+   "options": [
+    "امی یا ابو، تاکہ وقت کام کی چیز میں لگے",
+    "بچہ؛ آپ کا کام صرف ساتھ ہونا ہے",
+    "مربی، جو ہر ہفتے activity بھیجیں گے",
+    "پوری فیملی مل کر ووٹ سے"
+   ],
+   "correctIndex": 1,
+   "explanation": "Target میں کہا گیا: دس منٹ میں کیا کرنا ہے، یہ بچہ طے کرے گا، آپ نہیں: لوڈو، school bag دکھانا، یا بس بات کرنا۔ آپ کا کام صرف ساتھ ہونا ہے۔",
+   "sourceLesson": "P1-06",
+   "module": "Module 1: The First Murabbi"
+  }
+ ],
+ "m2": [
+  {
+   "question": "Course کے مطابق بچے اکثر بات بتانا کیوں چھوڑ دیتے ہیں؟",
+   "questionEn": "According to the course, why do children often stop telling us things?",
+   "options": [
+    "کیونکہ اس عمر میں بچے فطرتاً کم بولتے ہیں",
+    "کیونکہ school میں واقعی کچھ نہیں ہوتا",
+    "کیونکہ پچھلی بار بتانے کا نتیجہ lecture یا طعنہ نکلا",
+    "کیونکہ وہ گھر والوں سے زیادہ اپنے دوستوں کو پسند کرنے لگتے ہیں"
+   ],
+   "correctIndex": 2,
+   "explanation": "Audio میں کہا گیا کہ بچے سیکھ جاتے ہیں کہ بات بتانے کا نتیجہ lecture، طعنہ یا \"تم ہمیشہ…\" والا جملہ ہے، اس لیے \"کچھ نہیں\" کہہ دیتے ہیں۔",
+   "sourceLesson": "P2-01",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "پشاور کی ماں کے بیٹے نے تین مہینے تک تنگ کیے جانے کی بات ماں کو کیوں نہیں بتائی؟",
+   "questionEn": "Why did the Peshawar mother's son not tell her about being bullied for three months?",
+   "options": [
+    "اس نے کہا: \"آپ غصہ کرتیں\"",
+    "اسے لگا کہ یہ کوئی بڑی بات نہیں",
+    "teacher نے اسے منع کیا تھا",
+    "وہ خود معاملہ حل کرنا چاہتا تھا"
+   ],
+   "correctIndex": 0,
+   "explanation": "جب ماں نے پوچھا \"مجھے کیوں نہیں بتایا؟\" تو بیٹے نے کہا: \"آپ غصہ کرتیں۔\" اس نے اپنے کزن کو بتایا، ماں کو نہیں۔",
+   "sourceLesson": "P2-01",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "ابو عُمیر کی ننھی چڑیا مر گئی تو نبی ﷺ نے کیا کیا؟",
+   "questionEn": "When Abu Umair's little bird died, what did the Prophet ﷺ do?",
+   "options": [
+    "فرمایا کہ یہ تو بس ایک چڑیا تھی",
+    "اسے بازار سے نئی اور اس سے بھی خوبصورت چڑیا لا کر دینے کا وعدہ کیا",
+    "اسے صبر کی ایک لمبی نصیحت کی",
+    "اس سے پوچھا: \"تمہاری ننھی چڑیا کا کیا ہوا؟\""
+   ],
+   "correctIndex": 3,
+   "explanation": "آپ ﷺ نے بچے کے دکھ کو چھوٹا نہیں سمجھا، بلکہ اس کی دنیا میں داخل ہو کر پوچھا: \"اے ابو عمیر، تمہاری ننھی چڑیا کا کیا ہوا؟\" (بخاری)",
+   "sourceLesson": "P2-02",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "Flip chart 2.1 کے تین قدموں کی صحیح ترتیب کیا ہے؟",
+   "questionEn": "What is the right order of the three steps on flip chart 2.1?",
+   "options": [
+    "رہنمائی کریں، پھر سنیں، پھر احساس کو نام دیں",
+    "سنیں، احساس کو نام دیں، پھر رہنمائی کریں",
+    "احساس کو نام دیں، رہنمائی کریں، پھر سنیں",
+    "سنیں، رہنمائی کریں، پھر احساس کو نام دیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "پہلا قدم سننا، دوسرا احساس کو نام دینا، تیسرا رہنمائی۔ اکثر ہم سیدھا تیسرے قدم پر کود جاتے ہیں؛ پہلے دو قدم کے بعد ہی بچہ رہنمائی سنتا ہے۔",
+   "sourceLesson": "P2-02",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "بچہ آ کر کہتا ہے: \"آج teacher نے مجھے ڈانٹا۔\" Course کے مطابق پہلا اچھا جواب کون سا ہے؟",
+   "questionEn": "Your child says, \"The teacher scolded me today.\" According to the course, which is the best first response?",
+   "options": [
+    "\"اچھا… پھر کیا ہوا؟\" اور بیچ میں ٹوکے بغیر سننا",
+    "\"ضرور تم نے کچھ کیا ہوگا!\"",
+    "\"کل میں خود school جا کر teacher سے اس بارے میں بات کروں گا۔\"",
+    "\"رونے کی کیا بات ہے، کپڑے بدل لو۔\""
+   ],
+   "correctIndex": 0,
+   "explanation": "پہلا قدم سننا ہے: موبائل نیچے، چہرہ بچے کی طرف، بیچ میں نہ ٹوکیں: \"اچھا… پھر؟\" \"ضرور تم نے کچھ کیا ہوگا\" وہ جملہ ہے جو بچوں کو خاموش کر دیتا ہے۔",
+   "sourceLesson": "P2-02",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "زینب کی کہانی کے دونوں انجاموں میں اصل فرق کیا تھا؟",
+   "questionEn": "What was the real difference between the two endings of Zainab's story?",
+   "options": [
+    "دوسری امی نے revision کی بات بالکل نہیں کی، بس زینب کو گلے لگا کر کھانا کھلا دیا",
+    "پہلی امی کو زینب سے کم محبت تھی",
+    "دوسری امی نے بھی revision کی بات کی، مگر پہلے سنا اور احساس کو نام دیا",
+    "پہلی امی نے زینب کو موبائل لے دیا اور revision اگلے دن پر چھوڑ دی"
+   ],
+   "correctIndex": 2,
+   "explanation": "دونوں امیوں کو بیٹی سے محبت تھی اور دونوں چاہتی تھیں کہ زینب پڑھے۔ پہلی نے revision کی بات پہلے کر دی؛ دوسری نے پاس بیٹھ کر احساس کو نام دیا، اور وہی بات سب سے آخر میں کی۔",
+   "sourceLesson": "P2-03",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "ان میں سے کون سی تعریف course کے مطابق \"specific\" ہے اور دل میں اترتی ہے؟",
+   "questionEn": "Which of these is the kind of \"specific\" praise the course says reaches the heart?",
+   "options": [
+    "\"تم بہت اچھے بچے ہو، اللہ تمہیں ہمیشہ ایسا ہی رکھے۔\"",
+    "\"آج تم نے اپنے چھوٹے بھائی کو اپنا biscuit دیا، مجھے بہت اچھا لگا۔\"",
+    "\"ماشاءاللہ، تم ہمیشہ سب سے اچھے رہو گے، تم جیسا بچہ پورے خاندان میں کوئی نہیں۔\"",
+    "\"شاباش، اب جاؤ اور سو جاؤ۔\""
+   ],
+   "correctIndex": 1,
+   "explanation": "\"تم بہت اچھے ہو\" کم اثر کرتا ہے۔ جو آپ نے واقعی دیکھا وہ کہیں، جیسے biscuit والی مثال؛ بچہ جانتا ہے کہ آپ نے واقعی دیکھا۔",
+   "sourceLesson": "P2-04",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "بیٹے ابراہیم کی وفات پر نبی ﷺ کے آنسوؤں سے بچوں کے جذبات کے بارے میں ہم کیا سیکھتے ہیں؟",
+   "questionEn": "What do the Prophet's ﷺ tears at his son Ibrahim's death teach us about children's feelings?",
+   "options": [
+    "لڑکوں کو رونا نہیں چاہیے، آنسو صرف بڑوں کو اور وہ بھی اکیلے میں زیب دیتے ہیں",
+    "غصہ اور ڈر گناہ ہیں، انہیں دبانا چاہیے",
+    "جذبات صرف دعا میں ظاہر کرنے چاہییں",
+    "احساس حرام نہیں؛ بچوں کو سکھانا ہے کہ احساس کے ساتھ کیا کریں"
+   ],
+   "correctIndex": 3,
+   "explanation": "آپ ﷺ نے فرمایا: آنکھ آنسو بہاتی ہے، دل غمگین ہے، مگر زبان سے وہی کہیں گے جس سے رب راضی ہو۔ احساس حرام نہیں: \"غصہ آنا ٹھیک ہے، مارنا ٹھیک نہیں۔\"",
+   "sourceLesson": "P2-04",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "آپ joint family میں رہتے ہیں اور بچے سے اکیلے بات کرنا مشکل ہے۔ Course کیا مشورہ دیتا ہے؟",
+   "questionEn": "You live in a joint family and it is hard to talk to your child alone. What does the course suggest?",
+   "options": [
+    "ایک وقت اور جگہ طے کر لیں: چھت، صبح کی سیر، یا دکان تک کا راستہ",
+    "سب کے سامنے ہی بات کریں تاکہ کوئی ناراض نہ ہو",
+    "یہ بات چیت بچے کے بڑے ہونے تک چھوڑ دیں",
+    "بچے سے صرف phone پر message کے ذریعے بات کریں، تاکہ گھر میں کسی کو پتہ نہ چلے"
+   ],
+   "correctIndex": 0,
+   "explanation": "Joint family میں ایک وقت اور ایک جگہ طے کر لیں: چھت، صبح کی سیر، یا دکان تک جاتے ہوئے کے پانچ منٹ۔ جو بات سب کے سامنے نہیں ہو سکتی، وہ وہاں ہو جاتی ہے۔",
+   "sourceLesson": "P2-05",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "رات کو آپ پوچھتے ہیں: \"آج کا سب سے اچھا لمحہ کیا تھا؟\" بچہ جواب دیتا ہے۔ Target کے مطابق اب آپ کو کیا کرنا ہے؟",
+   "questionEn": "At night you ask, \"What was the best moment of your day?\" Your child answers. According to the target, what do you do now?",
+   "options": [
+    "جواب میں سے ایک اچھا سا سبق نکال کر بچے کو سمجھا دیں",
+    "جواب ٹھیک نہ ہو تو اصلاح کر دیں",
+    "اگلے دن کا homework یاد دلائیں",
+    "جواب جو بھی ہو، بس سنیں؛ کوئی lecture نہیں"
+   ],
+   "correctIndex": 3,
+   "explanation": "Target کی پہلی بات: ہر رات سونے سے پہلے یہ سوال، اور جواب جو بھی ہو، بس سنیں۔ کوئی lecture نہیں۔",
+   "sourceLesson": "P2-06",
+   "module": "Module 2: Connection Before Correction"
+  }
+ ],
+ "m3": [
+  {
+   "question": "اس module میں موبائل کے بارے میں ہمارا رویہ کیا ہے؟",
+   "questionEn": "What is this module's approach to the mobile phone?",
+   "options": [
+    "موبائل گھر سے بالکل نکال دینا چاہیے، کیونکہ اس کے ہوتے ہوئے بچے کبھی نہیں سدھریں گے",
+    "موبائل زندگی کا حصہ ہے؛ ہم سمجھیں گے یہ بچوں کو کیسے پکڑتا ہے اور گھر کا plan بنائیں گے",
+    "جن ماں باپ نے کبھی بچے کو فون پکڑایا، انہیں شرمندہ ہونا چاہیے",
+    "بچے کو فون دینا یا نہ دینا صرف school کا فیصلہ ہے، گھر کا نہیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio میں کہا گیا کہ یہ module کسی کو شرمندہ کرنے کے لیے نہیں؛ موبائل زندگی کا حصہ ہے اور رہے گا۔ ہم سمجھیں گے کہ یہ بچوں کو کیسے پکڑتا ہے، کب فکر کی بات ہے، اور گھر میں ایسا plan بنائیں گے جو واقعی چلے۔",
+   "sourceLesson": "P3-01",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "بچہ کتاب دس منٹ نہیں پڑھ پاتا مگر Shorts دو گھنٹے دیکھ لیتا ہے۔ Audio کے مطابق اس کی اصل وجہ کیا ہے؟",
+   "questionEn": "A child can't read a book for ten minutes but watches Shorts for two hours. According to the audio, what is the real reason?",
+   "options": [
+    "بچہ سست ہے اور اسے پڑھائی سے کوئی دلچسپی نہیں",
+    "آج کل کی کتابیں بچوں کے لیے بہت مشکل اور بے رنگ لکھی جاتی ہیں، اس لیے دل نہیں لگتا",
+    "بچے کی آنکھیں screen کی روشنی پر زیادہ آرام محسوس کرتی ہیں، کتاب پر جلدی تھک جاتی ہیں",
+    "کمزوری نہیں؛ apps بنی ہی ایسی ہیں: autoplay، چھوٹی videos اور ہر بار ایک چھوٹا انعام"
+   ],
+   "correctIndex": 3,
+   "explanation": "Trainer نے کہا: یہ بچے کی کمزوری نہیں، apps اسی طرح بنائی گئی ہیں۔ Autoplay، تیس سیکنڈ کی videos جن پر لگتا ہے \"بس ایک اور\"، اور ہر video میں دماغ کو ایک چھوٹا انعام جو اگلا انعام مانگتا ہے (flip chart 3.1)۔",
+   "sourceLesson": "P3-02",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "نبی ﷺ نے کن دو نعمتوں کے بارے میں فرمایا کہ اکثر لوگ ان میں نقصان اٹھاتے ہیں؟",
+   "questionEn": "Which two blessings did the Prophet ﷺ say most people are at a loss in?",
+   "options": [
+    "صحت اور فارغ وقت",
+    "مال اور نیک اولاد",
+    "علم اور عزت",
+    "نیند اور خوراک"
+   ],
+   "correctIndex": 0,
+   "explanation": "حدیث (بخاری): \"دو نعمتیں ہیں جن میں اکثر لوگ نقصان اٹھاتے ہیں: صحت، اور فارغ وقت۔\" Audio میں کہا گیا کہ ہمارے بچوں کا فارغ وقت ایک امانت ہے۔",
+   "sourceLesson": "P3-02",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "آپ نے کئی بار بیٹے سے کہا: \"خود ہی بند کر دو\"، مگر وہ نہیں کر پاتا۔ Audio کے مطابق اسے کس چیز کی ضرورت ہے؟",
+   "questionEn": "You have told your son many times to \"just switch it off yourself\", but he can't. According to the audio, what does he need?",
+   "options": [
+    "زیادہ سخت ڈانٹ، تاکہ اسے بات سمجھ آ جائے",
+    "ایک نیا اور بہتر فون، جس میں games کم ہوں اور سختی سے lock لگا ہو",
+    "ہماری مدد: ایسا ماحول جہاں موبائل کی حد خود بخود ہو",
+    "کچھ نہیں؛ وقت کے ساتھ وہ خود ہی سنبھل جائے گا"
+   ],
+   "correctIndex": 2,
+   "explanation": "\"خود ہی بند کر دو\" کہہ کر ہم نو سال کے بچے کو ان ہزاروں لوگوں کے مقابلے میں اکیلا کھڑا کر دیتے ہیں جو اسے screen پر رکھنے کے لیے کام کر رہے ہیں۔ اسے قانون نہیں، مدد چاہیے: ایسا ماحول جہاں حد خود بخود ہو۔",
+   "sourceLesson": "P3-02",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "ان میں سے کون سی بات ان چھ نشانیوں میں شامل ہے جن سے پتہ چلتا ہے کہ موبائل عادت سے آگے بڑھ رہا ہے؟",
+   "questionEn": "Which of these is one of the six signs that the phone has gone past a habit?",
+   "options": [
+    "بچہ کبھی کبھار school کا کام فون پر دیکھ لیتا ہے",
+    "بچہ ہفتے میں ایک دن cousins کے ساتھ game کھیلتا ہے",
+    "بچہ کھانا بھی موبائل کے بغیر نہیں کھاتا",
+    "بچہ cartoon دیکھتے ہوئے زور سے ہنستا ہے"
+   ],
+   "correctIndex": 2,
+   "explanation": "چھ نشانیاں (flip chart 3.2): فون لینے پر شدید غصہ؛ رات دیر تک جاگنا؛ کھیل اور دوستوں میں دلچسپی ختم؛ استعمال کے بارے میں جھوٹ؛ کھانا بھی موبائل کے بغیر نہیں؛ گھر والوں سے زیادہ screen کے ساتھ اکیلا رہنا۔",
+   "sourceLesson": "P3-03",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "Game کی chat میں کوئی \"دوست\" آپ کے بچے کو diamonds دیتا ہے اور کہتا ہے \"امی ابو کو مت بتانا\"۔ آپ نے بچے کو پہلے سے کیا اصول سکھایا ہونا چاہیے؟",
+   "questionEn": "In a game chat, a \"friend\" gives your child diamonds and says \"don't tell your parents\". What rule should you already have taught your child?",
+   "options": [
+    "\"Online کوئی راز رکھنے کو کہے یا تصویر مانگے تو فوراً مجھے بتانا؛ تمہیں سزا نہیں ملے گی\"",
+    "\"Online صرف ان لوگوں سے بات کرنا جو بہت اچھے لگیں، تعریف کریں اور تحفے بھی دیں\"",
+    "\"ایسا کچھ ہوا تو تمہارا فون ہمیشہ کے لیے لے لیا جائے گا\"",
+    "\"ایسی باتیں صرف اپنے قریبی دوستوں کو بتانا، امی ابو یا کسی بڑے کو بتانے کی ضرورت نہیں\""
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio کا اصول: online کوئی راز رکھنے کو کہے یا تصویر مانگے تو فوراً بتانا، اور میں غصہ نہیں کروں گا۔ آخری جملہ سب سے ضروری ہے: اگر بچے کو ڈر ہو کہ فون چھن جائے گا تو وہ نہیں بتائے گا۔ ایسا کچھ ہو تو مربی سے رابطہ کریں۔",
+   "sourceLesson": "P3-03",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "اس module کی activity \"پہلے اپنا موبائل\" میں ہمیں کیا کرنا تھا؟",
+   "questionEn": "In this module's activity, \"Our own phone first\", what were we asked to do?",
+   "options": [
+    "بچے کا فون check کر کے اس کا پورا screen time گھر کے سب بڑوں کو بتا دینا",
+    "اپنا فون ایک ہفتے کے لیے بالکل بند کر دینا",
+    "WhatsApp، Facebook اور TikTok اپنے فون سے ہمیشہ کے لیے ہٹا کر Journal میں لکھ دینا",
+    "Digital Wellbeing یا Screen Time میں اپنا کل کا استعمال دیکھ کر Parent Journal میں لکھنا"
+   ],
+   "correctIndex": 3,
+   "explanation": "بچے ہمارے عمل سے زیادہ سیکھتے ہیں، اس لیے activity ہم سے شروع ہوئی: Android پر Digital Wellbeing یا iPhone پر Screen Time میں کل کے گھنٹے دیکھ کر Parent Journal میں لکھنا، کسی کو بتانے کی ضرورت نہیں۔ کام والا ضروری استعمال شرمندگی کی بات نہیں۔",
+   "sourceLesson": "P3-04",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "Family media plan (flip chart 3.3) کے تین خانے کون سے ہیں؟",
+   "questionEn": "What are the three boxes of the family media plan (flip chart 3.3)?",
+   "options": [
+    "کون سی app، کتنے گھنٹے، اور کس دن",
+    "کب نہیں، کہاں نہیں، اور اس کی جگہ کیا",
+    "بچے کے لیے اصول، سزا، اور انعام",
+    "School کا وقت، کھیل کا وقت، اور سونے کا وقت"
+   ],
+   "correctIndex": 1,
+   "explanation": "تین خانے: کب نہیں (مثلاً کھانے کے وقت اور سونے سے ایک گھنٹہ پہلے)، کہاں نہیں (بستر اور دسترخوان پر نہیں، رات کو سب فون ایک ٹوکری میں)، اور اس کی جگہ کیا: swap list سے، اور پہلی چیز بچہ خود چنے۔ یہ plan پورے گھر کے لیے ہے، امی ابو سمیت۔",
+   "sourceLesson": "P3-05",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "آپ joint family میں رہتے ہیں۔ امی بچے سے فون لیتی ہیں تو چاچو اپنا فون دے دیتے ہیں۔ Audio کے مطابق کیا کرنا بہتر ہے؟",
+   "questionEn": "You live in a joint family. When the mother takes the phone away, the uncle hands over his own. According to the audio, what is better?",
+   "options": [
+    "گھر کے بڑوں سے پیار سے بات کریں، تاکہ سب ایک ہی plan پر چلیں",
+    "چاچو سے ناراض ہو کر ان سے بات چیت بند کر دیں",
+    "بچے کو سزا دیں کہ اس نے چاچو سے فون کیوں مانگا",
+    "Plan چھوڑ دیں، کیونکہ joint family میں ایسا کوئی plan کبھی چل ہی نہیں سکتا"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں کہا گیا کہ joint family میں اکثر ایسا ہوتا ہے، تو گھر کے بڑوں سے پیار سے بات کریں؛ plan شریکِ حیات یا گھر کے کسی بڑے کے ساتھ مل کر بنائیں۔ Module 8 میں اس پر تفصیل سے بات ہوگی۔",
+   "sourceLesson": "P3-05",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "Module 3 کا fortnight target کیا ہے؟",
+   "questionEn": "What is the fortnight target for Module 3?",
+   "options": [
+    "ہر روز صرف بچے کا فون ایک گھنٹے کے لیے لے کر الماری میں تالا لگا کر رکھنا",
+    "ہفتے میں ایک دن پورا خاندان صبح سے رات تک بغیر بجلی، بغیر فون اور بغیر TV کے گزارے",
+    "ہر روز ایک گھنٹہ پورا خاندان فون کے بغیر، امی ابو سمیت، swap list کی ایک چیز کے ساتھ",
+    "ہر روز بچے کو ایک گھنٹہ صرف تعلیمی videos دکھانا"
+   ],
+   "correctIndex": 2,
+   "explanation": "Target: ہر روز ایک گھنٹہ، پورا خاندان بغیر فون کے، امی ابو اور بچے سب، اور swap list سے ایک چیز تیار ہو۔ چودہ میں سے دس دن، ہلکے target والوں کے لیے سات۔ Tick بچہ لگائے گا، اور یہ بھی دیکھے گا کہ امی ابو نے فون تو نہیں اٹھایا!",
+   "sourceLesson": "P3-06",
+   "module": "Module 3: Screens and the Stolen Attention"
+  }
+ ],
+ "m4": [
+  {
+   "question": "بچہ کسی ایسے دوست سے کوئی بُری بات سیکھ کر آئے، تو اس module کے مطابق اصل حل کیا ہے؟",
+   "questionEn": "When a child picks up something bad from a friend, what does this module say is the real solution?",
+   "options": [
+    "بچے کو سب دوستوں سے کاٹ دینا، تاکہ کوئی خطرہ نہ رہے",
+    "بچے کو کسی کے گھر جانے سے ہمیشہ کے لیے منع کر دینا",
+    "بچے کو اچھے دوست چننا سکھانا، کیونکہ دوست اللہ کی بنائی ہوئی ضرورت ہیں",
+    "دوست کے امی ابو سے جا کر شکایت کرنا اور دونوں بچوں کی دوستی فوراً ختم کروانا"
+   ],
+   "correctIndex": 2,
+   "explanation": "ہمارا پہلا ردعمل ہوتا ہے \"اس سے دور رہو\"، مگر بچوں کو دوست چاہییں؛ یہ اللہ کی بنائی ہوئی ضرورت ہے۔ دوستوں سے کاٹ دینا حل نہیں، اچھے دوست چننا سکھانا حل ہے۔",
+   "sourceLesson": "P4-01",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "عطر والے اور بھٹی والے کی مثال میں نبی ﷺ نے ہمیں کیا سکھایا؟",
+   "questionEn": "In the example of the perfume seller and the blacksmith, what did the Prophet ﷺ teach us?",
+   "options": [
+    "اچھے اور بُرے ساتھی کا فرق پہچاننا",
+    "کسی کے پاس بھی نہیں بیٹھنا، اکیلے رہنا بہتر ہے",
+    "صرف امیر لوگوں سے دوستی رکھنا",
+    "بازار میں بچوں کو ساتھ نہیں لے جانا"
+   ],
+   "correctIndex": 0,
+   "explanation": "عطر والے کے پاس بیٹھو تو کچھ نہیں تو خوشبو آ جائے گی، بھٹی والے کے پاس دھوئیں کی بو (بخاری، مسلم)۔ نبی ﷺ نے یہ نہیں کہا کہ کسی کے پاس مت بیٹھو؛ آپ ﷺ نے فرق پہچاننا سکھایا (flip chart 4.1)۔",
+   "sourceLesson": "P4-02",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "Audio کے مطابق بچے کے دوستوں کے لیے گھر کا دروازہ کھلا رکھنے کا کیا فائدہ ہے؟",
+   "questionEn": "According to the audio, what is the benefit of keeping your door open to your child's friends?",
+   "options": [
+    "بچے کے دوست گھر کے کام میں ہاتھ بٹاتے ہیں",
+    "گھر میں رونق رہتی ہے، مہمان نوازی کا ثواب ملتا ہے اور بچے کے دوست بھی آپ کی عزت کرنے لگتے ہیں",
+    "بچہ اپنے دوستوں کے گھر جانا بالکل چھوڑ دیتا ہے، کیونکہ سب دوست آپ ہی کے گھر آ جاتے ہیں",
+    "آپ دوستوں کو دیکھتے سنتے ہیں، اور بچہ محسوس کرتا ہے کہ اس کے دوست قبول ہیں، تو چھپ کر نہیں ملتا"
+   ],
+   "correctIndex": 3,
+   "explanation": "جب دوست آپ کے گھر آ کر چائے biscuit کھاتے ہیں تو آپ انہیں دیکھتے اور ان کی باتیں سنتے ہیں۔ اور بچہ محسوس کرتا ہے کہ اس کے دوست قبول ہیں، تو وہ چھپ کر نہیں ملتا۔ Trainer نے کہا: یہ مذاق نہیں، حکمت ہے۔",
+   "sourceLesson": "P4-02",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "دوست زبردستی کچھ غلط دکھانا چاہیں اور آپ کا بچہ کہے \"ابو نے منع کیا ہے\"۔ Audio کے مطابق یہ کیسا ہے؟",
+   "questionEn": "Friends push your child to watch something wrong, and your child says \"Abbu has said no\". According to the audio, is that okay?",
+   "options": [
+    "یہ ٹھیک نہیں؛ بچے کو اپنی بات خود کرنی چاہیے، ماں باپ کا نام نہیں لینا چاہیے",
+    "بالکل ٹھیک ہے؛ بچے کو اجازت دیں کہ مشکل میں وہ آپ کا نام لے کر نکل آئے",
+    "یہ جھوٹ ہے، اس لیے بچے کو اس کی سزا ملنی چاہیے",
+    "یہ صرف بڑے بچوں کے لیے ٹھیک ہے، چھوٹوں کے لیے نہیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "\"نہ\" کہنا بچوں کے لیے بہت مشکل ہے۔ Audio نے آسان جملے سکھانے کو کہا، اور یہ بھی کہ \"ابو نے منع کیا ہے\" کہنا \"مجھے نہیں کرنا\" سے آسان ہے۔ بچے کو اجازت دیں کہ مشکل میں آپ کا نام لے کر نکل آئے (flip chart 4.3)۔",
+   "sourceLesson": "P4-03",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "Flip chart 4.3 پر لکھا وعدہ، جو ہم بچے سے کرتے ہیں، کیا ہے؟",
+   "questionEn": "What is the promise on flip chart 4.3 that we make to our child?",
+   "options": [
+    "\"اگر تم نے کوئی بھی غلطی کی، تو میں تمہارا فون پورے ایک مہینے کے لیے لے لوں گا\"",
+    "\"غلطی ہو، کوئی غلط دکھائے یا تنگ کرے، مجھے بتانا؛ سزا نہیں، پہلے بات، پھر مل کر حل\"",
+    "\"اگر تم ہمیشہ سچ بولو گے، تو میں تمہیں ہر مہینے ایک نیا کھلونا لے کر دوں گا\"",
+    "\"تم جو بھی کرو، میں کبھی نہیں پوچھوں گا\""
+   ],
+   "correctIndex": 1,
+   "explanation": "یہ وعدہ اس لیے کہ اگر بچے نے بتایا اور جواب میں تھپڑ ملا اور فون چھن گیا، تو اگلی بار جب کچھ بڑا ہوگا وہ خاموش رہے گا۔ اصول رہیں گے، مگر سچ بولنے کی ہمت کو ہمیشہ انعام ملنا چاہیے۔",
+   "sourceLesson": "P4-03",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "ملتان میں آٹھ سال کی عائشہ اپنی پکی سہیلی سے سیکھے ہوئے بُرے الفاظ گھر میں بول رہی ہے۔ Audio کے مشورے کے مطابق پہلا قدم کیا ہے؟",
+   "questionEn": "In Multan, eight-year-old Ayesha is using bad words at home that she picked up from her best friend. According to the audio's advice, what is the first step?",
+   "options": [
+    "فوراً سہیلی سے دوستی ختم کروا دیں اور اس کی امی کو فون کر کے شکایت کریں",
+    "سب گھر والوں کے سامنے سختی سے ڈانٹیں، تاکہ وہ یہ لفظ دوبارہ کبھی منہ سے نہ نکالے",
+    "چپ رہیں، کچھ دن میں وہ خود بھول جائے گی",
+    "غصہ نہیں، سوال: \"اس لفظ کا مطلب پتہ ہے؟\" پھر سمجھائیں کہ ہمارے گھر میں یہ کیوں نہیں بولتے"
+   ],
+   "correctIndex": 3,
+   "explanation": "مشورہ: پہلے غصہ نہیں، سوال؛ اکثر بچوں کو مطلب پتہ ہی نہیں ہوتا۔ پھر سمجھائیں کہ ہمارے گھر میں یہ لفظ کیوں نہیں بولتے۔ دوستی ختم کروانے کی ضرورت نہیں؛ اس سہیلی کو ایک دن گھر بلا لیں۔",
+   "sourceLesson": "P4-04",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "پنڈی میں بارہ سال کا عمر کہتا ہے: \"ابو، بھائی جان نے فون پر کچھ دکھایا تھا، مجھے اچھا نہیں لگا۔\" Audio کے مطابق آپ کا پہلا جواب کیا ہونا چاہیے؟",
+   "questionEn": "In Pindi, twelve-year-old Umar says: \"Abbu, bhai jan showed me something on his phone, I didn't like it.\" According to the audio, what should your first response be?",
+   "options": [
+    "\"تم نے بتایا، مجھے تم پر فخر ہے\"، پھر آرام سے پوچھیں، اور یقین دلائیں کہ غلطی اس کی نہیں",
+    "\"تم وہاں کیوں بیٹھے تھے؟ آج سے cousins کے پاس جانا اور ان کے ساتھ کھیلنا بالکل بند\"",
+    "فوراً اس کا فون لے لیں، تاکہ وہ دوبارہ کچھ نہ دیکھے",
+    "بات ٹال دیں، کیونکہ ایسی باتوں پر اس عمر کے بچوں سے کھل کر بات نہیں کرنی چاہیے"
+   ],
+   "correctIndex": 0,
+   "explanation": "سب سے پہلے شکریہ: \"تم نے مجھے بتایا، مجھے تم پر فخر ہے۔\" بتانے پر سزا نہیں۔ پھر آرام سے پوچھیں کہ کیا دیکھا، اور یقین دلائیں کہ اس کی غلطی نہیں تھی۔ معاملہ سنگین ہو تو خاموشی سے مربی سے رابطہ کریں۔",
+   "sourceLesson": "P4-05",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "کوئٹہ کے school سے فون آتا ہے کہ آپ کا دس سال کا بیٹا شاہ زیب دوستوں کے ساتھ ایک نئے لڑکے کا مذاق اڑاتا ہے اور اس کا lunch چھین لیتا ہے۔ Audio کے مطابق کیا کرنا چاہیے؟",
+   "questionEn": "Your ten-year-old son Shahzeb's school in Quetta calls: he and his friends mock a new boy and snatch his lunch. According to the audio, what should you do?",
+   "options": [
+    "School والوں کو بتائیں کہ آپ کا بیٹا گھر میں بہت اچھا ہے، ضرور کوئی غلط فہمی ہوئی ہے",
+    "گھر آتے ہی اسے مار کر سبق سکھائیں",
+    "دفاع نہیں، مار نہیں؛ پوچھیں \"کوئی تمہارے ساتھ ایسا کرے تو؟\"، پھر معافی اور نقصان کی تلافی",
+    "کچھ نہ کہیں، کیونکہ اس عمر کے لڑکے ایسا کرتے ہی ہیں اور خود بڑے ہو کر سیکھ جاتے ہیں"
+   ],
+   "correctIndex": 2,
+   "explanation": "یہ سب سے مشکل ہے کیونکہ اپنا بچہ غلطی پر ہے۔ دفاع نہ کریں، اور مار بھی نہیں۔ پوچھیں کہ اس کے ساتھ ایسا ہو تو کیسا لگے گا، پھر اس لڑکے سے معافی اور نقصان کی تلافی۔ ظلم کرنے والے بچے کو بھی مدد چاہیے۔",
+   "sourceLesson": "P4-05",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "اگر آپ کا بچہ bullying ہوتے صرف دیکھ رہا ہو، تو Audio کے مطابق اسے کیا سکھائیں؟",
+   "questionEn": "If your child is only watching while bullying happens, what does the audio say to teach them?",
+   "options": [
+    "دوسروں کے معاملے میں نہیں پڑنا چاہیے، چپ رہنا ہی بہتر ہے",
+    "Bully کرنے والے بچوں سے خود لڑائی کر لے",
+    "اس جگہ سے بھاگ جائے اور کسی کو کچھ نہ بتائے",
+    "خاموش رہنا بھی ایک فیصلہ ہے؛ کسی بڑے کو بتانا بہادری ہے"
+   ],
+   "correctIndex": 3,
+   "explanation": "Audio نے کہا: بچے کو سکھائیں کہ خاموش رہنا بھی ایک فیصلہ ہے۔ کسی بڑے کو بتانا بہادری ہے۔",
+   "sourceLesson": "P4-05",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "Module 4 کا fortnight target کیا ہے؟",
+   "questionEn": "What is the fortnight target for Module 4?",
+   "options": [
+    "بچے کے تین سب سے قریبی دوستوں کے نام، اور ہر ایک کی ایک بات، باتوں باتوں میں جاننا",
+    "بچے کے ہر دوست کے گھر جا کر اس کے امی ابو سے ملنا",
+    "بچے کا فون روز check کر کے دیکھنا کہ وہ کس کس سے بات کرتا ہے اور کیا لکھتا ہے",
+    "بچے کے لیے صرف دو اچھے دوست خود چن کر باقی سب سے ملنا جلنا بند کروا دینا"
+   ],
+   "correctIndex": 0,
+   "explanation": "Target: بچے کے تین قریبی دوستوں کے نام، اور ہر ایک کے بارے میں ایک بات (پسندیدہ کھیل، گھر میں کون کون ہے، کس بات پر ہنستا ہے)۔ پوچھ گچھ کی طرح نہیں، کھانے پر یا family hour میں۔ ہلکے target والوں کے لیے دو دوست کافی ہیں (flip chart 4.2)۔",
+   "sourceLesson": "P4-06",
+   "module": "Module 4: Friends and Peer Pressure"
+  }
+ ],
+ "m5": [
+  {
+   "question": "Result والے دن امی نے بیٹے سے کہا: \"دیکھو خالہ کی سارہ کے کتنے آئے ہیں!\" Audio کے مطابق امی نے یہ بات زیادہ تر کیوں کہی؟",
+   "questionEn": "On result day the mother said, \"Look how many marks Khala's Sara got!\" According to the audio, why did she mostly say it?",
+   "options": [
+    "کیونکہ وہ بیٹے سے سخت ناراض تھیں اور سب کے سامنے اسے سزا دے کر سبق سکھانا چاہتی تھیں",
+    "فکر میں، کیونکہ وہ چاہتی تھیں بیٹا آگے بڑھے، اور خاندان کے سامنے کچھ شرمندگی بھی تھی",
+    "کیونکہ school نے والدین کو مقابلہ کروانے کا کہا تھا",
+    "کیونکہ سارہ کی امی نے صبح ہی خاندان کے WhatsApp group میں سب کے سامنے انہیں طعنہ دیا تھا"
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio میں بتایا گیا کہ امی نے یہ غصے میں نہیں، فکر میں کہا تھا۔ وہ چاہتی تھیں بیٹا آگے بڑھے، اور شاید خاندان کے سامنے انہیں بھی تھوڑی شرمندگی ہوئی۔",
+   "sourceLesson": "P5-01",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "جب ہم کہتے ہیں \"تمہارا بھائی تو کبھی ایسا نہیں کرتا تھا\"، تو flip chart 5.1 کے مطابق بچہ کیا سنتا ہے؟",
+   "questionEn": "When we say \"Your brother never used to do this\", what does the child hear, according to flip chart 5.1?",
+   "options": [
+    "\"مجھے بھائی جیسا بننے کی کوشش کرنی چاہیے\"",
+    "\"امی ابو مجھ سے بہت امید رکھتے ہیں\"",
+    "\"بھائی مجھ سے بڑا ہے، اس لیے بہتر ہے\"",
+    "\"امی ابو کو بھائی زیادہ پیارا ہے\""
+   ],
+   "correctIndex": 3,
+   "explanation": "Flip chart 5.1 میں بتایا گیا: ہم کہتے ہیں \"تمہارا بھائی تو کبھی ایسا نہیں کرتا تھا\"، اور بچہ سنتا ہے \"امی ابو کو بھائی زیادہ پیارا ہے۔\"",
+   "sourceLesson": "P5-02",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "اس fortnight کے target میں، اگر غلطی سے مقابلے والا جملہ منہ سے نکل جائے تو کیا کرنا ہے؟",
+   "questionEn": "In this fortnight's target, what should you do if a comparison sentence slips out by mistake?",
+   "options": [
+    "رک جائیں، اور مسکرا کر کہیں: \"نہیں، میں یہ نہیں کہنا چاہتا تھا\"",
+    "خاموش رہیں تاکہ بات بڑی نہ ہو",
+    "بچے کو بعد میں کوئی تحفہ دے دیں",
+    "اگلے دن اسی بچے کی سب کے سامنے دو بار تعریف کریں تاکہ حساب برابر ہو جائے"
+   ],
+   "correctIndex": 0,
+   "explanation": "Target کا دوسرا حصہ ہے: کوئی مقابلے والا جملہ نہیں۔ اگر منہ سے نکل جائے تو رک جائیں اور مسکرا کر کہیں: \"نہیں، میں یہ نہیں کہنا چاہتا تھا۔\"",
+   "sourceLesson": "P5-06",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "فطرت کے باغ (flip chart 5.2) اور صحابہ کی مثالوں سے کیا سبق ملتا ہے؟",
+   "questionEn": "What is the lesson of the fitrah garden (flip chart 5.2) and the examples of the Sahaba?",
+   "options": [
+    "سب بچوں کو ایک جیسی خوبیاں سیکھنی چاہییں",
+    "جو بچہ پیچھے ہو اسے آگے والے کی مثال دینی چاہیے",
+    "ہر بچہ اللہ کا الگ بیج ہے؛ کام اسے دوسرا بنانا نہیں، اس کا بہترین بنانا ہے",
+    "خوبیاں صرف بڑے ہو کر ظاہر ہوتی ہیں، اس لیے ابھی صبر سے انتظار کرنا اور کچھ نہ کہنا چاہیے"
+   ],
+   "correctIndex": 2,
+   "explanation": "باغ میں گلاب، آم، گندم اور سورج مکھی ہیں، اور نبی ﷺ نے ہر صحابی کو اس کی اپنی خوبی سے پہچانا۔ ہر بچہ اللہ کا الگ بیج ہے؛ اسے دوسرا نہیں، اس کا بہترین بنانا ہے۔",
+   "sourceLesson": "P5-02",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "شادی میں کسی آنٹی کے سوال کے بعد آپ کے دل میں آواز آتی ہے: \"میرا بچہ پیچھے رہ گیا، یعنی میں پیچھے رہ گیا۔\" Audio کے مطابق کیا کرنا چاہیے؟",
+   "questionEn": "After an aunty's question at a wedding, a voice in your heart says: \"My child is behind, so I am behind.\" What does the audio suggest?",
+   "options": [
+    "یہ پہچانیں کہ یہ ہمارا اپنا مقابلہ ہے، اور اس کا بوجھ بچے کے کندھوں پر نہ ڈالیں",
+    "بچے کو فوراً زیادہ tuition میں داخل کروا دیں تاکہ اگلی بار کوئی آنٹی سوال نہ کرے",
+    "ایسی شادیوں اور محفلوں میں جانا ہی چھوڑ دیں جہاں لوگ بچوں کے نمبروں کی باتیں کرتے ہیں",
+    "بچے کو صاف بتا دیں کہ خاندان والے اس کے بارے میں کیا کہتے ہیں، تاکہ اسے فکر ہو"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں کہا گیا کہ ایسا محسوس کرنے سے آپ بُرے ماں باپ نہیں، انسان ہیں۔ بس اسے پہچانیں، اور اس بوجھ کو بچے کے کندھوں پر نہ ڈالیں۔",
+   "sourceLesson": "P5-03",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "نعمان بن بشیرؓ کے تحفے والے واقعے کے مطابق، اولاد میں انصاف کا کیا مطلب ہے؟",
+   "questionEn": "Based on the story of Nu'man ibn Bashir's gift, what does justice between children mean?",
+   "options": [
+    "ہر بچے کو ہر چیز بالکل ایک جیسی اور ایک ہی مقدار میں ملے",
+    "بڑے بچے کو ہمیشہ زیادہ حصہ ملے، کیونکہ وہ زیادہ ذمہ دار ہے اور گھر کا بوجھ اٹھاتا ہے",
+    "صرف بیٹوں اور بیٹیوں میں برابری ہو، باقی معاملات میں نہیں",
+    "سب بالکل ایک جیسا ضروری نہیں، مگر کسی بچے کو یہ محسوس نہ ہو کہ وہ کم پیارا ہے"
+   ],
+   "correctIndex": 3,
+   "explanation": "نبی ﷺ نے فرمایا: \"اللہ سے ڈرو اور اپنی اولاد کے درمیان انصاف کرو\" (بخاری و مسلم)۔ Audio کے مطابق چھوٹے یا بیمار کو زیادہ وقت چاہیے، مگر کسی بچے کو یہ نہ لگے کہ وہ کم پیارا ہے۔",
+   "sourceLesson": "P5-03",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "بچے نے math کا ایک مشکل سوال تین بار کوشش کر کے حل کیا۔ Audio کے مطابق تعریف کا بہتر طریقہ کون سا ہے؟",
+   "questionEn": "Your child solved a hard maths question after trying three times. According to the audio, which is the better way to praise?",
+   "options": [
+    "\"تم بہت ذہین ہو، تمہیں تو سب آتا ہے\"",
+    "\"تم نے ہار نہیں مانی، تین بار کوشش کی، یہ زبردست تھا\"",
+    "\"دیکھا، تم بھی سارہ جتنے اچھے ہو سکتے ہو، بس تھوڑی اور محنت کرو\"",
+    "\"شاباش، اب اگلی بار پورے نمبر لانا\""
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio میں کہا گیا کہ نمبروں یا \"ذہین\" کی نہیں، محنت کی تعریف کریں۔ \"ذہین\" بچے کے بس میں نہیں، مگر محنت اس کے بس میں ہے، اور اگلی بار وہ پھر محنت کر سکتا ہے۔",
+   "sourceLesson": "P5-04",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "اگر مقابلہ کرنا ہی ہو تو audio کے مطابق بچے کا مقابلہ کس سے کریں؟",
+   "questionEn": "If you must compare, who does the audio say the child should be compared with?",
+   "options": [
+    "کلاس کے سب سے اچھے بچے سے، تاکہ اسے حوصلہ ملے",
+    "اپنے بہن بھائیوں سے، کیونکہ وہ ایک ہی گھر میں پلے ہیں",
+    "اپنے ہی پچھلے کام سے، جیسے \"پچھلے مہینے دو صفحے، اب پانچ\"",
+    "اپنے بچپن سے، تاکہ بچہ جانے کہ آپ نے اس عمر میں کتنی زیادہ محنت کی"
+   ],
+   "correctIndex": 2,
+   "explanation": "Audio کے مطابق مقابلہ کرنا ہو تو بچے کا اس کے اپنے پچھلے کام سے کریں: \"پچھلے مہینے تم دو صفحے پڑھتے تھے، اب پانچ پڑھتے ہو۔\"",
+   "sourceLesson": "P5-04",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "خوبیوں کے card (flip chart 5.3) پر کون سی مثال صحیح طریقے سے لکھی گئی ہے؟",
+   "questionEn": "Which example is written the right way on the strengths card (flip chart 5.3)?",
+   "options": [
+    "\"وہ بہت اچھی بچی ہے، سب اسے پسند کرتے ہیں اور ہر کوئی اس کی تعریف کرتا ہے۔\"",
+    "\"وہ ہمیشہ بہت فرماں بردار رہتی ہے۔\"",
+    "\"وہ مہربان ہے۔ منگل کو اس نے school میں نئی لڑکی کے ساتھ lunch بانٹا۔\"",
+    "\"وہ اپنی کزن سے زیادہ سمجھدار ہے، اور کلاس میں بھی سب سے آگے رہتی ہے۔\""
+   ],
+   "correctIndex": 2,
+   "explanation": "Audio کے مطابق ہر خوبی specific ہو، سچی ہو (آپ نے خود دیکھی ہو) اور اسی ہفتے کی ہو۔ \"وہ اچھی بچی ہے\" سچ ہے مگر کچھ نہیں بتاتا۔",
+   "sourceLesson": "P5-05",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "آپ کے ایک بچے سے آج کل بہت بحث ہوتی ہے اور وہ ضدی لگتا ہے۔ خوبیوں کے card کے بارے میں audio کیا کہتا ہے؟",
+   "questionEn": "One of your children argues a lot and seems stubborn these days. What does the audio say about the strengths card for this child?",
+   "options": [
+    "اس بچے کے لیے یہ activity سب سے ضروری ہے؛ ضد کے پیچھے اکثر پکا ارادہ چھپا ہوتا ہے",
+    "اس بچے کو فی الحال چھوڑ دیں؛ جب اس کا رویہ ٹھیک ہو جائے، تب اس کے لیے card بنائیں",
+    "اس بچے کے card پر خوبیوں کے ساتھ اس کی کمزوریاں بھی لکھیں، تاکہ اسے اپنی اصلاح کا پتہ چلے",
+    "اس کی جگہ کسی دوسرے بچے کی تین خوبیاں لکھ دیں"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں کہا گیا کہ جس بچے کی خوبیاں ڈھونڈنا مشکل لگے، اسی کے لیے یہ activity سب سے ضروری ہے۔ ضدی بچہ پکے ارادے والا، بہت سوال کرنے والا جاننے کا شوقین ہوتا ہے۔",
+   "sourceLesson": "P5-05",
+   "module": "Module 5: Stop the Comparison"
+  }
+ ],
+ "m6": [
+  {
+   "question": "Audio کے مطابق دس گیارہ سال کی عمر تک پہنچتے پہنچتے مار اور چیخ کا کیا اثر ہوتا ہے؟",
+   "questionEn": "According to the audio, what happens with hitting and shouting as a child reaches ten or eleven?",
+   "options": [
+    "بچہ پہلے سے زیادہ فرماں بردار ہو جاتا ہے اور آہستہ آہستہ ہر بات بغیر بحث کے ماننے لگتا ہے",
+    "یہ کام کرنا چھوڑ دیتی ہے؛ بچہ ڈھیٹ ہو جاتا ہے، جھوٹ سیکھ لیتا ہے، یا اندر سے ٹوٹ جاتا ہے",
+    "اس کا اثر صرف لڑکوں پر کم ہوتا ہے، لڑکیوں پر نہیں",
+    "بچہ سمجھ جاتا ہے کہ homework کیوں اہم ہے"
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio میں کہا گیا کہ مار اور چیخ چھوٹے بچے پر کچھ دیر کام کرتی ہے، مگر دس گیارہ سال تک یہ کام کرنا چھوڑ دیتی ہے: بچہ ڈھیٹ ہو جاتا ہے، جھوٹ سیکھ لیتا ہے، یا اندر سے ٹوٹ جاتا ہے۔",
+   "sourceLesson": "P6-01",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "جب انسؓ کام پر جانے کے بجائے بچوں کے ساتھ کھیلنے لگے تو نبی ﷺ نے کیا کیا؟",
+   "questionEn": "When Anas started playing with other children instead of going on the errand, what did the Prophet ﷺ do?",
+   "options": [
+    "سب کے سامنے انہیں ڈانٹا تاکہ دوسرے بچے بھی سیکھیں",
+    "کام کسی اور کو دے دیا اور انسؓ سے اس بارے میں کچھ بھی نہ کہا",
+    "مسکرا کر ان کی گردن پکڑی اور پیار سے کام یاد دلایا",
+    "انہیں اگلے دن کھیلنے سے منع کر دیا"
+   ],
+   "correctIndex": 2,
+   "explanation": "صحیح مسلم کے مطابق آپ ﷺ پیچھے سے آئے، مسکرا کر گردن پکڑی اور کہا: \"اے انیس، جہاں بھیجا تھا وہاں گئے؟\" نہ چیخ، نہ تھپڑ، نہ لمبا lecture۔",
+   "sourceLesson": "P6-02",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "Audio کے مطابق \"نرمی\" کا صحیح مطلب کیا ہے؟",
+   "questionEn": "According to the audio, what does \"gentleness\" really mean?",
+   "options": [
+    "اصول پکا، لہجہ نرم",
+    "بچے کی ہر بات مان لینا تاکہ وہ ناراض نہ ہو",
+    "گھر میں کوئی اصول نہ رکھنا",
+    "صرف چھوٹے بچوں کے ساتھ نرمی، بڑوں کے ساتھ سختی"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں کہا گیا کہ نرمی کا مطلب یہ نہیں کہ کوئی اصول نہیں۔ آپ ﷺ نے انس کو کام یاد دلایا، بات چھوڑی نہیں۔ نرمی کا مطلب ہے: اصول پکا، لہجہ نرم۔",
+   "sourceLesson": "P6-02",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "آپ جانتے ہیں کہ شام سات بجے، دن بھر کی تھکن کے بعد، آپ کا صبر ختم ہو جاتا ہے، اور اسی وقت homework پر روز جھگڑا ہوتا ہے۔ Audio کیا مشورہ دیتا ہے؟",
+   "questionEn": "You know your patience runs out at 7 pm after a long day, which is exactly when the daily homework fight happens. What does the audio suggest?",
+   "options": [
+    "بچے کو بتا دیں کہ سات بجے آپ کو تنگ نہ کرے",
+    "homework کی ذمہ داری مکمل طور پر بچے پر چھوڑ دیں",
+    "سات بجے سے پہلے چائے پی لیں تاکہ غصہ نہ آئے",
+    "اپنی تھکن پہچانیں، اور homework کا وقت بدل دیں"
+   ],
+   "correctIndex": 3,
+   "explanation": "Audio کے مطابق پہلا قدم اپنی تھکن پہچاننا ہے: اگر شام سات بجے آپ کا صبر ختم ہو جاتا ہے تو homework کا وقت بدل دیں۔",
+   "sourceLesson": "P6-03",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "رکنے کے plan (flip chart 6.2) کے پانچ قدموں کی صحیح ترتیب کون سی ہے؟",
+   "questionEn": "Which is the correct order of the five steps of the pause plan (flip chart 6.2)?",
+   "options": [
+    "بیٹھیں، ڈانٹیں، خاموشی، اعوذ باللہ، معافی",
+    "رکیں، اعوذ باللہ پڑھیں، بیٹھ جائیں یا وضو، خاموشی، واپس آ کر بات",
+    "اعوذ باللہ، بچے کو کمرے میں بھیجیں، خاموشی، پھر سزا، اور آخر میں بات",
+    "خاموشی، ابو کو بتائیں، رکیں، وضو، نتیجہ"
+   ],
+   "correctIndex": 1,
+   "explanation": "Flip chart 6.2: پہلا رکیں، دوسرا اعوذ باللہ من الشیطان الرجیم، تیسرا بیٹھ جائیں یا وضو، چوتھا خاموشی، پانچواں واپس آ کر بات۔",
+   "sourceLesson": "P6-03",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "Audio کے مطابق \"اللہ تمہیں جہنم میں ڈالے گا!\" جیسی دھمکی کا بچے پر کیا اثر ہوتا ہے؟",
+   "questionEn": "According to the audio, what effect does a threat like \"Allah will put you in Hell!\" have on a child?",
+   "options": [
+    "بچہ اللہ سے محبت نہیں، ڈر سیکھتا ہے",
+    "بچہ نماز کا پابند ہو جاتا ہے",
+    "بچہ سمجھ جاتا ہے کہ غلطی کتنی بڑی ہے",
+    "اس کا کوئی خاص اثر نہیں، بچہ جلد بھول جاتا ہے"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں کہا گیا کہ جب ہم اللہ کو دھمکی بنا لیتے ہیں تو بچہ اللہ سے محبت نہیں، ڈر سیکھتا ہے، جبکہ ہم چاہتے ہیں کہ بچے اللہ کو رحمٰن اور رحیم کے طور پر جانیں۔",
+   "sourceLesson": "P6-04",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "بچہ بات نہیں مان رہا اور آپ کے منہ سے نکلنے والا ہے: \"آنے دو ابو کو، بتاتی ہوں!\" Flip chart 6.1 کے مطابق اس کی جگہ کیا کہیں؟",
+   "questionEn": "Your child isn't listening and you're about to say: \"Wait till your father comes home!\" According to flip chart 6.1, what could you say instead?",
+   "options": [
+    "\"اگر بات نہ مانی تو تمہیں چھوڑ کر چلی جاؤں گی\"",
+    "\"ٹھیک ہے، جو مرضی کرو، مجھے کیا\"",
+    "\"Homework ختم ہوگا تو cartoon لگے گا\"",
+    "\"پولیس والا آ کر لے جائے گا\""
+   ],
+   "correctIndex": 2,
+   "explanation": "Flip chart 6.1 میں \"آنے دو ابو کو!\" کی جگہ پُرسکون حد دی گئی ہے: \"Homework ختم ہوگا تو cartoon لگے گا۔\" اس سے ابو جج نہیں بنتے اور بچے کا بھروسہ نہیں ٹوٹتا۔",
+   "sourceLesson": "P6-04",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "گھر میں امی ایک بات پر \"نہیں\" کہتی ہیں اور دادی \"ہاں\"۔ Flip chart 6.3 کے مطابق اس سے بچہ کیا سیکھتا ہے؟",
+   "questionEn": "At home, the mother says \"no\" to something and the grandmother says \"yes\". According to flip chart 6.3, what does the child learn?",
+   "options": [
+    "کہ دادی امی سے زیادہ پیار کرتی ہیں",
+    "کہ اصول صرف بڑوں کے لیے ہوتے ہیں",
+    "کہ ہر سوال پر دونوں سے پوچھنا چاہیے",
+    "کہ \"ہاں\" کے لیے کس کے پاس جانا ہے"
+   ],
+   "correctIndex": 3,
+   "explanation": "Flip chart 6.3: کم اصول (تین سے پانچ) اور ہر بڑا ایک ہی جواب دے۔ اگر امی \"نہیں\" کہیں اور دادی \"ہاں\" تو بچہ سیکھ جاتا ہے کہ کس کے پاس جانا ہے۔",
+   "sourceLesson": "P6-05",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "اس fortnight کے target پر tick کیسے لگے گا؟",
+   "questionEn": "How is this fortnight's target ticked?",
+   "options": [
+    "مربی ہر ہفتے فون کر کے پوچھیں گے کہ غصہ کتنی بار آیا، اور خود اپنے register میں tick لگائیں گے",
+    "آپ بچے کو بتائیں گے کہ آج غصہ آیا اور آپ نے رکنے کا plan استعمال کیا؛ tick بچہ لگائے گا",
+    "آپ خود چپکے سے tick لگائیں گے تاکہ بچے کو پتہ نہ چلے",
+    "ہر شام بچہ بتائے گا کہ آج اسے ڈانٹ پڑی یا نہیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "Audio کے مطابق آپ بچے کو بتائیں گے: \"آج امی کو غصہ آیا تھا، میں نے رکنے کا plan استعمال کیا\"، اور بچہ tick لگائے گا۔ بچوں کو یہ سن کر بہت اچھا لگتا ہے۔",
+   "sourceLesson": "P6-06",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "کل آپ نے غصے میں بچے کو بہت زیادہ ڈانٹ دیا۔ Audio کے مطابق اب کیا کرنا بہتر ہے؟",
+   "questionEn": "Yesterday you scolded your child far too harshly in anger. According to the audio, what is best to do now?",
+   "options": [
+    "بچے سے معافی مانگیں؛ یہ کمزوری نہیں، بچہ سیکھتا ہے کہ غلطی ماننا بڑوں کا کام ہے",
+    "بات کو بھول جائیں، کیونکہ بچے جلدی بھول جاتے ہیں اور پرانی بات چھیڑنے سے دکھ بڑھتا ہے",
+    "بچے کو کوئی تحفہ دے دیں تاکہ وہ خوش ہو جائے",
+    "بچے کو آرام سے سمجھائیں کہ غلطی اسی کی تھی، اسی لیے ڈانٹ پڑی، تاکہ آئندہ خیال رکھے"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں کہا گیا کہ اگر غصے میں زیادہ کہہ دیا تو بچے سے معافی مانگیں: \"مجھے ایسا نہیں کرنا چاہیے تھا، sorry۔\" یہ کمزوری نہیں؛ بچہ بھی معافی مانگنا سیکھے گا۔",
+   "sourceLesson": "P6-05",
+   "module": "Module 6: Discipline with Dignity"
+  }
+ ],
+ "m7": [
+  {
+   "question": "اس module کے مطابق گھر میں دین کس طرح آنا چاہیے؟",
+   "questionEn": "According to this module, how should deen come into the home?",
+   "options": [
+    "سختی اور ڈر سے، تاکہ بچہ سنجیدہ رہے",
+    "محبت سے، ڈر سے نہیں",
+    "صرف مدرسے اور قاری صاحب کے ذریعے",
+    "بچہ بڑا ہو جائے تو خود سمجھ جائے گا"
+   ],
+   "correctIndex": 1,
+   "explanation": "خلاصے میں کہا گیا: دین محبت سے آتا ہے، ڈر سے نہیں۔ ہم میں سے بہت سوں نے قرآن چھڑی کے سائے میں پڑھا، اور کچھ بچوں کے دل میں ڈر بیٹھ گیا۔",
+   "sourceLesson": "P7-01",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "سات سے دس سال کے تین سالوں میں، روز پانچ نمازوں کے حساب سے، بچے کو تقریباً کتنی بار پیار سے نماز کا کہنا اور ساتھ پڑھنا ہوتا ہے؟",
+   "questionEn": "Between ages seven and ten, with five prayers a day, roughly how many loving reminders does a child get?",
+   "options": [
+    "تقریباً سو بار",
+    "تقریباً پانچ سو بار",
+    "صرف دسویں سالگرہ پر ایک بار",
+    "پانچ ہزار سے زیادہ بار"
+   ],
+   "correctIndex": 3,
+   "explanation": "حدیث کا پہلا حصہ: سات سال پر نماز کا کہو۔ سات سے دس تک تین سال، روز پانچ نمازیں، یعنی پانچ ہزار سے زیادہ بار پیار سے کہنا، ساتھ پڑھنا، یاد دلانا۔ اس کے بعد سختی کی بات آتی ہے۔",
+   "sourceLesson": "P7-02",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "Audio کے مطابق، اس عمر کے بچے کے لیے نماز میں \"سختی\" کا مطلب آج بہت سے علما کیا بتاتے ہیں؟",
+   "questionEn": "According to the audio, what do many scholars today say \"firmness\" about prayer means for a child of this age?",
+   "options": [
+    "پکا اصول، اور اس کا نتیجہ",
+    "غصے میں ہلکی سی مار",
+    "کچھ دن بچے سے بات چیت بند کر دینا",
+    "دوسرے بچوں کے سامنے ڈانٹنا"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio میں بتایا گیا کہ اس سے مراد ایسی سزا نہیں جو تکلیف دے، چہرے پر ہو یا غصے میں ہو؛ بہت سے علما کہتے ہیں کہ اس عمر میں سختی کا مطلب پکا اصول اور اس کا نتیجہ ہے، جیسا پچھلے module میں سیکھا۔",
+   "sourceLesson": "P7-02",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "آپ کا سات سال کا بیٹا آپ کے ساتھ نماز کے لیے کھڑا ہوا، مگر آدھی نماز میں بھاگ گیا۔ آپ کیا کریں گے؟",
+   "questionEn": "Your seven-year-old stands to pray with you but runs off halfway. What will you do?",
+   "options": [
+    "نماز کے بعد اسے سزا دیں تاکہ آئندہ نہ بھاگے",
+    "اگلے دن سے اسے ساتھ کھڑا کرنا چھوڑ دیں",
+    "کوئی بات نہیں؛ اسے پیار سے ساتھ کھڑا کرتے رہیں",
+    "اسے بتائیں کہ اب اس کی نماز کبھی قبول نہیں ہوگی"
+   ],
+   "correctIndex": 2,
+   "explanation": "سات سال کی عمر پیار سے سکھانے کی ہے: ساتھ کھڑا کریں، اور اگر آدھی نماز میں بھاگ جائے تو کوئی بات نہیں۔ نبی ﷺ کے نواسے سجدے میں آپ ﷺ کی پیٹھ پر چڑھ جاتے تھے۔",
+   "sourceLesson": "P7-02",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "اگر آپ خود نماز میں باقاعدہ نہیں ہیں، تو audio کا مشورہ کیا ہے؟",
+   "questionEn": "If you are not regular in prayer yourself, what does the audio advise?",
+   "options": [
+    "پہلے خود پکے ہو جائیں، پھر بچے سے نماز کی بات کریں، ورنہ اثر نہیں ہوگا",
+    "بچے کو صرف مدرسے کے حوالے کر دیں",
+    "شرمندہ ہو کر رکیں نہیں، بچے کے ساتھ مل کر شروع کریں",
+    "بچے سے نماز کی بات ہی نہ کریں"
+   ],
+   "correctIndex": 2,
+   "explanation": "Audio نے کہا: شرمندہ ہو کر رکیں نہیں۔ بچے کے ساتھ شروع کریں: \"آؤ، آج سے ہم دونوں عشاء ساتھ پڑھیں گے۔\" یہ آپ دونوں کے لیے نیا آغاز ہو سکتا ہے۔",
+   "sourceLesson": "P7-02",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "آپ کی بیٹی حفظ کر رہی ہے۔ آج کل وہ چڑچڑی ہے، نیند پوری نہیں ہوتی، اور کھیلنا بھول گئی ہے۔ آپ کیا کریں گے؟",
+   "questionEn": "Your daughter is doing hifz. Lately she is irritable, short of sleep and has stopped playing. What will you do?",
+   "options": [
+    "مزید target کی جگہ تھوڑا آرام دیں، کھیلنے دیں، اور بتائیں کہ آپ کو اس پر فخر ہے",
+    "سبق کی مقدار بڑھا دیں تاکہ حفظ جلدی مکمل ہو اور وہ جلد اس مشکل وقت سے نکل جائے",
+    "حفظ مکمل ہونے تک کھیل بالکل بند کر دیں",
+    "اسے اپنی اس کزن کی مثال دیں جو اس سے کم عمر میں جلدی حافظ بن گئی تھی"
+   ],
+   "correctIndex": 0,
+   "explanation": "Audio کے مطابق ایسے بچے کو مزید target نہیں، تھوڑا آرام چاہیے۔ اسے کھیلنے دیں، اور بتائیں کہ آپ کو اس پر فخر ہے، چاہے آج سبق کم ہوا۔",
+   "sourceLesson": "P7-03",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "جو شخص قرآن اٹک اٹک کر پڑھتا ہے اور اس کے لیے مشکل ہے، حدیث کے مطابق اس کے لیے کیا ہے؟",
+   "questionEn": "According to the hadith, what is there for someone who reads the Qur'an haltingly and finds it hard?",
+   "options": [
+    "کوئی اجر نہیں جب تک صحیح نہ پڑھے",
+    "آدھا اجر",
+    "ایک اجر",
+    "دو اجر"
+   ],
+   "correctIndex": 3,
+   "explanation": "بخاری اور مسلم کی حدیث: جو اٹک اٹک کر پڑھتا ہے اور اس کے لیے مشکل ہے، اس کے لیے دو اجر ہیں۔ اس لیے بچے کے ساتھ بیٹھ کر اٹک اٹک کر پڑھیں؛ بچہ دیکھے گا کہ امی بھی سیکھ رہی ہیں۔",
+   "sourceLesson": "P7-03",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "ناظرہ پڑھنے والے بچے کے لیے audio نے کیا طریقہ بتایا؟",
+   "questionEn": "What routine does the audio suggest for a child doing nazra?",
+   "options": [
+    "ہفتے میں صرف ایک دن، چھٹی والے دن، دو گھنٹے ایک ساتھ بیٹھ کر",
+    "روز تھوڑا: دس منٹ، ہر دن ایک ہی وقت پر، اور آپ پاس بیٹھیں",
+    "جب بچے کا دل چاہے، تب پڑھ لے",
+    "روز ایک پورا پارہ پڑھوائیں، تاکہ قرآن جلدی ختم ہو جائے"
+   ],
+   "correctIndex": 1,
+   "explanation": "دوسرا پڑاؤ ناظرہ: روز تھوڑا، مگر روز۔ دس منٹ، ہر دن ایک ہی وقت پر، جیسے فجر یا مغرب کے بعد۔ اور آپ پاس بیٹھیں، چاہے صرف سنیں۔",
+   "sourceLesson": "P7-03",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "اگر ابو فون پر کہیں \"کہہ دو ابو گھر پر نہیں ہیں\"، تو audio کے مطابق بچہ کیا سیکھتا ہے؟",
+   "questionEn": "If a father says on the phone \"tell them I'm not home\", what does the child learn, according to the audio?",
+   "options": [
+    "کہ دین مسجد میں ہے، زندگی میں نہیں",
+    "فون پر بات کرنے کے آداب",
+    "کہ ابو بہت مصروف رہتے ہیں",
+    "کچھ نہیں، بچے ایسی باتوں پر دھیان نہیں دیتے"
+   ],
+   "correctIndex": 0,
+   "explanation": "بچہ وہ نہیں سیکھتا جو ہم کہتے ہیں، وہ سیکھتا ہے جو ہم کرتے ہیں۔ ایسی باتوں سے بچہ سیکھتا ہے کہ دین مسجد میں ہے، زندگی میں نہیں؛ اور جب ہم نقصان اٹھا کر بھی سچ بولیں تو وہ سیکھتا ہے کہ دین پوری زندگی ہے۔",
+   "sourceLesson": "P7-04",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "گھر کے routine card کے چار خانے کون سے ہیں؟",
+   "questionEn": "What are the four boxes of the home routine card?",
+   "options": [
+    "نماز، school کا homework، باہر کھیلنا، اور سونے کا وقت",
+    "قرآن کا سبق، school کی تیاری، رات کا کھانا، اور موبائل کا وقت",
+    "ایک نماز ساتھ، قرآن کا وقت، کہانی کی رات، نیکی کا ایک کام",
+    "فجر، ظہر، عصر، مغرب"
+   ],
+   "correctIndex": 2,
+   "explanation": "Flip chart 7.3 کے چار خانے: ایک نماز ساتھ، قرآن کا وقت، کہانی کی رات، اور نیکی کا ایک کام۔ یہ card بچے کے ساتھ مل کر بنائیں اور fridge یا دیوار پر لگائیں۔",
+   "sourceLesson": "P7-05",
+   "module": "Module 7: Deen at Home"
+  }
+ ],
+ "m8": [
+  {
+   "question": "Flip chart 8.1 کے \"ہمارے گھر کا نقشہ\" میں بیچ میں کون ہوتا ہے، اور اس کے اردگرد کون؟",
+   "questionEn": "In flip chart 8.1, \"our home map\", who is in the middle and who is around them?",
+   "options": [
+    "بیچ میں ابو، اور اردگرد باقی گھر والے، ان کی اہمیت کے حساب سے",
+    "بیچ میں مربی، اردگرد حلقے کے بچے",
+    "بیچ میں آپ کا بچہ، اور اردگرد ہر وہ شخص جو اس کا خیال رکھتا ہے",
+    "بیچ میں گھر کے سب سے بڑے، اور اردگرد ان کی اولاد اور پوتے پوتیاں"
+   ],
+   "correctIndex": 2,
+   "explanation": "بیچ میں آپ کا بچہ، اور اردگرد ہر وہ شخص جو اس کا خیال رکھتا ہے۔ ہر شخص کے آگے لکھیں کہ وہ بچے کو کیا دیتا ہے، اور دیکھیں کہ کہاں ایک خالی جگہ ہے جسے کوئی بھر سکتا ہے۔",
+   "sourceLesson": "P8-01",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "آپ نے رات نو بجے کے بعد فون نہ دینے کا اصول بنایا ہے، مگر دادی کہتی ہیں \"ارے بچہ ہے، کھیلنے دو\"۔ آپ کیا کریں گے؟",
+   "questionEn": "You've made a rule of no phone after 9 pm, but grandmother says \"he's only a child, let him play\". What will you do?",
+   "options": [
+    "ادب سے پہلے ان کی قدر بتائیں، پھر \"میں\" سے اپنی بات کہیں، پھر ان سے مدد مانگیں",
+    "بچوں کے سامنے ہی ان سے بحث کر کے اپنی بات منوائیں، تاکہ بچے بھی اصول سمجھ جائیں",
+    "خاموش رہیں اور اپنا اصول چھوڑ دیں",
+    "اسی دن باقی سارے نئے اصول بھی ایک ساتھ لکھ کر سب کو بتا دیں"
+   ],
+   "correctIndex": 0,
+   "explanation": "حل بڑوں سے لڑائی نہیں، ادب کے ساتھ بات ہے: پہلے ان کی قدر بتائیں، پھر \"میں\" سے اپنی بات، پھر مدد مانگیں۔ ہم نے دادی کو غلط نہیں کہا، انہیں اپنی ٹیم میں شامل کیا۔ اور ایک وقت میں ایک ہی اصول۔",
+   "sourceLesson": "P8-02",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "اگر شوہر اور بیوی کی بچوں کے بارے میں رائے مختلف ہو، تو audio کیا کہتا ہے؟",
+   "questionEn": "If husband and wife disagree about the children, what does the audio say?",
+   "options": [
+    "بچوں کے سامنے ہی بات کریں، تاکہ وہ دونوں کی رائے سن کر خود سمجھ لیں",
+    "بچے سے پوچھ لیں کہ کس کی بات ٹھیک ہے",
+    "جو عمر میں بڑا ہو، اس کی بات خود بخود مانی جائے",
+    "یہ بات اکیلے میں طے کریں، اور بچوں کے سامنے ایک آواز رکھیں"
+   ],
+   "correctIndex": 3,
+   "explanation": "Audio نے کہا کہ یہ بات بچوں کے سامنے نہیں، اکیلے میں طے کریں۔ بچوں کے سامنے ایک آواز۔",
+   "sourceLesson": "P8-02",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "جو ابو بیرون ملک ہیں، ان کی ہفتہ وار video call کیسی ہونی چاہیے؟",
+   "questionEn": "For a father working abroad, what should the weekly video call be like?",
+   "options": [
+    "بس پڑھائی اور نمبروں کا حال پوچھ لیں",
+    "مقصد کے ساتھ: Home Card اور ڈرائنگ دیکھیں، اور اس ہفتے کی سب سے اچھی بات پوچھیں",
+    "پورے ہفتے کی شکایتیں سنیں جو امی نے جمع کی ہیں، اور بچے کو call پر سمجھائیں",
+    "call بہت مختصر رکھیں، تاکہ بچے کی پڑھائی اور نیند خراب نہ ہو اور روٹین نہ ٹوٹے"
+   ],
+   "correctIndex": 1,
+   "explanation": "Flip chart 8.2 کا پہلا طریقہ: ہفتہ وار video call، مقصد کے ساتھ۔ صرف \"پڑھائی ٹھیک ہے؟\" نہیں؛ بچے کا Home Card اور ڈرائنگ دیکھیں، اور اس ہفتے کی سب سے اچھی بات پوچھیں۔",
+   "sourceLesson": "P8-03",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "ابو سال بھر بعد دبئی سے چھٹی پر گھر آئے ہیں۔ پہلے ہفتے کے لیے audio کا مشورہ کیا ہے؟",
+   "questionEn": "Father has come home on leave from Dubai after a year. What does the audio advise for the first week?",
+   "options": [
+    "امی پہلے ہی دن ساری شکایتیں سنا دیں",
+    "پہلا ہفتہ صرف محبت کا ہو: کھیل، سیر اور باتیں",
+    "ابو آتے ہی سال بھر کی غلطیوں کا حساب لیں اور سزا دیں",
+    "چھٹی کو پڑھائی کا خاص ہفتہ بنا دیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "گھر واپسی کا ہفتہ: اکثر امی ساری شکایتیں ایک ساتھ سنا دیتی ہیں اور ابو آتے ہی جج بن جاتے ہیں۔ ایسا نہ کریں؛ پہلا ہفتہ صرف محبت کا ہو: کھیل، سیر، باتیں۔",
+   "sourceLesson": "P8-03",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "جو ماں یا باپ اکیلے دونوں کردار اٹھا رہے ہیں، ان کے لیے audio کا پیغام کیا ہے؟",
+   "questionEn": "What is the audio's message for a mother or father carrying both roles alone?",
+   "options": [
+    "اکیلے والدین کو کسی سے مدد نہیں لینی چاہیے، ورنہ لوگ باتیں بنائیں گے",
+    "ایسے گھر میں اچھی تربیت ممکن نہیں",
+    "بچے کو کسی اور گھر کے حوالے کر دینا بہتر ہے",
+    "آپ کا گھر ادھورا نہیں، اور مدد قبول کرنا کمزوری نہیں"
+   ],
+   "correctIndex": 3,
+   "explanation": "Audio نے کہا: آپ کا گھر ادھورا نہیں۔ آپ کا بچہ ایسے شخص کے ساتھ پل رہا ہے جو دو لوگوں کا کام اکیلا کر رہا ہے۔ نانی، خالہ، ماموں یا ہمسائی جو مدد دے، اسے ہاں کہیں؛ مدد لینا کمزوری نہیں۔",
+   "sourceLesson": "P8-04",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "اکیلی ماں بیٹے کے لیے، یا اکیلے ابو بیٹی کے لیے، \"بھروسے کا رشتہ دار\" کیسے چنیں؟",
+   "questionEn": "How should a single mother (for a son) or single father (for a daughter) choose a \"trusted relative\"?",
+   "options": [
+    "صرف ایسا رشتہ دار جس پر آپ کو پورا بھروسہ ہو، جیسے نانا، ماموں، خالہ یا پھوپھی",
+    "جو بھی رشتہ دار سب سے زیادہ وقت دے سکے، بس وہی ٹھیک ہے، بھروسے کی بات بعد میں",
+    "محلے کا کوئی بھی بڑا جو بچے کو جانتا ہو",
+    "جسے بچہ خود چن لے، آپ کو اس رشتہ دار کو جاننے یا پرکھنے کی ضرورت نہیں"
+   ],
+   "correctIndex": 0,
+   "explanation": "بیٹے کے لیے کوئی نانا، ماموں یا چچا، اور بیٹی کے لیے کوئی خالہ یا پھوپھی، جو ساتھ وقت گزاریں۔ مگر audio نے زور دیا: صرف وہ، جن پر آپ کو پورا بھروسہ ہو۔",
+   "sourceLesson": "P8-04",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "جو guardians کسی یتیم بچے کو پال رہے ہیں، ان کے بارے میں نبی ﷺ نے کیا فرمایا؟",
+   "questionEn": "What did the Prophet ﷺ say about those who care for an orphan?",
+   "options": [
+    "یتیم کی کفالت صرف مالدار لوگوں کا کام ہے، عام گھر اس کی ذمہ داری نہیں اٹھا سکتے",
+    "اس کا اجر صرف دنیا میں ملتا ہے",
+    "میں اور یتیم کی کفالت کرنے والا جنت میں ان دو انگلیوں کی طرح ساتھ ہوں گے",
+    "یتیم بچے کو صرف اپنے رشتہ داروں کے پاس رہنا چاہیے"
+   ],
+   "correctIndex": 2,
+   "explanation": "بخاری کی حدیث: \"میں اور یتیم کی کفالت کرنے والا جنت میں اس طرح ہوں گے\"، اور آپ ﷺ نے اپنی دو انگلیاں ملا کر دکھائیں۔",
+   "sourceLesson": "P8-04",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "آپ بہت عرصے سے اداس ہیں، رات کو نیند نہیں آتی، اور ہر وقت بوجھ سا لگتا ہے۔ Audio کے مطابق آپ کیا کریں؟",
+   "questionEn": "You've felt sad for a long time, can't sleep and always feel weighed down. What does the audio suggest?",
+   "options": [
+    "چپ چاپ برداشت کریں، کسی کو بتانا کمزوری ہے",
+    "اپنی ساری توجہ صرف بچوں پر لگا دیں، تاکہ اپنے بارے میں سوچنے کا وقت ہی نہ ملے",
+    "انتظار کریں، یہ خود ہی ٹھیک ہو جائے گا",
+    "یہ کمزوری نہیں؛ کسی ڈاکٹر سے بات کریں، اور مربی سے بھی بات کر سکتے ہیں"
+   ],
+   "correctIndex": 3,
+   "explanation": "Audio نے کہا کہ یہ کمزوری نہیں۔ ڈاکٹر سے بات کرنا اتنا ہی ٹھیک ہے جتنا بخار میں دوا لینا، اور آپ مربی سے بھی بات کر سکتے ہیں؛ وہ خاموشی سے صحیح جگہ تک پہنچنے میں مدد کریں گے۔ پہلے اپنا oxygen mask، پھر بچے کا۔",
+   "sourceLesson": "P8-05",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "تیس دن کے plan کے بارے میں کون سی بات درست ہے؟",
+   "questionEn": "Which statement about the thirty-day plan is correct?",
+   "options": [
+    "آٹھوں modules کی ساری عادتیں ایک ساتھ شروع کریں، تاکہ تیس دن میں سب پکی ہو جائیں",
+    "آٹھ modules میں سے صرف ایک بات چنیں؛ مربی دن پندرہ اور دن تیس پر رابطہ کرے گا",
+    "plan مربی بنائے گا، گھر والے صرف دیکھیں گے",
+    "یہ plan صرف course کے آخری دن کے لیے ہے"
+   ],
+   "correctIndex": 1,
+   "explanation": "پچھلے آٹھ modules میں سے صرف ایک بات چنیں، جو آپ کے گھر کو سب سے زیادہ چاہیے۔ چار خانے بھریں: مقصد، تین قدم، کیا مدد چاہیے، کون مدد کرے گا۔ مربی پندرہویں اور تیسویں دن رابطہ کر کے حال پوچھے گا۔",
+   "sourceLesson": "P8-06",
+   "module": "Module 8: Our Family, Our Way"
+  }
+ ],
+ "final": [
+  {
+   "question": "رات کو آپ تھکے ہوئے گھر آتے ہیں اور بچہ دوڑ کر اپنی ڈرائنگ دکھانا چاہتا ہے۔ کورس کے مطابق اس لمحے کیا کرنا سب سے اچھا ہے؟",
+   "questionEn": "You come home tired at night and your child runs to show you a drawing. According to the course, what is best in that moment?",
+   "options": [
+    "بچے سے کہیں کہ صبح دکھائے، کیونکہ تھکن میں دھیان نہیں دیا جا سکتا",
+    "موبائل نیچے رکھ کر چند منٹ پورے دھیان سے بچے کی ڈرائنگ دیکھیں",
+    "جلدی سے \"شاباش\" کہہ کر بچے کو سونے کے لیے بھیج دیں",
+    "بچے کو بتائیں کہ ابو سارا دن اسی کے لیے محنت کرتے ہیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "وسیم صاحب کی کہانی میں حمزہ کو fees نہیں، پانچ منٹ چاہیے تھے۔ بچہ تب سیکھتا ہے کہ وہ قیمتی ہے جب ہم اس کے لیے موبائل نیچے رکھ دیں۔ \"ساتھ ہونا\" کا مطلب ہے دھیان بچے پر ہو۔",
+   "sourceLesson": "P1-03",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "ایک نانی اکیلے اپنے دو نواسوں کو پال رہی ہیں اور سوچتی ہیں کہ ان کا گھر \"ادھورا\" ہے۔ کورس انہیں کیا بتاتا ہے؟",
+   "questionEn": "A grandmother is raising two grandchildren alone and feels her home is \"incomplete\". What does the course tell her?",
+   "options": [
+    "گھر ادھورا ہے، اس لیے بچوں کو زیادہ سختی کی ضرورت ہے",
+    "باپ کا کردار صرف باپ ہی ادا کر سکتا ہے، اس لیے نانی کو یہ کمی ماننی ہوگی",
+    "بچوں کو جلد کسی بڑے رشتہ دار کے حوالے کر دینا ان کے لیے زیادہ بہتر ہے",
+    "کردار دیکھ بھال کی ایک شکل ہے، شخص نہیں؛ اللہ دونوں کرداروں کا اجر لکھ رہا ہے"
+   ],
+   "correctIndex": 3,
+   "explanation": "کورس نے کہا: ہم اسے ادھورا گھر نہیں کہتے۔ کردار ایک طرح کی دیکھ بھال ہے، شخص نہیں۔ جو اکیلے دونوں کردار اٹھا رہا ہے، اللہ دونوں کو دیکھ رہا ہے اور دونوں کا اجر لکھ رہا ہے۔",
+   "sourceLesson": "P1-04",
+   "module": "Module 1: The First Murabbi"
+  },
+  {
+   "question": "بیٹی school سے آ کر کہتی ہے: \"آج میری دوست مجھ سے ناراض ہو گئی۔\" سننے کے تین قدموں کے مطابق آپ کا پہلا کام کیا ہے؟",
+   "questionEn": "Your daughter comes home and says, \"My friend got angry with me today.\" Following the three listening steps, what do you do first?",
+   "options": [
+    "پوری بات سنیں اور بیچ میں نہ ٹوکیں: \"اچھا… پھر؟\"",
+    "فوراً بتائیں کہ دوستی آگے کیسے سنبھالنی ہے اور کل کیا کہنا ہے",
+    "پوچھیں کہ تم نے پہلے اسے کیا کہا تھا",
+    "کہیں کہ ایسی دوست بنانے کی ضرورت ہی نہیں"
+   ],
+   "correctIndex": 0,
+   "explanation": "تین قدم ہیں: سنیں، احساس کو نام دیں، پھر رہنمائی کریں۔ اکثر ہم سیدھا تیسرے قدم پر کود جاتے ہیں۔ پہلے دو قدم کر لیں تو بچہ آپ کی بات سنتا ہے، کیونکہ وہ جانتا ہے آپ اس کی ٹیم میں ہیں۔",
+   "sourceLesson": "P2-02",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "زینب والی کہانی میں دونوں امیاں چاہتی تھیں کہ زینب پڑھے۔ دوسرے انجام میں اصل فرق کیا تھا؟",
+   "questionEn": "In Zainab's story both mothers wanted her to study. What was the real difference in the second ending?",
+   "options": [
+    "دوسری امی نے پڑھائی کی بات بالکل نہیں کی",
+    "دوسری امی نے زینب سے کہا کہ وہ کل جا کر teacher سے شکایت کرے",
+    "دوسری امی نے پہلے احساس سمجھا، اور پڑھائی کی بات سب سے آخر میں کی",
+    "دوسری امی نے زینب کا موبائل کچھ دن کے لیے لے لیا تاکہ وہ پڑھائی پر دھیان دے"
+   ],
+   "correctIndex": 2,
+   "explanation": "دونوں امیوں نے revision کی بات کی۔ پہلی امی نے یہ بات سب سے پہلے کر دی تو زینب خاموش ہو گئی۔ دوسری امی نے پاس بیٹھ کر احساس کو نام دیا، اور وہی بات سب سے آخر میں کی، تو زینب نے خود مدد مانگی۔",
+   "sourceLesson": "P2-03",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "ابو بیرون ملک ہیں اور ہفتے کی video call ہمیشہ \"پڑھائی کیسی ہے؟\" پر ختم ہو جاتی ہے۔ کورس کیا مشورہ دیتا ہے؟",
+   "questionEn": "Dad works abroad and the weekly video call always ends at \"How are your studies?\" What does the course suggest?",
+   "options": [
+    "call کم کر دیں تاکہ بچہ پڑھائی پر دھیان دے",
+    "call پر صرف report card، نمبروں اور اگلے test کی تیاری کی بات کریں",
+    "پوچھیں \"آج کا سب سے اچھا لمحہ کیا تھا؟\" اور بچے کی ڈرائنگ دیکھیں",
+    "call پر امی کی بتائی ہوئی ساری شکایتوں پر بچے کو پیار سے سمجھائیں"
+   ],
+   "correctIndex": 2,
+   "explanation": "کورس نے کہا: video call صرف پڑھائی پر ختم نہ ہو۔ آج کا سب سے اچھا لمحہ پوچھیں، ڈرائنگ دیکھیں، اپنا دن بتائیں۔ قربت فاصلے سے نہیں، دھیان سے بنتی ہے۔",
+   "sourceLesson": "P2-05",
+   "module": "Module 2: Connection Before Correction"
+  },
+  {
+   "question": "بیٹی کی class کے WhatsApp group سے ایک نامعلوم نمبر اسے الگ سے message کرتا ہے اور لکھتا ہے: \"یہ بات ہم دونوں کا راز ہے، کسی کو مت بتانا۔\" کورس کے مطابق کون سی پہلے سے کی ہوئی تیاری اسے محفوظ رکھتی ہے؟",
+   "questionEn": "An unknown number from your daughter's class WhatsApp group messages her privately: \"This is our secret, don't tell anyone.\" According to the course, what preparation done beforehand keeps her safe?",
+   "options": [
+    "اسے پہلے سے پتہ ہو کہ فوراً آپ کو بتانا ہے، اور بتانے پر نہ غصہ ہوگا نہ سزا",
+    "اسے سکھایا ہو کہ ایسے message کا خود ہی سخت جواب دے، نمبر block کرے اور بات ختم کر دے",
+    "اسے ڈرایا ہو کہ ایسا ہوا تو اس کا فون ہمیشہ کے لیے لے لیا جائے گا",
+    "اسے کہا ہو کہ ایسی باتیں صرف اپنی سہیلیوں کو بتائے، بڑوں کو نہیں"
+   ],
+   "correctIndex": 0,
+   "explanation": "کورس کا اصول: اگر online کوئی راز رکھنے کو کہے یا تصویر مانگے تو بچہ فوراً بتائے، اور \"میں غصہ نہیں کروں گا، تمہیں سزا نہیں ملے گی\" سب سے ضروری جملہ ہے۔ ایسا ہو تو مربی سے بھی رابطہ کریں۔",
+   "sourceLesson": "P3-03",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "کورس کے مطابق بچے سے صرف یہ کہنا کہ \"خود ہی فون بند کر دو\" اکثر کیوں کام نہیں کرتا؟",
+   "questionEn": "According to the course, why does simply telling a child \"switch it off yourself\" usually not work?",
+   "options": [
+    "کیونکہ اس عمر کے بچے جان بوجھ کر بڑوں کی بات ماننا ہی نہیں چاہتے اور ضد کرتے ہیں",
+    "کیونکہ بچوں کو وقت گزرنے کا اندازہ ہی نہیں ہوتا",
+    "کیونکہ زیادہ تر apps میں بند کرنے کا بٹن چھپا ہوتا ہے اور بچے اسے ڈھونڈ نہیں پاتے",
+    "کیونکہ apps بچے کو دیر تک روکنے کے لیے بنائی جاتی ہیں، اس لیے اسے ہماری مدد چاہیے"
+   ],
+   "correctIndex": 3,
+   "explanation": "Autoplay، چھوٹی videos اور games کے انعام اس لیے بنائے گئے ہیں کہ بچہ زیادہ دیر screen پر رہے۔ ایک بچے کو اکیلا اس کے مقابلے میں نہ چھوڑیں؛ اسے قانون نہیں، مدد اور ایسا ماحول چاہیے جہاں حد خود بخود ہو۔",
+   "sourceLesson": "P3-02",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "آپ نے اصول بنایا کہ رات کو سب کے فون ٹوکری میں ہوں گے، مگر پہلے ہی دن بچہ بہت غصے میں ہے۔ کورس کے مطابق plan میں کیا کمی رہ گئی؟",
+   "questionEn": "You made a rule that all phones go in a basket at night, but on day one your child is very angry. According to the course, what is missing from the plan?",
+   "options": [
+    "اصول صرف بچوں کے لیے ہونا چاہیے تھا، بڑوں کے لیے نہیں",
+    "فون کی جگہ کیا کرنا ہے یہ طے نہیں ہوا؛ swap list سے بچہ خود کچھ چنے",
+    "ٹوکری بچے کے اپنے کمرے میں رکھی جانی چاہیے تھی",
+    "سارے فون ایک ہی دن میں سختی سے مکمل بند کرنے چاہیے تھے، تھوڑا تھوڑا نہیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "Plan کا تیسرا خانہ \"اس کی جگہ کیا؟\" سب سے ضروری ہے۔ صرف فون لیں اور کچھ نہ دیں تو خالی جگہ میں غصہ آتا ہے۔ swap list سے پہلی چیز بچہ خود چنے، اور اچانک سب بند کرنے کے بجائے تھوڑا تھوڑا کم کریں۔",
+   "sourceLesson": "P3-05",
+   "module": "Module 3: Screens and the Stolen Attention"
+  },
+  {
+   "question": "آپ کے بچے کے لیے دوستوں یا کزنز کے دباؤ میں \"نہ\" کہنا مشکل ہے۔ کورس اسے آسان بنانے کا کون سا طریقہ بتاتا ہے؟",
+   "questionEn": "Saying \"no\" under pressure from friends or cousins is hard for your child. Which way does the course give to make it easier?",
+   "options": [
+    "اسے اجازت دیں کہ مشکل میں آپ کا نام لے: \"ابو نے منع کیا ہے\"",
+    "اسے کہیں کہ ایسے دوستوں اور کزنز سے بالکل نہ ملے",
+    "اسے سکھائیں کہ بحث کر کے دلیل سے دوستوں کو سب کے سامنے غلط ثابت کرے",
+    "اسے کہیں کہ وہاں کچھ نہ کہے، بس گھر آ کر سب کی شکایت لگائے"
+   ],
+   "correctIndex": 0,
+   "explanation": "کورس نے کہا کہ \"نہ\" کے آسان جملے گھر میں کھیل کی طرح practice کریں، اور بچے کو اجازت دیں کہ وہ آپ کا نام لے کر نکل آئے۔ \"ابو نے منع کیا ہے\" کہنا بچے کے لیے \"مجھے نہیں کرنا\" سے آسان ہے۔",
+   "sourceLesson": "P4-03",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "آپ کا بچہ دیکھتا ہے کہ class کے کچھ لڑکے ایک نئے بچے کا lunch چھینتے ہیں، مگر وہ خود اس میں شامل نہیں۔ کورس کے مطابق اسے کیا سکھائیں؟",
+   "questionEn": "Your child sees some classmates taking a new boy's lunch, though he isn't part of it. According to the course, what should you teach him?",
+   "options": [
+    "یہ اس کا معاملہ نہیں، اسے بس دور رہنا چاہیے",
+    "اسے خود ان لڑکوں سے لڑ کر بدلہ لینا چاہیے",
+    "نئے بچے سے دوستی بھی نہ کرے، تاکہ وہ لڑکے اسے بھی تنگ نہ کرنا شروع کر دیں",
+    "خاموش رہنا بھی ایک فیصلہ ہے؛ کسی بڑے کو بتانا بہادری ہے"
+   ],
+   "correctIndex": 3,
+   "explanation": "کورس نے کہا: اگر آپ کا بچہ دیکھنے والا ہے تو اسے سکھائیں کہ خاموش رہنا بھی ایک فیصلہ ہے، اور کسی بڑے کو بتانا بہادری ہے۔",
+   "sourceLesson": "P4-05",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "اپنے بچے کے دوستوں کو جاننے کے لیے کورس کا سب سے عملی مشورہ کیا ہے؟",
+   "questionEn": "What is the course's most practical advice for getting to know your child's friends?",
+   "options": [
+    "بچے سے روز ہر دوست کے بارے میں تفصیل سے پوچھ گچھ کریں",
+    "گھر کا دروازہ دوستوں کے لیے کھلا رکھیں اور انہیں گھر بلائیں",
+    "صرف ان بچوں سے دوستی کی اجازت دیں جن کے والدین کو آپ جانتے ہیں",
+    "بچے کے فون کے پیغامات روز چپکے سے check کریں"
+   ],
+   "correctIndex": 1,
+   "explanation": "کورس نے کہا: جس گھر میں بچوں کے دوست آ کر چائے biscuit کھاتے ہیں، وہاں کی امی کو سب کی خبر ہوتی ہے۔ جب بچہ محسوس کرتا ہے کہ اس کے دوست قبول ہیں تو وہ چھپ کر نہیں ملتا۔ دوستوں کے بارے میں جاننا پوچھ گچھ کی طرح نہ ہو۔",
+   "sourceLesson": "P4-02",
+   "module": "Module 4: Friends and Peer Pressure"
+  },
+  {
+   "question": "Result کے دن آپ کے بچے کے بہتر فیصد آئے جبکہ کزن کے ستانوے۔ بچے نے پورا سال محنت کی تھی۔ کورس کے مطابق آپ کیا کہیں؟",
+   "questionEn": "On result day your child got 72% and a cousin got 97%. Your child worked hard all year. According to the course, what should you say?",
+   "options": [
+    "اگلی بار کزن سے زیادہ نمبر لانے کی پوری کوشش کرنا، تاکہ سب کے سامنے بات رہ جائے",
+    "کوئی بات نہیں بیٹا، تم ویسے بھی بہت ذہین ہو",
+    "تم نے مشکل سوالوں پر ہار نہیں مانی، پچھلی بار سے تمہاری محنت صاف دکھ رہی ہے",
+    "نمبروں کی کوئی اہمیت نہیں، اب پڑھائی کی فکر چھوڑ دو"
+   ],
+   "correctIndex": 2,
+   "explanation": "کورس نے کہا: نمبروں کی نہیں، محنت کی تعریف کریں، کیونکہ \"ذہین\" بچے کے بس میں نہیں مگر محنت ہے۔ مقابلہ کرنا ہو تو بچے کا اس کے اپنے پچھلے کام سے کریں، کسی کزن سے نہیں۔",
+   "sourceLesson": "P5-04",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "اولاد میں انصاف کے بارے میں کورس نے کیا سمجھایا؟",
+   "questionEn": "What did the course explain about fairness between children?",
+   "options": [
+    "ہر بچے کو ہر چیز بالکل ایک جیسی اور برابر ملنی چاہیے، ذرا سا فرق بھی ناانصافی ہے",
+    "بیٹے کو زیادہ آزادی دینا انصاف کے خلاف نہیں",
+    "انصاف صرف جائیداد اور وراثت کے معاملے میں ضروری ہے، روزمرہ کی چیزوں میں نہیں",
+    "ضرورت کے حساب سے فرق ہو سکتا ہے، مگر کوئی بچہ یہ محسوس نہ کرے کہ وہ کم پیارا ہے"
+   ],
+   "correctIndex": 3,
+   "explanation": "نبی ﷺ نے فرمایا: اللہ سے ڈرو اور اپنی اولاد میں انصاف کرو۔ کورس نے سمجھایا کہ انصاف کا مطلب بالکل ایک جیسا ملنا نہیں؛ چھوٹے کو زیادہ وقت، بیمار کو زیادہ دیکھ بھال چاہیے، مگر کوئی بچہ خود کو کم پیارا محسوس نہ کرے۔",
+   "sourceLesson": "P5-03",
+   "module": "Module 5: Stop the Comparison"
+  },
+  {
+   "question": "شام سات بجے ہیں، آپ دن بھر کے تھکے ہوئے ہیں اور بچہ ابھی تک homework نہیں کر رہا۔ غصہ بڑھ رہا ہے۔ رکنے کے plan کا پہلا قدم کیا ہے؟",
+   "questionEn": "It's 7 pm, you're exhausted and your child still hasn't started homework. Your anger is rising. What is the first step of the pause plan?",
+   "options": [
+    "منہ سے کچھ نکلنے سے پہلے رک جائیں",
+    "ایک بار زور سے ڈانٹ دیں تاکہ بات ختم ہو جائے",
+    "بچے کو کمرے میں بھیج دیں جب تک کام نہ کرے",
+    "ابو کے آنے کا انتظار کریں تاکہ وہ سمجھائیں"
+   ],
+   "correctIndex": 0,
+   "explanation": "رکنے کا plan: رکیں، اعوذ باللہ پڑھیں، بیٹھ جائیں یا وضو کریں، کچھ لمحے خاموشی، پھر واپس آ کر بات۔ کورس نے یہ بھی کہا کہ اگر شام سات بجے آپ کا صبر ختم ہو جاتا ہے تو homework کا وقت بدل دیں۔",
+   "sourceLesson": "P6-03",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "بچہ نماز ٹال رہا ہے اور آپ کے منہ سے نکلنے لگتا ہے: \"اللہ تمہیں جہنم میں ڈالے گا!\" کورس اس کی جگہ کیا کہنے کا مشورہ دیتا ہے؟",
+   "questionEn": "Your child keeps putting off salah and you are about to say, \"Allah will put you in hell!\" What does the course suggest saying instead?",
+   "options": [
+    "اگر نماز نہیں پڑھو گے تو آج رات کا کھانا نہیں ملے گا",
+    "آنے دو ابو کو، وہ آ کر تمہیں سیدھا کریں گے",
+    "چلو، ساتھ نماز پڑھتے ہیں، پھر کھانا کھائیں گے",
+    "دیکھو تمہارا کزن کتنی پابندی سے نماز پڑھتا ہے"
+   ],
+   "correctIndex": 2,
+   "explanation": "جب ہم اللہ کو دھمکی بنا لیتے ہیں تو بچہ اللہ سے محبت نہیں، ڈر سیکھتا ہے۔ flip chart کے مطابق دھمکی کی جگہ پُرسکون حد: \"چلو، ساتھ نماز پڑھتے ہیں، پھر کھانا کھائیں گے۔\"",
+   "sourceLesson": "P6-04",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "بچے نے اپنی cycle بارش میں صحن میں چھوڑ دی۔ کورس کے مطابق اچھا نتیجہ کون سا ہے؟",
+   "questionEn": "Your child left his bicycle out in the rain in the courtyard. According to the course, which is a good consequence?",
+   "options": [
+    "ایک مہینے کے لیے cycle بالکل بند کر دی جائے تاکہ اگلی بار یاد رہے",
+    "صرف کل cycle نہیں ملے گی، اور یہ بات آرام سے کہی جائے",
+    "سب کے سامنے بچے کو لاپروائی پر شرمندہ کیا جائے",
+    "کچھ نہ کہا جائے، کیونکہ نرمی میں کوئی اصول نہیں ہوتا"
+   ],
+   "correctIndex": 1,
+   "explanation": "کورس کے مطابق نتیجہ غلطی سے جڑا ہوا، چھوٹا اور پُرسکون ہو: صرف کل cycle نہیں، ایک مہینہ نہیں، اور چیخ کر نہیں۔ نرمی کا مطلب ہے اصول پکا، لہجہ نرم۔",
+   "sourceLesson": "P6-05",
+   "module": "Module 6: Discipline with Dignity"
+  },
+  {
+   "question": "آپ کا سات سال کا بچہ نماز میں آپ کے ساتھ کھڑا ہوتا ہے مگر آدھی نماز میں بھاگ جاتا ہے۔ کورس کے مطابق آپ کا رویہ کیا ہو؟",
+   "questionEn": "Your seven-year-old stands with you in salah but runs off halfway. According to the course, how should you respond?",
+   "options": [
+    "اسے سختی سے روکیں تاکہ پوری نماز کی عادت پڑے",
+    "کوئی بات نہیں؛ یہ پیار سے سکھانے کی عمر ہے، بس ساتھ کھڑا کرتے رہیں",
+    "جب تک وہ پوری نماز نہ پڑھ سکے، اسے اپنے ساتھ کھڑا ہی نہ کریں تاکہ عادت نہ بگڑے",
+    "اسے مدرسے بھیج دیں تاکہ قاری صاحب نماز سکھائیں"
+   ],
+   "correctIndex": 1,
+   "explanation": "سات سال کی عمر پیار سے سکھانے کی ہے: سات سے دس تک تین سال، پانچ ہزار سے زیادہ بار پیار سے کہنا اور ساتھ پڑھنا۔ نبی ﷺ کے نواسے سجدے میں آپ ﷺ کی پیٹھ پر چڑھ جاتے تھے۔",
+   "sourceLesson": "P7-02",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "ایک امی کہتی ہیں: \"مجھے عربی ٹھیک سے نہیں آتی، میں بچوں کو قرآن کیا سکھاؤں؟\" کورس انہیں کیا بتاتا ہے؟",
+   "questionEn": "A mother says, \"I can't read Arabic well. How can I teach my children the Qur'an?\" What does the course tell her?",
+   "options": [
+    "قرآن سکھانا صرف مدرسے اور قاری صاحب کی ذمہ داری ہے، گھر والوں کی نہیں",
+    "جب تک خود اچھی طرح عربی نہ سیکھ لیں، بچے کے ساتھ بیٹھ کر قرآن نہ پڑھیں",
+    "اٹک اٹک کر پڑھنے والے کے لیے دو اجر ہیں؛ بچے کے ساتھ بیٹھ کر پڑھیں",
+    "بچے کو قرآن کے بجائے فی الحال صرف دعائیں سکھائیں"
+   ],
+   "correctIndex": 2,
+   "explanation": "نبی ﷺ نے فرمایا کہ جو اٹک اٹک کر پڑھے اور اس کے لیے مشکل ہو، اس کے لیے دو اجر ہیں۔ بچے کے ساتھ بیٹھ کر پڑھیں؛ بچہ دیکھے گا کہ امی بھی سیکھ رہی ہیں، اور کبھی کہیں: \"آج تم مجھے پڑھاؤ۔\"",
+   "sourceLesson": "P7-03",
+   "module": "Module 7: Deen at Home"
+  },
+  {
+   "question": "Joint family میں دادی جان رات دیر تک بچے کو اپنا فون دے دیتی ہیں۔ کورس کے مطابق ان سے بات کیسے شروع کریں؟",
+   "questionEn": "In a joint family, Dadi lets your child use her phone late at night. According to the course, how should you start the conversation with her?",
+   "options": [
+    "پہلے ان کی قدر بتائیں، پھر \"میں\" سے اپنی بات کریں، پھر ان سے مدد مانگیں",
+    "بچوں کے سامنے ہی صاف کہہ دیں کہ ان کا طریقہ غلط ہے",
+    "سارے نئے اصول ایک ساتھ لکھ کر، اسی رات گھر کے سب بڑوں کو ایک ایک copy دے دیں",
+    "بچے سے کہیں کہ آئندہ دادی کی یہ بات نہ مانے"
+   ],
+   "correctIndex": 0,
+   "explanation": "کورس نے کہا: بڑوں سے لڑائی نہیں، ادب کے ساتھ بات۔ پہلے قدر بتائیں، پھر \"میں\" سے اپنی بات، پھر مدد مانگیں، تاکہ وہ آپ کی ٹیم میں شامل ہوں۔ ایک وقت میں ایک اصول، اور اختلاف بچوں کے سامنے نہیں۔",
+   "sourceLesson": "P8-02",
+   "module": "Module 8: Our Family, Our Way"
+  },
+  {
+   "question": "ابو کئی مہینوں بعد چھٹی پر گھر آئے ہیں اور امی کے پاس بچوں کی کئی شکایتیں جمع ہیں۔ کورس کیا مشورہ دیتا ہے؟",
+   "questionEn": "Dad is home on leave after many months, and Mum has saved up many complaints about the children. What does the course advise?",
+   "options": [
+    "پہلے ہی دن ساری شکایتیں بتا دیں تاکہ ابو فیصلہ کریں",
+    "شکایتیں ہمیشہ کے لیے چھپا لیں اور ابو کو کبھی نہ بتائیں",
+    "ابو بچوں کو ایک ایک کر کے بلا کر ان کا حساب لیں",
+    "پہلا ہفتہ صرف محبت کا ہو: کھیل، سیر اور باتیں"
+   ],
+   "correctIndex": 3,
+   "explanation": "کورس نے کہا کہ اکثر ابو آتے ہی جج بن جاتے ہیں جب امی ساری شکایتیں ایک ساتھ سنا دیتی ہیں۔ ایسا نہ کریں: گھر واپسی کا پہلا ہفتہ صرف محبت کا ہو۔ اصول امی ابو مل کر طے کریں۔",
+   "sourceLesson": "P8-03",
+   "module": "Module 8: Our Family, Our Way"
+  }
+ ]
+}

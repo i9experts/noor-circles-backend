@@ -51,6 +51,8 @@ export class CourseFlipChart {
   @Prop({ type: Boolean, default: false }) live: boolean;
   /** Lessons whose audio explains this chart. */
   @Prop({ type: [String], default: [] }) lessonCodes: string[];
+  /** Meant to be printed or copied (fridge, journal, wall). */
+  @Prop({ type: Boolean, default: false }) printable: boolean;
 }
 export const CourseFlipChartSchema = SchemaFactory.createForClass(CourseFlipChart);
 
@@ -67,9 +69,13 @@ export class Course {
   @Prop({ trim: true, default: '' })
   titleUr: string;
 
-  /** Training tier this course certifies (its certificate is the tier certificate). */
-  @Prop({ type: Number, enum: [1, 2, 3], required: true })
-  tier: number;
+  /** Training tier this course certifies (its certificate is the tier certificate). Null for the parents' course. */
+  @Prop({ type: Number, enum: [1, 2, 3, null], default: null })
+  tier: number | null;
+
+  /** Who takes it: murabbis (tier training) or parents (Asaas for Parents, admin-only progress). */
+  @Prop({ type: String, enum: ['murabbi', 'parent'], default: 'murabbi' })
+  audience: 'murabbi' | 'parent';
 
   @Prop({ trim: true, default: '' })
   trainer: string;
@@ -136,6 +142,10 @@ export class CourseSection {
 
   @Prop({ trim: true, default: '' })
   meta: string;
+
+  /** Days after the course starts for this person when the section opens (0 = straight away). */
+  @Prop({ type: Number, min: 0, default: 0 })
+  unlockDay: number;
 }
 export const CourseSectionSchema = SchemaFactory.createForClass(CourseSection);
 CourseSectionSchema.index({ course: 1, key: 1 }, { unique: true });
@@ -222,6 +232,14 @@ export class CourseAssignment {
 
   @Prop({ type: Date, default: null })
   certifiedAt: Date | null;
+
+  /** Parents' course: every section open now, whatever the fortnight. */
+  @Prop({ type: Boolean, default: false })
+  allOpen: boolean;
+
+  /** Parents' course certificate number, once earned. */
+  @Prop({ type: String, default: null })
+  certificateNumber: string | null;
 }
 export const CourseAssignmentSchema = SchemaFactory.createForClass(CourseAssignment);
 CourseAssignmentSchema.index({ course: 1, user: 1 }, { unique: true });

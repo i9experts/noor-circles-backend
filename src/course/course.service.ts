@@ -32,6 +32,18 @@ const DAY_MS = 24 * 3600_000;
 
 type Requester = { id: string; role: string };
 
+/** Whole days (Pakistan time) from `start` to `now`: 0 on the first day. */
+export function dayIndex(start: Date, now = new Date()) {
+  const pk = (d: Date) => Math.floor((d.getTime() + 5 * 3600_000) / DAY_MS);
+  return pk(now) - pk(new Date(start));
+}
+
+/** Parents' course: a section opens `unlockDay` days after the person's start (or now, if an admin opened everything). */
+export function sectionOpen(section: { unlockDay?: number }, assignment: { createdAt?: Date; allOpen?: boolean } | null, now = new Date()) {
+  if (!assignment) return false;
+  return !!assignment.allOpen || dayIndex(assignment.createdAt ?? now, now) >= (section.unlockDay ?? 0);
+}
+
 @Injectable()
 export class CourseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CourseService.name);
@@ -119,11 +131,16 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
 
   // ══ Helpers ════════════════════════════════════════════════════════════════
 
+  /** Other courses (e.g. Asaas for Parents) register how to seed themselves, for the retry below. */
+  private readonly seeders = new Map<string, () => Promise<void>>();
+  registerSeeder(key: string, seed: () => Promise<void>) { this.seeders.set(key, seed); }
+
   private async course(key: string) {
     let c = await this.courseModel.findOne({ key }).lean();
-    if (!c && key === ASAAS_KEY) {
+    const seed = key === ASAAS_KEY ? () => this.seedAsaas() : this.seeders.get(key);
+    if (!c && seed) {
       // Seeding at startup can fail (e.g. the database was briefly unreachable); retry on first use.
-      await this.seedAsaas();
+      await seed();
       c = await this.courseModel.findOne({ key }).lean();
     }
     if (!c) throw new NotFoundException('Course not found.');
@@ -480,7 +497,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
     const today = new Date(now.getTime() + 5 * 3600_000).toISOString().slice(0, 10);
     const dayDiff = (a: string, b: string) => Math.round((Date.parse(a) - Date.parse(b)) / DAY_MS);
     let sent = 0;
-    for (const course of await this.courseModel.find().select('title').lean()) {
+    for (const course of await this.courseModel.find({ audience: { $ne: 'parent' } }).select('title').lean()) {
       const total = await this.lessonModel.countDocuments({ course: course._id });
       const assignments = await this.assignmentModel.find({ course: course._id, certifiedAt: null }).populate('user', 'fullName email isActive').lean();
       for (const a of assignments) {
@@ -553,7 +570,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
 
   /** Badges for a set of murabbis (admin lists, profiles). */
   async badges(userIds?: Types.ObjectId[]) {
-    const courses = await this.courseModel.find().select('key tier badge title').lean();
+    const courses = await this.courseModel.find({ audience: { $ne: 'parent' } }).select('key tier badge title').lean();
     const certs = await this.training.certificatesFor(userIds, undefined);
     return certs.flatMap((c) => courses.filter((k) => k.tier === c.tier).map((k) => ({
       user: c.user.toString(), badge: k.badge, courseKey: k.key, certificateNumber: c.certificateNumber, issuedAt: c.issuedAt,
@@ -662,7 +679,11 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
     const course = await this.courseModel.findById(lesson.course).lean();
     if (!course) throw new NotFoundException('Course not found.');
     if (user.role !== UserRole.ADMIN) {
-      await this.requireAssignment(course._id, user.id);
+      const assignment = await this.requireAssignment(course._id, user.id);
+      if (course.audience === 'parent') {
+        const section = await this.sectionModel.findById(lesson.section).select('unlockDay').lean();
+        if (!section || !sectionOpen(section, assignment as any)) throw new ForbiddenException('This module hasn’t opened yet.');
+      }
       if (course.sequential && lesson.order > 1) {
         const prev = await this.lessonModel.findOne({ course: course._id, order: lesson.order - 1 }).select('_id').lean();
         const done = prev && await this.progressModel.exists({ lesson: prev._id, user: new Types.ObjectId(user.id), completed: true });
@@ -724,7 +745,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
         this.lessonModel.countDocuments({ course: course._id }),
         this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
       ]);
-      if (done === total) {
+      if (done === total && course.audience !== 'parent') {
         void this.emailMurabbi(user.id, 'training.lessons-done', {
           courseTitle: course.title, total, questions: course.questions.length, passingScore: course.passingScore,
         }, { dedupeKey: `lessons-done:${String(course._id)}:${user.id}` });

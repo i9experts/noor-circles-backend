@@ -1,0 +1,215 @@
+{
+ "selfCheck": {
+  "intro": "یہ امتحان نہیں ہے، اور اس کا کوئی صحیح یا غلط جواب نہیں۔ یہ صرف آپ کے لیے ہے، تاکہ سولہ ہفتوں کے بعد آپ خود دیکھ سکیں کہ کیا بدلا۔ پچھلے دو ہفتوں کو سوچ کر ایمانداری سے جواب دیں۔",
+  "scale": [
+   "کبھی نہیں",
+   "کبھی کبھی",
+   "اکثر",
+   "تقریباً روز"
+  ],
+  "scaleEn": [
+   "Never",
+   "Sometimes",
+   "Often",
+   "Almost every day"
+  ],
+  "items": [
+   {
+    "module": 1,
+    "text": "میں روز اپنے بچے کے ساتھ کم از کم دس منٹ پورے دھیان سے گزارتا / گزارتی ہوں، موبائل کے بغیر۔",
+    "en": "I spend at least ten minutes a day with my child with full attention, without my phone."
+   },
+   {
+    "module": 2,
+    "text": "جب میرا بچہ کچھ بتاتا ہے تو میں پہلے پوری بات سنتا / سنتی ہوں، پھر سمجھاتا / سمجھاتی ہوں۔",
+    "en": "When my child tells me something, I listen fully first, then guide."
+   },
+   {
+    "module": 2,
+    "text": "میں اپنے بچے کو لفظوں میں بتاتا / بتاتی ہوں کہ مجھے اس سے محبت ہے اور مجھے اس پر فخر ہے۔",
+    "en": "I tell my child in words that I love them and am proud of them."
+   },
+   {
+    "module": 3,
+    "text": "ہمارے گھر میں موبائل اور اسکرین کے صاف اصول ہیں، اور میں خود بھی ان پر چلتا / چلتی ہوں۔",
+    "en": "Our home has clear phone and screen rules, and I follow them myself."
+   },
+   {
+    "module": 4,
+    "text": "مجھے اپنے بچے کے تین سب سے قریبی دوستوں کے نام معلوم ہیں۔",
+    "en": "I know the names of my child's three closest friends."
+   },
+   {
+    "module": 5,
+    "text": "میں اپنے بچے کا مقابلہ دوسرے بچوں، کزنز یا بہن بھائیوں سے نہیں کرتا / کرتی۔",
+    "en": "I don't compare my child with other children, cousins or siblings."
+   },
+   {
+    "module": 5,
+    "text": "میں نمبروں سے زیادہ اپنے بچے کی محنت کی تعریف کرتا / کرتی ہوں۔",
+    "en": "I praise my child's effort more than their marks."
+   },
+   {
+    "module": 6,
+    "text": "غصے میں میں کچھ کہنے یا کرنے سے پہلے رک جاتا / جاتی ہوں۔",
+    "en": "When angry, I pause before I say or do anything."
+   },
+   {
+    "module": 6,
+    "text": "اگر میں بچے کے ساتھ غلطی کروں تو اس سے معافی مانگ لیتا / لیتی ہوں۔",
+    "en": "If I get it wrong with my child, I say sorry."
+   },
+   {
+    "module": 7,
+    "text": "ہمارے گھر میں نماز، قرآن یا دعا کا ایک چھوٹا سا روٹین ہے جو ہم مل کر کرتے ہیں۔",
+    "en": "Our home has a small routine of salah, Qur'an or du'a that we do together."
+   },
+   {
+    "module": 8,
+    "text": "میں اپنے بچے کی دیکھ بھال کرنے والے باقی بڑوں (دادا دادی، نانا نانی، رشتے دار یا مربی) کے ساتھ مل کر چلتا / چلتی ہوں۔",
+    "en": "I work together with the other adults who care for my child (grandparents, relatives or the murabbi)."
+   },
+   {
+    "module": 8,
+    "text": "میں اپنا بھی خیال رکھتا / رکھتی ہوں، تاکہ میں اپنے بچے کے لیے پرسکون رہ سکوں۔",
+    "en": "I look after myself too, so I can stay calm for my child."
+   }
+  ],
+  "endNote": "یہ رہے آپ کے پہلے دن کے جواب، اور آج کے جواب۔ جہاں فرق ہے، وہاں اللہ کا شکر ادا کریں۔ جہاں ابھی سفر باقی ہے، وہاں ایک چھوٹا سا قدم چن لیں۔"
+ },
+ "certificate": {
+  "title": "سندِ تکمیل: والدین کا Asaas",
+  "titleEn": "Certificate of Completion: Asaas for Parents",
+  "body": "یہ سند {name} کو پیش کی جاتی ہے، جنہوں نے Noor Circles کا سولہ ہفتوں کا \"والدین کا Asaas\" کورس مکمل کیا، اور اپنے گھر کو بچے کی پہلی تربیت گاہ بنانے کا وعدہ کیا۔",
+  "bodyEn": "Presented to {name}, who completed Noor Circles' sixteen-week Asaas for Parents course and pledged to make their home their child's first place of tarbiyah.",
+  "line": "بچے کا پہلا مربی… اس کا گھر ہے۔",
+  "dua": "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا",
+  "signedBy": "عتیق الرحمٰن ایوبی · Noor Circles",
+  "badge": "نور والدین",
+  "badgeEn": "Noor Parent",
+  "requirements": [
+   "تمام 52 clips پوری سنی ہوں",
+   "آٹھوں knowledge checks دیے ہوں (کم از کم 7 / 10)",
+   "آخری knowledge check (کم از کم 14 / 20)",
+   "آخری self-check پُر کیا ہو",
+   "والدین کا وعدہ والی آخری clip سنی ہو"
+  ]
+ },
+ "targets": [
+  {
+   "module": 1,
+   "title": "روز دس منٹ، بچے کے ساتھ",
+   "titleEn": "Ten minutes a day, with your child",
+   "what": "روز دس منٹ اپنے بچے کے ساتھ۔ موبائل دوسرے کمرے میں۔ اس دس منٹ میں کیا کرنا ہے، یہ بچہ طے کرے گا، آپ نہیں؛ آپ کا کام صرف ساتھ ہونا ہے۔ ہر دن کے بعد بچہ اپنے target card پر tick لگائے گا۔",
+   "kind": "daily",
+   "slots": 14,
+   "needed": 10,
+   "lighterNeeded": 7,
+   "lighter": "اگر آپ shift پر کام کرتے ہیں یا اکیلے سب سنبھال رہے ہیں تو اپنے مربی کو بتا دیں: چودہ میں سے سات دن۔ اگر ابو بیرون ملک ہیں تو یہ دس منٹ video call پر بھی ہو سکتے ہیں۔",
+   "tickLabel": "آج ہم نے دس منٹ ساتھ گزارے، اور میں نے طے کیا کہ کیا کرنا ہے",
+   "flipChart": "1.1"
+  },
+  {
+   "module": 2,
+   "title": "ایک سوال، ایک تعریف",
+   "titleEn": "One question, one praise",
+   "what": "پہلی بات: ہر رات سونے سے پہلے ایک سوال: \"آج کا سب سے اچھا لمحہ کیا تھا؟\" جواب جو بھی ہو، بس سنیں؛ کوئی lecture نہیں۔ دوسری بات: ہر دن ایک specific تعریف، جو آپ نے واقعی دیکھا وہ کہیں۔ پچھلے fortnight کے دس منٹ بھی جاری رکھیں۔ tick آپ کا بچہ لگائے گا۔",
+   "kind": "daily",
+   "slots": 14,
+   "needed": 10,
+   "lighterNeeded": 7,
+   "lighter": "اگر آپ کے لیے ہلکا target طے ہے تو چودہ میں سے سات دن کافی ہیں۔",
+   "tickLabel": "آج سونے سے پہلے میری بات سنی گئی، اور مجھے ایک خاص تعریف ملی",
+   "flipChart": "2.1"
+  },
+  {
+   "module": 3,
+   "title": "روز ایک گھنٹہ، پورا گھر بغیر فون کے",
+   "titleEn": "One phone-free hour a day, for the whole family",
+   "what": "ہر روز ایک گھنٹہ… پورا خاندان، بغیر فون کے۔ امی، ابو، بچے، سب۔ اور swap list میں سے کوئی ایک چیز تیار ہو۔",
+   "kind": "daily",
+   "slots": 14,
+   "needed": 10,
+   "lighterNeeded": 7,
+   "lighter": "سات دن (چودہ میں سے)",
+   "tickLabel": "آج ایک گھنٹہ سب نے فون کے بغیر ساتھ گزارا",
+   "flipChart": "3.3"
+  },
+  {
+   "module": 4,
+   "title": "بچے کے تین قریبی دوستوں کو جانیں",
+   "titleEn": "Get to know your child's three closest friends",
+   "what": "اپنے بچے کے تین سب سے قریبی دوستوں کے نام جانیں… اور ہر ایک کے بارے میں ایک بات۔ اس کا پسندیدہ کھیل، اس کے گھر میں کون کون ہے، وہ کس بات پر ہنستا ہے۔ یہ پوچھ گچھ کی طرح نہ ہو: کھانے پر، family hour میں، باتوں باتوں میں۔",
+   "kind": "count",
+   "slots": 3,
+   "needed": 3,
+   "lighterNeeded": 2,
+   "lighter": "دو دوست کافی ہیں؛ جن کے کئی بچے ہیں وہ ایک بچے سے شروع کریں",
+   "tickLabel": "امی / ابو کو میرے دوست کا نام اور اس کی ایک بات صحیح یاد ہے",
+   "flipChart": "4.2"
+  },
+  {
+   "module": 5,
+   "title": "ہر بچے کی خوبی، کسی اور کے سامنے",
+   "titleEn": "Name each child's strength in front of someone else",
+   "what": "پہلا: ہر بچے کو اس کی ایک خوبی بتائیں… کسی اور کے سامنے (دادی، ابو، یا video call پر)۔ پورے fortnight میں دو بار، ہر بچے کے لیے۔ دوسرا: کوئی مقابلے والا جملہ نہیں؛ اگر منہ سے نکل جائے تو رک کر مسکرا کر کہیں: \"نہیں، میں یہ نہیں کہنا چاہتا تھا۔\"",
+   "kind": "count",
+   "slots": 2,
+   "needed": 2,
+   "lighterNeeded": 1,
+   "lighter": "ہلکے target والوں کے لیے ہر بچے کے لیے ایک بار کافی ہے۔",
+   "tickLabel": "آج امی / ابو نے سب کے سامنے میری خوبی بتائی",
+   "flipChart": "5.3"
+  },
+  {
+   "module": 6,
+   "title": "رکنے کا plan، اور sorry",
+   "titleEn": "Use the pause plan, and say sorry",
+   "what": "پورے fortnight میں کم از کم دو بار اپنا رکنے کا plan استعمال کریں۔ اور اگر کسی لمحے غصہ زیادہ ہو گیا تو بچے سے sorry کہیں۔ بچے کو بتائیں: \"آج امی کو غصہ آیا تھا، میں نے رکنے کا plan استعمال کیا\"، اور بچہ tick لگائے گا۔",
+   "kind": "count",
+   "slots": 2,
+   "needed": 2,
+   "lighterNeeded": null,
+   "lighter": "",
+   "tickLabel": "آج امی / ابو نے غصے میں رکنے کا plan استعمال کیا",
+   "flipChart": "6.2"
+  },
+  {
+   "module": 7,
+   "title": "گھر کا routine card",
+   "titleEn": "Our home routine card",
+   "what": "اپنا routine card دونوں ہفتے follow کریں: چاروں خانے، ہر ہفتے۔ ہر خانہ پورا ہونے پر بچہ tick لگائے گا۔ اور پچھلی عادتوں میں سے جو چھوٹ گئی ہو، اس fortnight میں ایک واپس لے آئیں۔",
+   "kind": "count",
+   "slots": 8,
+   "needed": 8,
+   "lighterNeeded": 6,
+   "lighter": "ہر ہفتے چار میں سے تین خانے کافی ہیں۔",
+   "tickLabel": "ہمارے routine card کا ایک خانہ پورا ہوا",
+   "flipChart": "7.3"
+  },
+  {
+   "module": 8,
+   "title": "تیس دن کا plan",
+   "titleEn": "The thirty-day plan",
+   "what": "اپنا تیس دن کا plan شروع کریں، اور اس کے پہلے دو قدم پورے کریں۔ آپ کا مربی پندرہویں دن اور تیسویں دن رابطہ کر کے حال پوچھے گا۔",
+   "kind": "count",
+   "slots": 3,
+   "needed": 2,
+   "lighterNeeded": null,
+   "lighter": "",
+   "tickLabel": "ہمارے تیس دن کے plan کا ایک قدم پورا ہوا",
+   "flipChart": "8.3"
+  }
+ ],
+ "privacy": "آپ کی معلومات صرف Noor Circles team کے پاس رہیں گی۔ آپ کا account صرف آپ کا ہے: کوئی دوسرا والد یا والدہ آپ کے جواب یا points نہیں دیکھ سکتا۔ کسی کا کسی سے مقابلہ نہیں؛ ہر گھر کا اپنا سفر ہے۔",
+ "pledge": [
+  "میں… اللہ کو گواہ بنا کر… وعدہ کرتا ہوں… یا کرتی ہوں…",
+  "کہ میں اپنے بچے کو… اللہ کی امانت سمجھوں گا… یا سمجھوں گی۔",
+  "کہ میں روز… اس کے ساتھ وقت گزاروں گا… یا گزاروں گی… پورے دھیان کے ساتھ۔",
+  "کہ میں پہلے سنوں گا… یا سنوں گی… پھر سمجھاؤں گا… یا سمجھاؤں گی۔",
+  "کہ میں اس کا مقابلہ کسی سے نہیں کروں گا… یا کروں گی… اور اس کی خوبیاں دیکھوں گا… یا دیکھوں گی۔",
+  "کہ غصے میں… میں رکوں گا… یا رکوں گی… اور غلطی ہو جائے تو معافی مانگوں گا… یا مانگوں گی۔",
+  "اور میں خود وہ بنوں گا… یا بنوں گی… جو میں اپنے بچے کو بنتے دیکھنا چاہتا ہوں… یا چاہتی ہوں۔",
+  "اللہ میری مدد فرمائے۔"
+ ]
+}

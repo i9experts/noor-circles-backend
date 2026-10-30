@@ -47,7 +47,7 @@ export class CourseController {
 
   @Get('lessons/:id/play')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  @Roles(UserRole.MURABBI, UserRole.PARENT, UserRole.ADMIN)
   play(@Param('id') id: string, @CurrentUser() user: UserDocument, @Req() req: Request) {
     return this.service.play(objectId(id), who(user), apiBase(req));
   }
@@ -56,7 +56,7 @@ export class CourseController {
   @Post('lessons/:id/heartbeat')
   @SkipThrottle()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  @Roles(UserRole.MURABBI, UserRole.PARENT, UserRole.ADMIN)
   heartbeat(@Param('id') id: string, @CurrentUser() user: UserDocument, @Body() dto: HeartbeatDto) {
     return this.service.heartbeat(objectId(id), who(user), dto);
   }
@@ -93,7 +93,7 @@ export class CourseController {
   @Post(':key/flip-charts/:chart/view')
   @SkipThrottle()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  @Roles(UserRole.MURABBI, UserRole.PARENT, UserRole.ADMIN)
   flipChart(@Param('key') key: string, @Param('chart') chart: string, @CurrentUser() user: UserDocument, @Body() dto: FlipChartViewDto) {
     return this.service.viewFlipChart(key, chart, who(user), dto);
   }
