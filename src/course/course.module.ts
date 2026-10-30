@@ -3,7 +3,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   Course, CourseAssignment, CourseAssignmentSchema, CourseAttempt, CourseAttemptSchema, CourseLesson, CourseLessonSchema,
   CoursePractical, CoursePracticalSchema, CourseReflection, CourseReflectionSchema, CourseSchema, CourseSection,
-  CourseSectionSchema, LessonProgress, LessonProgressSchema, MurabbiPoint, MurabbiPointSchema,
+  CourseSectionSchema, FlipChartView, FlipChartViewSchema, LessonProgress, LessonProgressSchema, MurabbiPoint,
+  MurabbiPointSchema,
 } from './course.schema';
 import { User, UserSchema } from '../user/user.schema';
 import { TrainingNestModule } from '../training/training.module';
@@ -24,6 +25,7 @@ import { CourseController } from './course.controller';
       { name: CourseReflection.name, schema: CourseReflectionSchema },
       { name: CoursePractical.name,  schema: CoursePracticalSchema  },
       { name: MurabbiPoint.name,     schema: MurabbiPointSchema     },
+      { name: FlipChartView.name,    schema: FlipChartViewSchema    },
       { name: User.name,             schema: UserSchema             },
     ]),
     TrainingNestModule,

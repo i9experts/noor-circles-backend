@@ -38,6 +38,22 @@ export class CoursePoints {
 }
 export const CoursePointsSchema = SchemaFactory.createForClass(CoursePoints);
 
+/** A flip chart the training audio refers to. Its drawing lives in the portal (by key). */
+@Schema({ _id: false })
+export class CourseFlipChart {
+  @Prop({ required: true, trim: true })  key: string;          // "fc-01"
+  @Prop({ type: Number, required: true }) number: number;
+  @Prop({ trim: true, default: '' })     module: string;       // "Module 1"
+  @Prop({ trim: true, default: '' })     title: string;        // Urdu
+  @Prop({ trim: true, default: '' })     subtitle: string;     // English
+  /** When the trainer uses it, e.g. prepared in advance or written live. */
+  @Prop({ trim: true, default: '' })     when: string;
+  @Prop({ type: Boolean, default: false }) live: boolean;
+  /** Lessons whose audio explains this chart. */
+  @Prop({ type: [String], default: [] }) lessonCodes: string[];
+}
+export const CourseFlipChartSchema = SchemaFactory.createForClass(CourseFlipChart);
+
 export type CourseDocument = Course & Document;
 
 @Schema({ timestamps: true })
@@ -87,6 +103,9 @@ export class Course {
 
   @Prop({ type: CoursePointsSchema, default: () => ({}) })
   points: CoursePoints;
+
+  @Prop({ type: [CourseFlipChartSchema], default: [] })
+  flipCharts: CourseFlipChart[];
 
   /** Title of the badge shown on the murabbi's account once certified. */
   @Prop({ trim: true, default: 'Certified Asaas Murabbi' })
@@ -337,3 +356,24 @@ export class MurabbiPoint {
 }
 export const MurabbiPointSchema = SchemaFactory.createForClass(MurabbiPoint);
 MurabbiPointSchema.index({ user: 1, reason: 1, ref: 1 }, { unique: true });
+
+// ── Flip chart views ─────────────────────────────────────────────────────────
+
+export type FlipChartViewDocument = FlipChartView & Document;
+
+/** How long a murabbi has looked at each flip chart. Counts as studied at FLIP_CHART_STUDIED_SEC. */
+@Schema({ timestamps: true })
+export class FlipChartView {
+  @Prop({ type: Types.ObjectId, ref: 'Course', required: true }) course: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })   user: Types.ObjectId;
+  @Prop({ type: String, required: true })                        chart: string;
+  @Prop({ type: Number, default: 0 })                            seconds: number;
+  /** Separate openings (a report after a gap of 10+ minutes starts a new one). */
+  @Prop({ type: Number, default: 0 })                            opens: number;
+  @Prop({ type: Date, default: null })                           studiedAt: Date | null;
+  @Prop({ type: Date, default: null })                           lastViewedAt: Date | null;
+}
+export const FlipChartViewSchema = SchemaFactory.createForClass(FlipChartView);
+FlipChartViewSchema.index({ course: 1, user: 1, chart: 1 }, { unique: true });
+
+export const FLIP_CHART_STUDIED_SEC = 20;

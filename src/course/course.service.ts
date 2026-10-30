@@ -7,11 +7,12 @@ import { Model, Types } from 'mongoose';
 import {
   Course, CourseAssignment, CourseAssignmentDocument, CourseAttempt, CourseAttemptDocument, CourseDocument,
   CourseLesson, CourseLessonDocument, CoursePractical, CoursePracticalDocument, CourseReflection,
-  CourseReflectionDocument, CourseSection, CourseSectionDocument, LessonProgress, LessonProgressDocument, MurabbiPoint,
-  MurabbiPointDocument, PRACTICAL_CRITERIA, practicalBand,
+  CourseReflectionDocument, CourseSection, CourseSectionDocument, FLIP_CHART_STUDIED_SEC, FlipChartView,
+  FlipChartViewDocument, LessonProgress, LessonProgressDocument, MurabbiPoint, MurabbiPointDocument, PRACTICAL_CRITERIA,
+  practicalBand,
 } from './course.schema';
 import {
-  AssignCourseDto, HeartbeatDto, PracticalDto, ReflectionDto, ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto,
+  AssignCourseDto, FlipChartViewDto, HeartbeatDto, PracticalDto, ReflectionDto, ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto,
   UpdateCourseSettingsDto,
 } from './course.dto';
 import { AudioStoreService, looksLikeMp3 } from './audio-store.service';
@@ -22,6 +23,7 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
 import asaasContent from './content/asaas-tier1.json';
 import asaasQuestions from './content/asaas-questions.json';
+import asaasFlipCharts from './content/asaas-flipcharts.json';
 
 export const ASAAS_KEY = 'asaas-tier1';
 const MAX_AUDIO_BYTES = 15 * 1024 * 1024;
@@ -43,6 +45,7 @@ export class CourseService implements OnModuleInit {
     @InjectModel(CourseReflection.name) private readonly reflectionModel: Model<CourseReflectionDocument>,
     @InjectModel(CoursePractical.name)  private readonly practicalModel:  Model<CoursePracticalDocument>,
     @InjectModel(MurabbiPoint.name)     private readonly pointModel:      Model<MurabbiPointDocument>,
+    @InjectModel(FlipChartView.name)    private readonly flipModel:       Model<FlipChartViewDocument>,
     @InjectModel(User.name)             private readonly userModel:       Model<UserDocument>,
     private readonly audio: AudioStoreService,
     private readonly training: TrainingService,
@@ -95,6 +98,9 @@ export class CourseService implements OnModuleInit {
     }
     if (!course.questions?.length && (asaasQuestions as any[]).length) {
       await this.courseModel.updateOne({ _id: course._id, 'questions.0': { $exists: false } }, { $set: { questions: asaasQuestions } });
+    }
+    if (!course.flipCharts?.length) {
+      await this.courseModel.updateOne({ _id: course._id, 'flipCharts.0': { $exists: false } }, { $set: { flipCharts: asaasFlipCharts } });
     }
   }
 
@@ -281,7 +287,7 @@ export class CourseService implements OnModuleInit {
       this.lessons(course._id),
     ]);
     const userIds = assignments.map((a) => (a.user as any)?._id).filter(Boolean);
-    const [progress, attempts, reflections, practicals, certs] = await Promise.all([
+    const [progress, attempts, reflections, practicals, certs, flips] = await Promise.all([
       this.progressModel.aggregate([
         { $match: { course: course._id, user: { $in: userIds } } },
         { $group: { _id: '$user', completed: { $sum: { $cond: ['$completed', 1, 0] } }, heardSec: { $sum: '$heardSec' }, listenSec: { $sum: '$listenSec' }, last: { $max: '$lastBeatAt' } } },
@@ -293,7 +299,10 @@ export class CourseService implements OnModuleInit {
       this.reflectionModel.find({ course: course._id, user: { $in: userIds } }).select('user status submittedAt').lean(),
       this.practicalModel.find({ course: course._id, user: { $in: userIds } }).select('user total').lean(),
       this.training.certificatesFor(userIds, course.tier),
+      this.flipModel.find({ course: course._id, user: { $in: userIds } }).select('user chart seconds studiedAt').lean(),
     ]);
+    const chartKeys = new Set((course.flipCharts ?? []).map((c) => c.key));
+    const studied = flips.filter((f) => f.studiedAt && chartKeys.has(f.chart));
     const totalSec = lessons.reduce((s, l) => s + l.durationSec, 0);
     const today = new Date(Date.now() + 5 * 3600_000).toISOString().slice(0, 10);
     const find = <T extends { _id?: any; user?: any }>(rows: T[], id: string, key: '_id' | 'user' = '_id') => rows.find((r) => r[key]?.toString() === id);
@@ -321,6 +330,7 @@ export class CourseService implements OnModuleInit {
         reflection: ref ? ref.status : null,
         practical: pr ? { total: pr.total, band: practicalBand(pr.total) } : null,
         certificate: cert ? { number: cert.certificateNumber, issuedAt: cert.issuedAt } : null,
+        flipCharts: { studied: studied.filter((f) => f.user.toString() === id).length, total: chartKeys.size },
         status,
       };
     }).sort((x, y) => y.lessonsCompleted - x.lessonsCompleted);
@@ -333,8 +343,20 @@ export class CourseService implements OnModuleInit {
         listened: by('listened') + by('assessment-passed'), certified: by('certified'),
         overdue: rows.filter((r) => r.overdue).length,
         reflectionsToReview: reflections.filter((r) => r.status === 'submitted').length,
+        flipChartsAllStudied: rows.filter((r) => chartKeys.size && r.flipCharts.studied === chartKeys.size).length,
       },
       rows,
+      // Per chart: who has studied it (only assigned murabbis count).
+      flipCharts: (course.flipCharts ?? []).map((c) => {
+        const views = flips.filter((f) => f.chart === c.key);
+        return {
+          key: c.key, number: c.number, module: c.module, title: c.title, subtitle: c.subtitle, lessonCodes: c.lessonCodes,
+          studied: views.filter((f) => f.studiedAt).length,
+          studiedBy: views.filter((f) => f.studiedAt).map((f) => f.user.toString()),
+          opened: views.length,
+          minutes: Math.round(views.reduce((s, f) => s + f.seconds, 0) / 60),
+        };
+      }),
     };
   }
 
@@ -343,16 +365,24 @@ export class CourseService implements OnModuleInit {
     const course = await this.course(key);
     const user = await this.userModel.findById(userId).select('fullName email').lean();
     if (!user) throw new NotFoundException('Murabbi not found.');
-    const [lessons, progress, attempts, reflection, practical, sections] = await Promise.all([
+    const [lessons, progress, attempts, reflection, practical, sections, flips] = await Promise.all([
       this.lessons(course._id),
       this.progressByLesson(course._id, userId),
       this.attemptModel.find({ course: course._id, user: user._id }).select('scorePercent correct total passed createdAt').sort({ createdAt: -1 }).lean(),
       this.reflectionModel.findOne({ course: course._id, user: user._id }).populate('reviewedBy', 'fullName').lean(),
       this.practicalModel.findOne({ course: course._id, user: user._id }).populate('assessedBy', 'fullName').lean(),
       this.sectionModel.find({ course: course._id }).sort({ order: 1 }).lean(),
+      this.flipModel.find({ course: course._id, user: user._id }).select('chart seconds opens studiedAt lastViewedAt').lean(),
     ]);
     return {
       user, criteria: PRACTICAL_CRITERIA,
+      flipCharts: (course.flipCharts ?? []).map((c) => {
+        const v = flips.find((f) => f.chart === c.key);
+        return {
+          key: c.key, number: c.number, title: c.title, subtitle: c.subtitle,
+          studied: !!v?.studiedAt, seconds: Math.round(v?.seconds ?? 0), opens: v?.opens ?? 0, lastViewedAt: v?.lastViewedAt ?? null,
+        };
+      }),
       sections: sections.map((s) => ({
         _id: s._id, title: s.title, titleUr: s.titleUr,
         lessons: lessons.filter((l) => l.section.toString() === s._id.toString()).map((l) => {
@@ -467,7 +497,7 @@ export class CourseService implements OnModuleInit {
   async myCourse(key: string, user: Requester) {
     const course = await this.course(key);
     const assignment = user.role === UserRole.ADMIN ? null : await this.requireAssignment(course._id, user.id);
-    const [sections, lessons, progress, attempts, reflection, practical, points, certs, failures] = await Promise.all([
+    const [sections, lessons, progress, attempts, reflection, practical, points, certs, failures, flips] = await Promise.all([
       this.sectionModel.find({ course: course._id }).sort({ order: 1 }).lean(),
       this.lessons(course._id),
       this.progressByLesson(course._id, user.id),
@@ -477,8 +507,10 @@ export class CourseService implements OnModuleInit {
       this.pointsTotal(user.id),
       this.training.certificatesFor([new Types.ObjectId(user.id)], course.tier),
       this.recentFailures(course._id, user.id),
+      this.flipModel.find({ course: course._id, user: new Types.ObjectId(user.id) }).select('chart seconds studiedAt').lean(),
     ]);
     const open = this.unlocked(course, lessons, progress);
+    const lessonByCode = new Map(lessons.map((l) => [l.code, l]));
     const completed = lessons.filter((l) => progress.get(l._id.toString())?.completed).length;
     const totalSec = lessons.reduce((s, l) => s + l.durationSec, 0);
     const heardSec = [...progress.values()].reduce((s, p) => s + (p.heardSec ?? 0), 0);
@@ -529,6 +561,17 @@ export class CourseService implements OnModuleInit {
       },
       practical: practical && { scores: practical.scores, total: practical.total, band: practicalBand(practical.total), notes: practical.notes, criteria: PRACTICAL_CRITERIA },
       certificate: certs[0] ? { number: certs[0].certificateNumber, issuedAt: certs[0].issuedAt, tier: course.tier } : null,
+      // A chart opens with the first lesson that explains it.
+      flipCharts: (course.flipCharts ?? []).map((c) => {
+        const linked = c.lessonCodes.map((code) => lessonByCode.get(code)).filter((l) => !!l);
+        const v = flips.find((f) => f.chart === c.key);
+        return {
+          key: c.key, number: c.number, module: c.module, title: c.title, subtitle: c.subtitle, when: c.when, live: c.live,
+          lessons: linked.map((l) => ({ _id: l._id, code: l.code, title: l.title, durationSec: l.durationSec })),
+          locked: !linked.some((l) => open.has(l._id.toString())),
+          studied: !!v?.studiedAt, seconds: Math.round(v?.seconds ?? 0),
+        };
+      }),
     };
   }
 
@@ -622,6 +665,35 @@ export class CourseService implements OnModuleInit {
     }
     const { stream } = await this.audio.open(lesson.audio.fileId);
     return { stream, size, start: 0, end: size - 1, partial: false };
+  }
+
+  // ══ Murabbi: flip charts ═══════════════════════════════════════════════════
+
+  /** Time a flip chart was on screen. It counts as studied after FLIP_CHART_STUDIED_SEC in total. */
+  async viewFlipChart(key: string, chartKey: string, user: Requester, dto: FlipChartViewDto) {
+    const course = await this.course(key);
+    const chart = (course.flipCharts ?? []).find((c) => c.key === chartKey);
+    if (!chart) throw new NotFoundException('Flip chart not found.');
+    if (user.role === UserRole.ADMIN) return { studied: false, seconds: 0 }; // admins previewing aren't tracked
+    await this.requireAssignment(course._id, user.id);
+
+    const uid = new Types.ObjectId(user.id);
+    const now = new Date();
+    const prev = await this.flipModel.findOne({ course: course._id, user: uid, chart: chart.key }).select('seconds lastViewedAt studiedAt').lean();
+    // Credit no more time than has passed since the last report (plus slack), like lesson listening.
+    const since = prev?.lastViewedAt ? (now.getTime() - new Date(prev.lastViewedAt).getTime()) / 1000 : null;
+    const seconds = Math.min(dto.seconds, since == null ? 60 : since + 5, 120);
+    const total = (prev?.seconds ?? 0) + seconds;
+    const studiedNow = !prev?.studiedAt && total >= FLIP_CHART_STUDIED_SEC;
+    await this.flipModel.updateOne(
+      { course: course._id, user: uid, chart: chart.key },
+      {
+        $inc: { seconds, opens: since == null || since > 600 ? 1 : 0 },
+        $set: { lastViewedAt: now, ...(studiedNow && { studiedAt: now }) },
+      },
+      { upsert: true },
+    );
+    return { studied: !!prev?.studiedAt || studiedNow, seconds: Math.round(total), justStudied: studiedNow };
   }
 
   // ══ Murabbi: assessment and reflection ═════════════════════════════════════
