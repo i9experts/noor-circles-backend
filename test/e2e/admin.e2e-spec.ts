@@ -66,6 +66,15 @@ describe('Admin', () => {
       });
     });
 
+    it('GET stats counts murabbis enrolled in Asaas and those certified', async () => {
+      expect((await get('stats')).body.data).toMatchObject({ asaasEnrolled: 0, asaasCertified: 0 });
+      const assign = await ctx.http().post(`${API}/course/asaas-tier1/assign`).set(A()).send({ userIds: [w.A.id, w.B.id] });
+      expect(assign.status).toBe(201);
+      await ctx.db.collection('courseassignments').updateOne({ user: new Types.ObjectId(w.A.id) }, { $set: { certifiedAt: new Date() } });
+      expect((await get('stats')).body.data).toMatchObject({ asaasEnrolled: 2, asaasCertified: 1 });
+      await ctx.db.collection('courseassignments').deleteMany({});
+    });
+
     it('GET dashboard/extended lists active circles with enrolment counts + activity feed', async () => {
       const r = await get('dashboard/extended');
       expect(r.status).toBe(200);

@@ -37,6 +37,9 @@ import { deleteStudentCascade } from '../student/student-cleanup';
 import { Performance, PerformanceDocument } from '../performance/performance.schema';
 import { attendanceTotals, rateOf } from '../attendance/attendance-stats';
 import { SyllabusTrack, SyllabusTrackDocument } from '../syllabus/syllabus.schema';
+import { Course, CourseAssignment, CourseAssignmentDocument, CourseDocument } from '../course/course.schema';
+
+const ASAAS_KEY = 'asaas-tier1';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -55,6 +58,8 @@ export class AdminService {
     @InjectModel(Incentive.name)     private readonly incentiveModel:     Model<IncentiveDocument>,
     @InjectModel(SyllabusTrack.name) private readonly trackModel:         Model<SyllabusTrackDocument>,
     @InjectModel(Performance.name)   private readonly performanceModel:   Model<PerformanceDocument>,
+    @InjectModel(Course.name)           private readonly courseModel:     Model<CourseDocument>,
+    @InjectModel(CourseAssignment.name) private readonly assignmentModel: Model<CourseAssignmentDocument>,
     private readonly usersService:        UsersService,
     private readonly notifService:        NotificationService,
     private readonly announcementService: AnnouncementService,
@@ -95,6 +100,7 @@ export class AdminService {
     ]);
 
     const avgAttendanceRate = rateOf(attendanceSessions.get('all'));
+    const asaas = await this.asaasCounts();
 
     return {
       totalMurabbis,
@@ -108,7 +114,21 @@ export class AdminService {
       sessionsCompleted,
       avgAttendanceRate,
       parentEngagement: totalParents > 0 ? Math.round((engagedParents / totalParents) * 100) : 0,
+      asaasEnrolled : asaas.enrolled,
+      asaasCertified: asaas.certified,
     };
+  }
+
+  /** Murabbis assigned the Asaas training, and how many of them are certified. */
+  private async asaasCounts() {
+    const course = await this.courseModel.findOne({ key: ASAAS_KEY }).select('_id').lean();
+    if (!course) return { enrolled: 0, certified: 0 };
+    const murabbis = await this.userModel.find({ role: UserRole.MURABBI }).distinct('_id');
+    const [enrolled, certified] = await Promise.all([
+      this.assignmentModel.countDocuments({ course: course._id, user: { $in: murabbis } }),
+      this.assignmentModel.countDocuments({ course: course._id, user: { $in: murabbis }, certifiedAt: { $ne: null } }),
+    ]);
+    return { enrolled, certified };
   }
 
   // ── Murabbis ──────────────────────────────────────────────────────────────────

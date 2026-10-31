@@ -14,6 +14,8 @@ import { Incentive, IncentiveSchema }         from '../incentive/incentive.schem
 import { SyllabusTrack, SyllabusTrackSchema } from '../syllabus/syllabus.schema';
 import { Performance, PerformanceSchema }     from '../performance/performance.schema';
 
+import { Course, CourseAssignment, CourseAssignmentSchema, CourseSchema } from '../course/course.schema';
+
 @Module({
   imports: [
     UsersModule,
@@ -29,6 +31,8 @@ import { Performance, PerformanceSchema }     from '../performance/performance.s
       { name: Incentive.name,     schema: IncentiveSchema     },
       { name: SyllabusTrack.name, schema: SyllabusTrackSchema },
       { name: Performance.name,   schema: PerformanceSchema   },
+      { name: Course.name,           schema: CourseSchema           },
+      { name: CourseAssignment.name, schema: CourseAssignmentSchema },
     ]),
   ],
   controllers: [AdminController],
