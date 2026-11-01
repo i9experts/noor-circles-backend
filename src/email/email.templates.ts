@@ -335,24 +335,24 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
 
   // 20. Training assigned
   'training.assigned': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => ({
       subject: `New training: ${d.courseTitle}`,
       preheader: d.dueDate ? `Please complete it by ${fmtDate(d.dueDate)}.` : 'Start listening when you’re ready.',
       heading: `Assalam-o-Alaikum ${first(d.name)}, you have a new training`,
       headingUr: 'آپ کے لیے نئی تربیت',
       en: [
-        `You’ve been assigned the **${d.courseTitle}**: ${d.lessons} short audio lessons (about ${d.minutes} minutes in all), then an assessment and a short written reflection. Completing it earns your Tier 1 certificate and the **${d.badge}** badge.`,
+        `You’ve been given the **${d.courseTitle}**: ${d.lessons} short audio lessons (about ${d.minutes} minutes in all). Completing it earns your certificate${d.badge ? ` and the **${d.badge}** badge` : ''}.`,
         ...(d.note ? [`Note from the team: ${d.note}`] : []),
       ],
-      ur: [`آپ کو **Asaas مربی تربیت** دی گئی ہے: مختصر آڈیو اسباق، پھر ایک جائزہ اور مختصر تحریری عکاسی۔ مکمل کرنے پر Tier 1 سرٹیفکیٹ ملے گا۔`],
+      ur: [`آپ کو نئی تربیت **${d.courseTitle}** دی گئی ہے: ${d.lessons} مختصر آڈیو اسباق۔ مکمل کرنے پر آپ کو سرٹیفکیٹ ملے گا۔`],
       facts: d.dueDate ? [['Complete by', fmtDate(d.dueDate)]] : undefined,
       button: { label: 'Start listening', labelUr: 'سننا شروع کریں', url: d.url },
     }),
   },
   // 21. Reminders
   'training.reminder': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => {
       const progress = `${d.done} of ${d.total} lessons heard`;
       const v: Record<string, { s: string; h: string; en: string; ur: string }> = {
@@ -391,7 +391,7 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
   },
   // 22. All lessons heard
   'training.lessons-done': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => ({
       subject: 'You’ve heard every lesson: next, the assessment',
       heading: `MashaAllah ${first(d.name)}, every lesson heard`,
@@ -407,7 +407,7 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
   },
   // 23. Assessment result
   'training.assessment': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => (d.passed ? {
       subject: `You passed the assessment: ${d.score}%`,
       heading: `MashaAllah ${first(d.name)}, you passed with ${d.score}%`,
@@ -433,7 +433,7 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
   },
   // 24. Reflection reviewed
   'training.reflection': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => (d.approved ? {
       subject: 'Your reflection was approved',
       heading: 'Your reflection was approved',
@@ -451,7 +451,7 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
   },
   // 25. Practical score
   'training.practical': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => ({
       subject: `Your practical score: ${d.total}/18`,
       heading: `Your practical score: ${d.total}/18`,
@@ -466,18 +466,40 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
   },
   // 26. Certified
   'training.certified': {
-    lang: () => 'en-first',
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
     build: (d) => ({
-      subject: `MashaAllah! You are a ${d.badge}`,
-      heading: `MashaAllah ${first(d.name)}, you are a ${d.badge}`,
-      headingUr: 'مبارک ہو! آپ Certified Asaas Murabbi ہیں',
+      subject: d.attached ? `MashaAllah! You are a ${d.badge}` : `MashaAllah! You’ve completed the ${d.courseTitle}`,
+      heading: d.attached ? `MashaAllah ${first(d.name)}, you are a ${d.badge}` : `MashaAllah ${first(d.name)}, you’ve completed the ${d.courseTitle}`,
+      headingUr: 'مبارک ہو! آپ نے تربیت مکمل کر لی',
       en: [
-        `You’ve completed the ${d.courseTitle}. Your Tier 1 certificate is attached, and the **${d.badge}** badge is now on your profile.`,
-        'May Allah make you a source of light for the children of your neighbourhood.',
+        `Your certificate is ${d.attached ? 'attached' : 'ready in the portal'}${d.badge ? `, and the **${d.badge}** badge is now on your profile` : ''}.`,
+        d.role === 'parent' ? 'May Allah make your home a garden of tarbiyah.' : 'May Allah make you a source of light for the children of your neighbourhood.',
       ],
-      ur: ['آپ نے Asaas تربیت مکمل کر لی ہے۔ آپ کا سرٹیفکیٹ اس ای میل کے ساتھ منسلک ہے۔ اللہ تعالیٰ آپ کو اپنے محلے کے بچوں کے لیے روشنی کا ذریعہ بنائے۔'],
+      ur: [`آپ نے **${d.courseTitle}** مکمل کر لی ہے۔ ${d.attached ? 'آپ کا سرٹیفکیٹ اس ای میل کے ساتھ منسلک ہے۔' : 'آپ کا سرٹیفکیٹ پورٹل میں موجود ہے۔'} اللہ تعالیٰ آپ کی محنت قبول فرمائے۔`],
       facts: [['Certificate No.', d.number]],
       button: { label: 'Open my profile', labelUr: 'پروفائل', url: d.url },
+    }),
+  },
+
+  // Trainings marketplace: a request to the team, and a decline to the person
+  'training.request-alert': {
+    lang: () => 'en-first',
+    build: (d) => ({
+      subject: `Training request: ${d.name} → ${d.courseTitle}`,
+      heading: 'A training request is waiting for approval',
+      en: [`**${d.name}** (${d.role}) has finished what was needed and asks to join **${d.courseTitle}**.`, ...(d.note ? [`Their note: ${d.note}`] : [])],
+      button: { label: 'Review requests', url: d.url },
+    }),
+  },
+  'training.declined': {
+    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
+    build: (d) => ({
+      subject: `About your request for ${d.courseTitle}`,
+      heading: `Assalam-o-Alaikum ${first(d.name)}`,
+      headingUr: 'آپ کی درخواست کے بارے میں',
+      en: [`Your request to join **${d.courseTitle}** can’t be approved just now.`, ...(d.reason ? [`From the team: ${d.reason}`] : []), 'You can ask again from Trainings whenever you’re ready.'],
+      ur: [`**${d.courseTitle}** میں شمولیت کی آپ کی درخواست ابھی منظور نہیں ہو سکی۔`, ...(d.reason ? [`ٹیم کی طرف سے: ${d.reason}`] : []), 'آپ جب تیار ہوں، Trainings سے دوبارہ درخواست دے سکتے ہیں۔'],
+      button: { label: 'Open Trainings', labelUr: 'تربیتیں', url: d.url },
     }),
   },
 

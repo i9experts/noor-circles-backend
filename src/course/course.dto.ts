@@ -1,12 +1,12 @@
 import {
   ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsIn, IsInt, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString,
-  Matches, Max, MaxLength, Min, ValidateNested,
+  Matches, Max, MaxLength, Min, ValidateIf, ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { safeTrim } from '../common/utils/transform.util';
 
 export class AssignCourseDto {
-  @IsArray() @ArrayMinSize(1, { message: 'Choose at least one murabbi.' }) @ArrayMaxSize(500)
+  @IsArray() @ArrayMinSize(1, { message: 'Choose at least one person.' }) @ArrayMaxSize(500)
   @IsMongoId({ each: true })
   userIds: string[];
 
@@ -57,6 +57,116 @@ export class UpdateCourseSettingsDto {
 
   @IsOptional() @ValidateNested() @Type(() => CoursePointsDto)
   points?: CoursePointsDto;
+
+  // ── Catalogue (marketplace) ────────────────────────────────────────────────
+
+  @IsOptional() @IsString() @IsNotEmpty({ message: 'Give the training a title.' }) @MaxLength(150) @Transform(safeTrim)
+  title?: string;
+
+  @IsOptional() @IsString() @MaxLength(150) @Transform(safeTrim)
+  titleUr?: string;
+
+  @IsOptional() @IsString() @MaxLength(500)
+  summary?: string;
+
+  @IsOptional() @IsString() @MaxLength(500)
+  summaryUr?: string;
+
+  @IsOptional() @IsString() @MaxLength(60) @Transform(safeTrim)
+  category?: string;
+
+  @IsOptional() @IsString() @MaxLength(100) @Transform(safeTrim)
+  trainer?: string;
+
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(100) @Transform(safeTrim)
+  badge?: string;
+
+  @IsOptional() @IsBoolean()
+  published?: boolean;
+
+  @IsOptional() @IsArray() @ArrayMaxSize(20) @IsString({ each: true })
+  prerequisites?: string[];
+
+  @IsOptional() @IsInt() @Min(0) @Max(1000)
+  position?: number;
+
+  /** Murabbi tier this training leads to (1–3), or null. */
+  @IsOptional() @ValidateIf((_o, v) => v !== null) @IsIn([1, 2, 3])
+  tier?: number | null;
+}
+
+export class CreateCourseDto {
+  @IsString() @IsNotEmpty({ message: 'Give the training a title.' }) @MaxLength(150) @Transform(safeTrim)
+  title: string;
+
+  @IsOptional() @IsString() @MaxLength(150) @Transform(safeTrim)
+  titleUr?: string;
+
+  @IsIn(['murabbi', 'parent'], { message: 'Choose who the training is for.' })
+  audience: 'murabbi' | 'parent';
+
+  @IsOptional() @IsString() @MaxLength(500)
+  summary?: string;
+
+  @IsOptional() @IsString() @MaxLength(60) @Transform(safeTrim)
+  category?: string;
+}
+
+export class CourseSectionDto {
+  @IsString() @IsNotEmpty({ message: 'Give the module a title.' }) @MaxLength(150) @Transform(safeTrim)
+  title: string;
+
+  @IsOptional() @IsString() @MaxLength(150) @Transform(safeTrim)
+  titleUr?: string;
+
+  @IsOptional() @IsString() @MaxLength(200)
+  meta?: string;
+}
+
+export class UpdateCourseSectionDto {
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(150) @Transform(safeTrim)
+  title?: string;
+
+  @IsOptional() @IsString() @MaxLength(150) @Transform(safeTrim)
+  titleUr?: string;
+
+  @IsOptional() @IsString() @MaxLength(200)
+  meta?: string;
+
+  @IsOptional() @IsIn(['up', 'down'])
+  move?: 'up' | 'down';
+}
+
+export class CourseLessonDto {
+  @IsMongoId({ message: 'Choose the module.' })
+  sectionId: string;
+
+  @IsString() @IsNotEmpty({ message: 'Give the lesson a title.' }) @MaxLength(200) @Transform(safeTrim)
+  title: string;
+
+  @IsOptional() @IsString() @MaxLength(200)
+  topic?: string;
+
+  /** The script; a blank line starts a new paragraph. */
+  @IsOptional() @IsString() @MaxLength(50000)
+  transcript?: string;
+}
+
+export class UpdateCourseLessonDto {
+  @IsOptional() @IsMongoId()
+  sectionId?: string;
+
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(200) @Transform(safeTrim)
+  title?: string;
+
+  @IsOptional() @IsString() @MaxLength(200)
+  topic?: string;
+
+  @IsOptional() @IsString() @MaxLength(50000)
+  transcript?: string;
+
+  @IsOptional() @IsIn(['up', 'down'])
+  move?: 'up' | 'down';
 }
 
 export class CourseQuestionDto {

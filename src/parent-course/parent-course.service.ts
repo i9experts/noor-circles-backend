@@ -56,6 +56,28 @@ export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
     private readonly email: EmailService,
   ) {
     courses.registerSeeder(PARENT_COURSE_KEY, () => this.seed());
+    courses.registerSteps(PARENT_COURSE_KEY, (userId) => this.steps(userId));
+  }
+
+  /** What finishing Asaas for Parents means, step by step (shown in the trainings marketplace). */
+  async steps(userId: string) {
+    const course = await this.course();
+    const uid = new Types.ObjectId(userId);
+    const [total, heard, passed, endCheck, a] = await Promise.all([
+      this.lessonModel.countDocuments({ course: course._id }),
+      this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
+      this.attemptModel.distinct('quiz', { course: course._id, user: uid, passed: true }),
+      this.selfCheckModel.exists({ course: course._id, user: uid, stage: 'end' }),
+      this.assignmentModel.findOne({ course: course._id, user: uid }).select('certificateNumber').lean(),
+    ]);
+    const modules = passed.filter((q) => q !== 'final').length;
+    return [
+      { label: 'Listen to every lesson', done: !!total && heard >= total, detail: `${heard} of ${total}` },
+      { label: 'Pass the module checks', done: modules >= PARENT_QUIZZES.length - 1, detail: `${modules} of ${PARENT_QUIZZES.length - 1}` },
+      { label: 'Pass the final check', done: passed.includes('final') },
+      { label: 'Share your closing self-check', done: !!endCheck },
+      { label: 'Certified', done: !!a?.certificateNumber },
+    ];
   }
 
   private emailTimer: NodeJS.Timeout | null = null;
@@ -129,7 +151,7 @@ export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
         course = await this.courseModel.create({
           key: PARENT_COURSE_KEY, title: c.title, titleUr: c.titleUr, trainer: c.trainer, audience: 'parent', tier: null,
           sequential: false, completionThreshold: 0.9, badge: extras.certificate.badgeEn, flipCharts,
-          reflectionPrompt: '', reflectionMinChars: 0,
+          reflectionPrompt: '', reflectionMinChars: 0, published: true, position: 10,
         });
       } catch (err: any) {
         if (err?.code !== 11000) throw err;

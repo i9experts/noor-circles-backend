@@ -33,6 +33,7 @@ import { AccountModule }       from './account/account.module';
 import { EmailModule }         from './email/email.module';
 import { InsightsModule }      from './insights/insights.module';
 import { ClusterModule }       from './cluster/cluster.module';
+import { MarketplaceModule }   from './marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { ClusterModule }       from './cluster/cluster.module';
     EmailModule,
     InsightsModule,
     ClusterModule,
+    MarketplaceModule,
   ],
   providers: [
     // Apply rate limiting globally
