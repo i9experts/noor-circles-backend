@@ -1,10 +1,18 @@
 import {
-  IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateNested,
+  IsEmail, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { FamilyProfileDto } from '../insights/family-profile';
 import { safeEmail, safeTrim } from '../common/utils/transform.util';
 import { INTEREST_ROLES, INTEREST_STATUSES } from './interest.schema';
+
+export class LocationDto {
+  @IsNumber() @Min(-90) @Max(90)
+  lat: number;
+
+  @IsNumber() @Min(-180) @Max(180)
+  lng: number;
+}
 
 export class CreateInterestDto {
   @IsIn(INTEREST_ROLES, { message: 'Role must be parent, mentor or host.' })
@@ -31,6 +39,16 @@ export class CreateInterestDto {
 
   @IsOptional() @IsString() @MaxLength(80) @Transform(safeTrim)
   roleDetail?: string;
+
+  @IsOptional() @IsString() @MaxLength(80) @Transform(safeTrim)
+  district?: string;
+
+  @IsOptional() @IsString() @MaxLength(80) @Transform(safeTrim)
+  province?: string;
+
+  /** From "Use my location" (stored rounded to about 1 km). */
+  @IsOptional() @ValidateNested() @Type(() => LocationDto)
+  location?: LocationDto;
 
   /** Parents only: the optional "about your family" answers. */
   @IsOptional() @ValidateNested() @Type(() => FamilyProfileDto)

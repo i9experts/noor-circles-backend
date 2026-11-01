@@ -33,6 +33,24 @@ export class Interest {
   @Prop({ required: true, trim: true, maxlength: 100 })
   neighbourhood: string;
 
+  /** City and area exactly as typed (city and neighbourhood hold the tidied names). */
+  @Prop({ trim: true, maxlength: 80 })
+  cityRaw: string;
+
+  @Prop({ trim: true, maxlength: 100 })
+  neighbourhoodRaw: string;
+
+  /** For a city that isn't on the website's list: the district and province picked. */
+  @Prop({ trim: true, maxlength: 80, default: '' })
+  district: string;
+
+  @Prop({ trim: true, maxlength: 80, default: '' })
+  province: string;
+
+  /** "Use my location", rounded to about 1 km. Admin-only. */
+  @Prop({ type: Object, default: null })
+  location: { lat: number; lng: number } | null;
+
   /** Child's age band (parent), background (mentor) or space type (host). */
   @Prop({ trim: true, maxlength: 80, default: '' })
   roleDetail: string;

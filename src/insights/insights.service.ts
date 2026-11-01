@@ -6,6 +6,7 @@ import { Interest, InterestDocument } from '../interest/interest.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { Circle, CircleDocument } from '../circle/circle.schema';
 import { Neighbourhood, NeighbourhoodDocument } from '../neighbourhood/neighbourhood.schema';
+import { PlacesService } from '../places/places.service';
 import { FamilyProfile, FamilyProfileDto, PROFILE_OPTIONS, cleanProfile } from './family-profile';
 
 type Status = 'new' | 'contacted' | 'closed' | 'registered' | 'enrolled';
@@ -54,6 +55,7 @@ export class InsightsService {
     @InjectModel(Student.name)       private readonly studentModel:  Model<StudentDocument>,
     @InjectModel(Circle.name)        private readonly circleModel:   Model<CircleDocument>,
     @InjectModel(Neighbourhood.name) private readonly areaModel:     Model<NeighbourhoodDocument>,
+    private readonly places: PlacesService,
   ) {}
 
   /** Parents on file plus parent interest requests that haven't become a parent record yet. */
@@ -97,6 +99,8 @@ export class InsightsService {
         profile,
       });
     }
+    // One spelling per city and area ("FAISALABAD", "Faislabad" → "Faisalabad").
+    await this.places.tidyRows(rows);
     return rows.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   }
 

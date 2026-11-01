@@ -553,7 +553,7 @@ export class ClusterService {
     const f = await this.interestFilter(scope);
     if (!f) return { requests: [] };
     // The family profile answers stay with admins (Parent Insights).
-    const requests = await this.interestModel.find(f).select('-profile')
+    const requests = await this.interestModel.find(f).select('-profile -location')
       .populate('account', 'email role isActive mustChangePassword lastLoginAt').sort({ createdAt: -1 }).limit(500).lean();
     return { requests };
   }
@@ -567,7 +567,7 @@ export class ClusterService {
   async updateInterest(scope: Scope, id: string, dto: { status?: string; notes?: string }) {
     await this.requireInterest(scope, id);
     const { interest } = await this.interests.update(id, dto as any);
-    const { profile: _profile, ...rest } = interest as any;
+    const { profile: _profile, location: _location, ...rest } = interest as any;
     return { message: 'Interest request updated.', interest: rest };
   }
 
