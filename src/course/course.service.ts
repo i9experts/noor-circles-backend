@@ -84,7 +84,8 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     try {
       await this.seedAsaas();
-      // The trainings that existed before the marketplace are open in it.
+      // The trainings that existed before the marketplace are open in it (and older ones are for murabbis).
+      await this.courseModel.updateMany({ audience: { $exists: false } }, { $set: { audience: 'murabbi' } });
       await this.courseModel.updateMany({ published: { $exists: false } }, { $set: { published: true } });
     } catch (err) {
       this.logger.error(`Could not seed the Asaas course: ${(err as Error).message}`);
@@ -261,7 +262,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
       const found = await Promise.all(keys.map((k) => this.course(k).catch(() => {
         throw new BadRequestException('A required training no longer exists.');
       })));
-      if (found.some((f) => f.audience !== course.audience)) throw new BadRequestException('Required trainings must be for the same people (murabbis or parents).');
+      if (found.some((f) => (f.audience ?? 'murabbi') !== (course.audience ?? 'murabbi'))) throw new BadRequestException('Required trainings must be for the same people (murabbis or parents).');
       // No loops: none of the required trainings may (indirectly) require this one.
       const all = await this.courseModel.find().select('key prerequisites').lean();
       const needs = new Map(all.map((c) => [c.key, c.prerequisites ?? []]));
