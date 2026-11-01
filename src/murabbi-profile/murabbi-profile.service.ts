@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { User, UserDocument, UserRole } from '../user/user.schema';
 import { MurabbiProfile, MurabbiProfileDocument } from './murabbi-profile.schema';
 import {
-  HARD_SKILLS, Introduction, LANGUAGES, LEVELS, MurabbiProfileDto, QURAN, SOFT_SKILLS, SkillKey, cleanIntroduction, completeness,
+  HARD_SKILLS, LANGUAGES, LEVELS, MurabbiProfileDto, QURAN, SOFT_SKILLS, SkillKey, cleanIntroduction, completeness,
 } from './murabbi-profile.options';
 
 export interface ProfileFilters {
