@@ -116,6 +116,30 @@ export class Course {
   /** Title of the badge shown on the murabbi's account once certified. */
   @Prop({ trim: true, default: 'Certified Asaas Murabbi' })
   badge: string;
+
+  // ── Trainings marketplace ──────────────────────────────────────────────────
+
+  /** Shown in the marketplace (otherwise only admins see it, e.g. while it's being built). */
+  @Prop({ type: Boolean, default: false })
+  published: boolean;
+
+  @Prop({ trim: true, maxlength: 500, default: '' })
+  summary: string;
+
+  @Prop({ trim: true, maxlength: 500, default: '' })
+  summaryUr: string;
+
+  /** A short label for grouping, e.g. "Foundations", "Parenting skills". */
+  @Prop({ trim: true, maxlength: 60, default: '' })
+  category: string;
+
+  /** Trainings (by key) that must be certified before someone can ask for this one. */
+  @Prop({ type: [String], default: [] })
+  prerequisites: string[];
+
+  /** Order in the marketplace (lower first). */
+  @Prop({ type: Number, default: 100 })
+  position: number;
 }
 export const CourseSchema = SchemaFactory.createForClass(Course);
 

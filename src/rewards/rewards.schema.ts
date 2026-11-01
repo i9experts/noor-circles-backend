@@ -32,9 +32,20 @@ export class RewardPool {
   @Prop({ type: Number, required: true, min: 0 })
   budget: number;
 
-  /** % of the budget for students; the rest goes to murabbis. */
+  /** % of the budget for students; parents get parentSharePct; the rest goes to murabbis. */
   @Prop({ type: Number, default: 60, min: 0, max: 100 })
   studentSharePct: number;
+
+  /** % of the budget for parents (by their monthly parent rating). */
+  @Prop({ type: Number, default: 0, min: 0, max: 100 })
+  parentSharePct: number;
+
+  @Prop({ type: Number, default: 5, min: 0, max: 100 })
+  maxParents: number;
+
+  /** Parents below this final rating aren't proposed. */
+  @Prop({ type: Number, default: 60, min: 0, max: 100 })
+  minParentScore: number;
 
   @Prop({ type: Number, default: 10, min: 0, max: 100 })
   maxStudents: number;
@@ -75,8 +86,8 @@ export class RewardAllocation {
   @Prop({ required: true })
   month: string;
 
-  @Prop({ type: String, enum: ['student', 'murabbi'], required: true })
-  recipientType: 'student' | 'murabbi';
+  @Prop({ type: String, enum: ['student', 'murabbi', 'parent'], required: true })
+  recipientType: 'student' | 'murabbi' | 'parent';
 
   @Prop({ type: Types.ObjectId, ref: 'Student', default: null })
   student: Types.ObjectId | null;
@@ -84,7 +95,11 @@ export class RewardAllocation {
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   murabbi: Types.ObjectId | null;
 
-  /** Points earned (student) or final rating (murabbi) when proposed. */
+  /** A parent's portal account. */
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  parent: Types.ObjectId | null;
+
+  /** Points earned (student) or final rating (murabbi, parent) when proposed. */
   @Prop({ type: Number, default: 0 })
   basisValue: number;
 
@@ -120,3 +135,4 @@ export const RewardAllocationSchema = SchemaFactory.createForClass(RewardAllocat
 RewardAllocationSchema.index({ pool: 1, recipientType: 1 });
 RewardAllocationSchema.index({ murabbi: 1, status: 1 });
 RewardAllocationSchema.index({ student: 1, status: 1 });
+RewardAllocationSchema.index({ parent: 1, status: 1 });

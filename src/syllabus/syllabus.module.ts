@@ -9,6 +9,7 @@ import { Student, StudentSchema } from '../student/student.schema';
 import { Parent, ParentSchema } from '../parent/parent.schema';
 import { Attendance, AttendanceSchema } from '../attendance/attendance.schema';
 import { Incentive, IncentiveSchema } from '../incentive/incentive.schema';
+import { ParentActivity, ParentActivitySchema } from '../parent-rating/parent-rating.schema';
 import { SyllabusService } from './syllabus.service';
 import { FamilyService } from './family.service';
 import { FamilyController, SyllabusController } from './syllabus.controller';
@@ -26,6 +27,7 @@ import { FamilyController, SyllabusController } from './syllabus.controller';
       { name: Parent.name,          schema: ParentSchema          },
       { name: Attendance.name,      schema: AttendanceSchema      },
       { name: Incentive.name,       schema: IncentiveSchema       },
+      { name: ParentActivity.name,  schema: ParentActivitySchema  },
     ]),
   ],
   controllers: [SyllabusController, FamilyController],

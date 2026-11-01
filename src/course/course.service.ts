@@ -12,10 +12,11 @@ import {
   practicalBand,
 } from './course.schema';
 import {
-  AssignCourseDto, FlipChartViewDto, HeartbeatDto, PracticalDto, ReflectionDto, ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto,
-  UpdateCourseSettingsDto,
+  AssignCourseDto, CourseLessonDto, CourseSectionDto, CreateCourseDto, FlipChartViewDto, HeartbeatDto, PracticalDto, ReflectionDto,
+  ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto, UpdateCourseLessonDto, UpdateCourseSectionDto, UpdateCourseSettingsDto,
 } from './course.dto';
 import { AudioStoreService, looksLikeMp3 } from './audio-store.service';
+import { mp3DurationSec } from './mp3-duration';
 import { Range, applyBeat } from './listening.util';
 import { User, UserDocument, UserRole } from '../user/user.schema';
 import { TrainingService } from '../training/training.service';
@@ -31,6 +32,15 @@ const MAX_AUDIO_BYTES = 15 * 1024 * 1024;
 const DAY_MS = 24 * 3600_000;
 
 type Requester = { id: string; role: string };
+
+/** One thing a person has to do to finish a training (shown in the marketplace). */
+export interface TrainingStep { label: string; done: boolean; detail?: string }
+/** A training with its own rules (Asaas for Parents) says what finishing it means. */
+export type StepsProvider = (userId: string) => Promise<TrainingStep[]>;
+
+/** Lesson length used until its audio is uploaded (the real length is read from the MP3). */
+const PLACEHOLDER_SEC = 60;
+const portalPath = (role?: string | null) => (role === UserRole.PARENT ? '/parent' : '/murabbi');
 
 /** Whole days (Pakistan time) from `start` to `now`: 0 on the first day. */
 export function dayIndex(start: Date, now = new Date()) {
@@ -74,6 +84,9 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     try {
       await this.seedAsaas();
+      // The trainings that existed before the marketplace are open in it (and older ones are for murabbis).
+      await this.courseModel.updateMany({ audience: { $exists: false } }, { $set: { audience: 'murabbi' } });
+      await this.courseModel.updateMany({ published: { $exists: false } }, { $set: { published: true } });
     } catch (err) {
       this.logger.error(`Could not seed the Asaas course: ${(err as Error).message}`);
     }
@@ -97,7 +110,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
       try {
         course = await this.courseModel.create({
           key: ASAAS_KEY, title: c.title, titleUr: c.titleUr, tier: c.tier, trainer: c.trainer,
-          reflectionPrompt: prompt,
+          reflectionPrompt: prompt, published: true, position: 10,
         });
       } catch (err: any) {
         if (err?.code !== 11000) throw err; // another instance seeded it first
@@ -134,6 +147,11 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   /** Other courses (e.g. Asaas for Parents) register how to seed themselves, for the retry below. */
   private readonly seeders = new Map<string, () => Promise<void>>();
   registerSeeder(key: string, seed: () => Promise<void>) { this.seeders.set(key, seed); }
+
+  /** Trainings with their own certificate rules (and so their own completion checks). */
+  private readonly stepProviders = new Map<string, StepsProvider>();
+  registerSteps(key: string, steps: StepsProvider) { this.stepProviders.set(key, steps); }
+  isCustom(key: string) { return this.stepProviders.has(key); }
 
   private async course(key: string) {
     let c = await this.courseModel.findOne({ key }).lean();
@@ -232,8 +250,35 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   async updateSettings(key: string, dto: UpdateCourseSettingsDto) {
     const course = await this.course(key);
     const $set: Record<string, unknown> = {};
-    for (const k of ['completionThreshold', 'sequential', 'passingScore', 'maxFailedAttemptsPerDay', 'requirePractical', 'reflectionPrompt', 'reflectionMinChars'] as const) {
+    for (const k of [
+      'completionThreshold', 'sequential', 'passingScore', 'maxFailedAttemptsPerDay', 'requirePractical', 'reflectionPrompt', 'reflectionMinChars',
+      'title', 'titleUr', 'summary', 'summaryUr', 'category', 'trainer', 'badge', 'published', 'position', 'tier',
+    ] as const) {
       if (dto[k] !== undefined) $set[k] = dto[k];
+    }
+    if (dto.prerequisites !== undefined) {
+      const keys = [...new Set(dto.prerequisites)].filter((k) => k !== course.key);
+      // Looked up one by one so a training that's created on first use (Asaas) is ready.
+      const found = await Promise.all(keys.map((k) => this.course(k).catch(() => {
+        throw new BadRequestException('A required training no longer exists.');
+      })));
+      if (found.some((f) => (f.audience ?? 'murabbi') !== (course.audience ?? 'murabbi'))) throw new BadRequestException('Required trainings must be for the same people (murabbis or parents).');
+      // No loops: none of the required trainings may (indirectly) require this one.
+      const all = await this.courseModel.find().select('key prerequisites').lean();
+      const needs = new Map(all.map((c) => [c.key, c.prerequisites ?? []]));
+      const seen = new Set<string>();
+      const stack = [...keys];
+      while (stack.length) {
+        const k = stack.pop()!;
+        if (k === course.key) throw new BadRequestException('That would make the trainings require each other.');
+        if (seen.has(k)) continue;
+        seen.add(k);
+        stack.push(...(needs.get(k) ?? []));
+      }
+      $set.prerequisites = keys;
+    }
+    if (dto.published && !course.published && !(await this.lessonModel.exists({ course: course._id, 'audio.fileId': { $ne: null } }))) {
+      throw new BadRequestException('Add at least one lesson with audio before publishing.');
     }
     if (dto.points) for (const [k, v] of Object.entries(dto.points)) if (v !== undefined) $set[`points.${k}`] = v;
     const updated = await this.courseModel.findByIdAndUpdate(course._id, { $set }, { new: true, runValidators: true }).lean();
@@ -268,7 +313,10 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
       if (f.size > MAX_AUDIO_BYTES) { rejected.push({ file: f.originalname, reason: 'larger than 15 MB' }); continue; }
       if (!looksLikeMp3(f.buffer)) { rejected.push({ file: f.originalname, reason: 'not an MP3 file' }); continue; }
       const fileId = await this.audio.save(f.buffer, `${course.key}/${lesson.code}.mp3`);
-      await this.lessonModel.updateOne({ _id: lesson._id }, { $set: { audio: { fileId, size: f.size, uploadedAt: new Date() } } });
+      const seconds = mp3DurationSec(f.buffer);
+      await this.lessonModel.updateOne({ _id: lesson._id }, { $set: {
+        audio: { fileId, size: f.size, uploadedAt: new Date() }, ...(seconds >= 1 && { durationSec: seconds }),
+      } });
       await this.audio.remove(lesson.audio?.fileId);
       matched.push(lesson.code);
     }
@@ -279,13 +327,179 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  // ══ Admin: building a training ═════════════════════════════════════════════
+
+  async createCourse(dto: CreateCourseDto) {
+    const base = dto.title.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'training';
+    let key = base;
+    for (let n = 2; await this.courseModel.exists({ key }); n++) key = `${base}-${n}`;
+    const last = await this.courseModel.findOne().sort({ position: -1 }).select('position').lean();
+    const course = await this.courseModel.create({
+      key, title: dto.title, titleUr: dto.titleUr ?? '', audience: dto.audience, summary: dto.summary ?? '', category: dto.category ?? '',
+      badge: dto.title, published: false, position: (last?.position ?? 0) + 10,
+    });
+    return { message: 'Training created. Add its modules and lessons, then publish it.', course };
+  }
+
+  async deleteCourse(key: string) {
+    const course = await this.course(key);
+    if (course.key === ASAAS_KEY || this.isCustom(course.key)) throw new BadRequestException('The Asaas trainings can’t be deleted.');
+    if (await this.assignmentModel.exists({ course: course._id })) {
+      throw new BadRequestException('People are enrolled in this training. Unpublish it instead, or unassign everyone first.');
+    }
+    const lessons = await this.lessonModel.find({ course: course._id }).select('audio').lean();
+    await Promise.all(lessons.map((l) => this.audio.remove(l.audio?.fileId)));
+    await Promise.all([
+      this.lessonModel.deleteMany({ course: course._id }), this.sectionModel.deleteMany({ course: course._id }),
+      this.progressModel.deleteMany({ course: course._id }), this.courseModel.deleteOne({ _id: course._id }),
+    ]);
+    await this.courseModel.updateMany({ prerequisites: course.key }, { $pull: { prerequisites: course.key } });
+    return { message: 'Training deleted.' };
+  }
+
+  /** Lessons are numbered through the whole training in module order (sequential unlocking follows it). */
+  private async renumber(courseId: Types.ObjectId) {
+    const sections = await this.sectionModel.find({ course: courseId }).sort({ order: 1 }).select('_id').lean();
+    const lessons = await this.lessonModel.find({ course: courseId }).sort({ order: 1 }).select('section order').lean();
+    let n = 0;
+    const ops = sections.flatMap((sec) => lessons.filter((l) => String(l.section) === String(sec._id)))
+      .map((l) => ({ updateOne: { filter: { _id: l._id }, update: { $set: { order: ++n } } } }));
+    if (ops.length) await this.lessonModel.bulkWrite(ops);
+  }
+
+  private async swap<T extends { _id: any; order: number }>(model: Model<any>, filter: Record<string, unknown>, item: T, move: 'up' | 'down') {
+    const neighbour = await model.findOne({ ...filter, order: move === 'up' ? { $lt: item.order } : { $gt: item.order } })
+      .sort({ order: move === 'up' ? -1 : 1 }).select('order').lean() as { _id: any; order: number } | null;
+    if (!neighbour) return;
+    await model.updateOne({ _id: item._id }, { $set: { order: neighbour.order } });
+    await model.updateOne({ _id: neighbour._id }, { $set: { order: item.order } });
+  }
+
+  private async editable(courseId: Types.ObjectId) {
+    const course = await this.courseModel.findById(courseId).select('key').lean();
+    if (!course) throw new NotFoundException('Training not found.');
+    if (course.key === ASAAS_KEY || this.isCustom(course.key)) {
+      throw new BadRequestException('The Asaas lessons come from the recorded course; replace their audio instead of editing them.');
+    }
+    return course;
+  }
+
+  async addSection(key: string, dto: CourseSectionDto) {
+    const course = await this.course(key);
+    await this.editable(course._id);
+    const last = await this.sectionModel.findOne({ course: course._id }).sort({ order: -1 }).select('order').lean();
+    const order = (last?.order ?? 0) + 1;
+    let skey = `s${order}`;
+    for (let n = order + 1; await this.sectionModel.exists({ course: course._id, key: skey }); n++) skey = `s${n}`;
+    const section = await this.sectionModel.create({ course: course._id, key: skey, order, title: dto.title, titleUr: dto.titleUr ?? '', meta: dto.meta ?? '' });
+    return { message: 'Module added.', section };
+  }
+
+  async updateSection(id: string, dto: UpdateCourseSectionDto) {
+    const section = await this.sectionModel.findById(id).lean();
+    if (!section) throw new NotFoundException('Module not found.');
+    await this.editable(section.course);
+    const $set: Record<string, unknown> = {};
+    for (const k of ['title', 'titleUr', 'meta'] as const) if (dto[k] !== undefined) $set[k] = dto[k];
+    if (Object.keys($set).length) await this.sectionModel.updateOne({ _id: section._id }, { $set });
+    if (dto.move) {
+      await this.swap(this.sectionModel, { course: section.course }, section, dto.move);
+      await this.renumber(section.course);
+    }
+    return { message: 'Module saved.' };
+  }
+
+  async deleteSection(id: string) {
+    const section = await this.sectionModel.findById(id).lean();
+    if (!section) throw new NotFoundException('Module not found.');
+    await this.editable(section.course);
+    if (await this.lessonModel.exists({ section: section._id })) throw new BadRequestException('Move or delete this module’s lessons first.');
+    await this.sectionModel.deleteOne({ _id: section._id });
+    return { message: 'Module deleted.' };
+  }
+
+  private paragraphs(text?: string) {
+    return (text ?? '').split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean).map((t) => ({ k: 'p', t }));
+  }
+
+  async addLesson(key: string, dto: CourseLessonDto) {
+    const course = await this.course(key);
+    await this.editable(course._id);
+    const section = await this.sectionModel.findOne({ _id: new Types.ObjectId(dto.sectionId), course: course._id }).lean();
+    if (!section) throw new NotFoundException('Module not found.');
+    const count = await this.lessonModel.countDocuments({ course: course._id });
+    let n = count + 1;
+    let code = `L${String(n).padStart(2, '0')}`;
+    while (await this.lessonModel.exists({ course: course._id, code })) code = `L${String(++n).padStart(2, '0')}`;
+    const lesson = await this.lessonModel.create({
+      course: course._id, section: section._id, code, order: 100000 + count, title: dto.title, topic: dto.topic ?? '',
+      durationSec: PLACEHOLDER_SEC, transcript: this.paragraphs(dto.transcript),
+    });
+    await this.renumber(course._id);
+    return { message: `Lesson ${code} added. Upload its audio as ${code.toLowerCase()}.mp3, or from the lesson itself.`, lesson };
+  }
+
+  async lessonForEdit(id: string) {
+    const lesson = await this.lessonModel.findById(id).lean();
+    if (!lesson) throw new NotFoundException('Lesson not found.');
+    return { ...lesson, transcriptText: lesson.transcript.map((p) => p.t).join('\n\n') };
+  }
+
+  async updateLesson(id: string, dto: UpdateCourseLessonDto) {
+    const lesson = await this.lessonModel.findById(id).lean();
+    if (!lesson) throw new NotFoundException('Lesson not found.');
+    await this.editable(lesson.course);
+    const $set: Record<string, unknown> = {};
+    if (dto.title !== undefined) $set.title = dto.title;
+    if (dto.topic !== undefined) $set.topic = dto.topic;
+    if (dto.transcript !== undefined) $set.transcript = this.paragraphs(dto.transcript);
+    if (dto.sectionId && dto.sectionId !== String(lesson.section)) {
+      const section = await this.sectionModel.findOne({ _id: new Types.ObjectId(dto.sectionId), course: lesson.course }).lean();
+      if (!section) throw new NotFoundException('Module not found.');
+      $set.section = section._id;
+      $set.order = 100000; // goes to the end of its new module
+    }
+    if (Object.keys($set).length) await this.lessonModel.updateOne({ _id: lesson._id }, { $set });
+    if (dto.move) await this.swap(this.lessonModel, { course: lesson.course, section: lesson.section }, lesson, dto.move);
+    if (dto.move || $set.section) await this.renumber(lesson.course);
+    return { message: 'Lesson saved.' };
+  }
+
+  async deleteLesson(id: string) {
+    const lesson = await this.lessonModel.findById(id).lean();
+    if (!lesson) throw new NotFoundException('Lesson not found.');
+    await this.editable(lesson.course);
+    await this.audio.remove(lesson.audio?.fileId);
+    await Promise.all([this.lessonModel.deleteOne({ _id: lesson._id }), this.progressModel.deleteMany({ lesson: lesson._id })]);
+    await this.renumber(lesson.course);
+    return { message: 'Lesson deleted.' };
+  }
+
+  /** One lesson's audio (any training, Asaas included); its length is read from the file. */
+  async uploadLessonAudio(id: string, file: Express.Multer.File | undefined) {
+    const lesson = await this.lessonModel.findById(id).lean();
+    if (!lesson) throw new NotFoundException('Lesson not found.');
+    if (!file) throw new BadRequestException('Choose the MP3 file.');
+    if (file.size > MAX_AUDIO_BYTES) throw new BadRequestException('The file is larger than 15 MB.');
+    if (!looksLikeMp3(file.buffer)) throw new BadRequestException('That isn’t an MP3 file.');
+    const course = await this.courseModel.findById(lesson.course).select('key').lean();
+    const fileId = await this.audio.save(file.buffer, `${course?.key}/${lesson.code}.mp3`);
+    const seconds = mp3DurationSec(file.buffer);
+    await this.lessonModel.updateOne({ _id: lesson._id }, { $set: {
+      audio: { fileId, size: file.size, uploadedAt: new Date() }, ...(seconds >= 1 && { durationSec: seconds }),
+    } });
+    await this.audio.remove(lesson.audio?.fileId);
+    return { message: `Audio uploaded (${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}).`, durationSec: seconds >= 1 ? seconds : lesson.durationSec };
+  }
+
   // ══ Admin: assignments and progress ════════════════════════════════════════
 
   async assign(key: string, adminId: string, dto: AssignCourseDto) {
     const course = await this.course(key);
     const ids = [...new Set(dto.userIds)].map((id) => new Types.ObjectId(id));
-    const murabbis = await this.userModel.find({ _id: { $in: ids }, role: UserRole.MURABBI }).select('_id fullName email').lean();
-    if (murabbis.length !== ids.length) throw new BadRequestException('Training can only be assigned to murabbi accounts.');
+    const role = course.audience === 'parent' ? UserRole.PARENT : UserRole.MURABBI;
+    const murabbis = await this.userModel.find({ _id: { $in: ids }, role }).select('_id fullName email role').lean();
+    if (murabbis.length !== ids.length) throw new BadRequestException(`This training can only be assigned to ${role} accounts.`);
     const existing = new Set((await this.assignmentModel.find({ course: course._id, user: { $in: ids } }).select('user').lean()).map((a) => a.user.toString()));
     const lessonDocs = await this.lessonModel.find({ course: course._id }).select('durationSec').lean();
     const lessonCount = lessonDocs.length;
@@ -298,22 +512,23 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
       );
       if (!existing.has(m._id.toString())) {
         this.notify(m._id.toString(), adminId, `New training: ${course.title}`,
-          `You've been assigned the ${course.title}${dto.dueDate ? `, to complete by ${dto.dueDate}` : ''}. Open Training to start listening.`,
+          `You've been given the ${course.title}${dto.dueDate ? `, to complete by ${dto.dueDate}` : ''}. Open Trainings to start listening.`,
           { courseKey: course.key });
         void this.email.queue('training.assigned', { email: m.email, name: m.fullName, userId: m._id }, {
-          courseTitle: course.title, badge: course.badge, dueDate: dto.dueDate ?? null, note: dto.note ?? '',
-          lessons: lessonCount, minutes: Math.round(totalSec / 60), url: this.email.link('/murabbi'),
+          courseTitle: course.title, badge: course.badge, dueDate: dto.dueDate ?? null, note: dto.note ?? '', role: m.role,
+          lessons: lessonCount, minutes: Math.round(totalSec / 60), url: this.email.link(portalPath(m.role)),
         });
       }
     }
     const added = murabbis.length - existing.size;
-    return { message: `Assigned to ${added} murabbi${added === 1 ? '' : 's'}${existing.size ? ` (${existing.size} already had it; due date updated)` : ''}.`, added, updated: existing.size };
+    const who = role === UserRole.PARENT ? (added === 1 ? 'parent' : 'parents') : (added === 1 ? 'murabbi' : 'murabbis');
+    return { message: `Assigned to ${added} ${who}${existing.size ? ` (${existing.size} already had it; due date updated)` : ''}.`, added, updated: existing.size };
   }
 
   async unassign(key: string, userId: string) {
     const course = await this.course(key);
     const r = await this.assignmentModel.deleteOne({ course: course._id, user: new Types.ObjectId(userId) });
-    if (!r.deletedCount) throw new NotFoundException('That murabbi doesn’t have this training.');
+    if (!r.deletedCount) throw new NotFoundException('That person doesn’t have this training.');
     return { message: 'Training unassigned. Their listening history is kept.' };
   }
 
@@ -447,7 +662,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   async reviewReflection(id: string, adminId: string, dto: ReviewReflectionDto) {
     const r = await this.reflectionModel.findById(id);
     if (!r) throw new NotFoundException('Reflection not found.');
-    if (dto.status === 'revision' && !dto.feedback) throw new BadRequestException('Tell the murabbi what to revise.');
+    if (dto.status === 'revision' && !dto.feedback) throw new BadRequestException('Say what should be revised.');
     r.status = dto.status;
     r.feedback = dto.feedback ?? '';
     r.reviewedBy = new Types.ObjectId(adminId);
@@ -481,10 +696,10 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   // ══ Emails ═════════════════════════════════════════════════════════════════
 
   private async emailMurabbi(userId: string, kind: string, data: Record<string, unknown>, opts: { dedupeKey?: string; attachment?: any } = {}) {
-    const u = await this.userModel.findById(userId).select('fullName email').lean();
+    const u = await this.userModel.findById(userId).select('fullName email role').lean();
     if (!u) return;
     await this.email.queue(kind, { email: u.email, name: u.fullName, userId: u._id }, {
-      courseTitle: 'Asaas Murabbi Training', url: this.email.link('/murabbi'), ...data,
+      courseTitle: 'Asaas Murabbi Training', url: this.email.link(portalPath(u.role)), role: u.role, ...data,
     }, opts);
   }
 
@@ -497,7 +712,8 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
     const today = new Date(now.getTime() + 5 * 3600_000).toISOString().slice(0, 10);
     const dayDiff = (a: string, b: string) => Math.round((Date.parse(a) - Date.parse(b)) / DAY_MS);
     let sent = 0;
-    for (const course of await this.courseModel.find({ audience: { $ne: 'parent' } }).select('title').lean()) {
+    for (const course of await this.courseModel.find().select('key title audience').lean()) {
+      if (this.isCustom(course.key)) continue; // Asaas for Parents sends its own module emails
       const total = await this.lessonModel.countDocuments({ course: course._id });
       const assignments = await this.assignmentModel.find({ course: course._id, certifiedAt: null }).populate('user', 'fullName email isActive').lean();
       for (const a of assignments) {
@@ -524,7 +740,8 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
         // At most one reminder per person per run: the most pressing first.
         for (const [variant, dedupeKey, extra] of candidates) {
           const r = await this.email.queue('training.reminder', { email: u.email, name: u.fullName, userId: u._id }, {
-            variant, courseTitle: course.title, dueDate: a.dueDate, done, total, url: this.email.link('/murabbi'), ...extra,
+            variant, courseTitle: course.title, dueDate: a.dueDate, done, total, url: this.email.link(portalPath(course.audience === 'parent' ? UserRole.PARENT : UserRole.MURABBI)),
+            role: course.audience === 'parent' ? 'parent' : 'murabbi', ...extra,
           }, { dedupeKey });
           if (r === 'queued') { sent++; break; }
           if (r === 'skipped') break;
@@ -543,26 +760,35 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
    */
   private async checkCertification(course: Course & { _id: any }, userId: string, actorId?: string) {
     const uid = new Types.ObjectId(userId);
-    const [lessonCount, completed, passed, reflection, practical] = await Promise.all([
+    if (this.isCustom(course.key)) return null;
+    const [lessonCount, completed, passed, reflection, practical, assignment] = await Promise.all([
       this.lessonModel.countDocuments({ course: course._id }),
       this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
       this.attemptModel.exists({ course: course._id, user: uid, passed: true }),
       this.reflectionModel.findOne({ course: course._id, user: uid }).select('status').lean(),
       this.practicalModel.findOne({ course: course._id, user: uid }).select('total').lean(),
+      this.assignmentModel.findOne({ course: course._id, user: uid }).select('certificateNumber certifiedAt').lean(),
     ]);
-    if (completed < lessonCount || !passed || reflection?.status !== 'approved') return null;
+    if (!assignment || !lessonCount || completed < lessonCount) return null;
+    if (course.questions.length && !passed) return null;
+    if (course.reflectionPrompt?.trim() && reflection?.status !== 'approved') return null;
     if (course.requirePractical && (!practical || practicalBand(practical.total) === 'practice')) return null;
 
-    const cert = await this.training.issueCertificateIfNeeded(userId, course.tier);
+    // Tier trainings issue the tier certificate; any other training gets its own number.
+    const cert = course.tier
+      ? await this.training.issueCertificateIfNeeded(userId, course.tier)
+      : { certificateNumber: assignment.certificateNumber ?? `NCT-${new Date().getFullYear()}-${userId.slice(-4).toUpperCase()}${String(course._id).slice(-4).toUpperCase()}`, issuedAt: assignment.certifiedAt ?? new Date() };
     const res = await this.assignmentModel.updateOne(
-      { course: course._id, user: uid, certifiedAt: null }, { $set: { certifiedAt: new Date() } },
+      { course: course._id, user: uid, certifiedAt: null },
+      { $set: { certifiedAt: new Date(), ...(!course.tier && { certificateNumber: cert.certificateNumber }) } },
     );
     if (res.modifiedCount) {
-      this.notify(userId, actorId, `MashaAllah! You are a ${course.badge}`,
-        `You've completed the ${course.title}. Your certificate (${cert.certificateNumber}) is ready to download, and the ${course.badge} badge is now on your profile.`,
+      this.notify(userId, actorId, course.tier ? `MashaAllah! You are a ${course.badge}` : `MashaAllah! You've completed the ${course.title}`,
+        `Your certificate (${cert.certificateNumber}) is ready to download${course.badge ? `, and the ${course.badge} badge is now on your profile` : ''}.`,
         { courseKey: course.key, certificateNumber: cert.certificateNumber });
-      void this.emailMurabbi(userId, 'training.certified', { badge: course.badge, courseTitle: course.title, number: cert.certificateNumber }, {
-        dedupeKey: `certified:${String(course._id)}:${userId}`, attachment: { type: 'certificate', userId, tier: course.tier },
+      void this.emailMurabbi(userId, 'training.certified', { badge: course.badge, courseTitle: course.title, number: cert.certificateNumber, attached: !!course.tier }, {
+        dedupeKey: `certified:${String(course._id)}:${userId}`,
+        ...(course.tier && { attachment: { type: 'certificate', userId, tier: course.tier } }),
       });
     }
     return { number: cert.certificateNumber, issuedAt: cert.issuedAt };
@@ -580,15 +806,52 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
   // ══ Murabbi: course, lessons, listening ════════════════════════════════════
 
   async myCourses(userId: string) {
-    const assignments = await this.assignmentModel.find({ user: new Types.ObjectId(userId) }).populate('course', 'key title titleUr tier badge').lean();
+    const assignments = await this.assignmentModel.find({ user: new Types.ObjectId(userId) })
+      .populate('course', 'key title titleUr tier badge summary summaryUr category audience').sort({ createdAt: 1 }).lean();
     return Promise.all(assignments.filter((a) => a.course).map(async (a) => {
       const course = a.course as any;
       const [total, done] = await Promise.all([
         this.lessonModel.countDocuments({ course: course._id }),
         this.progressModel.countDocuments({ course: course._id, user: new Types.ObjectId(userId), completed: true }),
       ]);
-      return { key: course.key, title: course.title, titleUr: course.titleUr, badge: course.badge, dueDate: a.dueDate, certifiedAt: a.certifiedAt, lessonsCompleted: done, lessonsTotal: total };
+      return {
+        key: course.key, title: course.title, titleUr: course.titleUr, badge: course.badge, summary: course.summary, summaryUr: course.summaryUr,
+        category: course.category, audience: course.audience, custom: this.isCustom(course.key),
+        dueDate: a.dueDate, certifiedAt: a.certifiedAt, certificateNumber: a.certificateNumber, assignedAt: (a as any).createdAt,
+        lessonsCompleted: done, lessonsTotal: total,
+      };
     }));
+  }
+
+  /**
+   * What finishing a training means for this person, step by step: every
+   * lesson heard, the assessment passed, the reflection shared (and
+   * approved), the practical, and the certificate.
+   */
+  async steps(courseOrKey: string | (Course & { _id: any }), userId: string): Promise<TrainingStep[]> {
+    const course = typeof courseOrKey === 'string' ? await this.course(courseOrKey) : courseOrKey;
+    const custom = this.stepProviders.get(course.key);
+    if (custom) return custom(userId);
+    const uid = new Types.ObjectId(userId);
+    const [total, done, passed, reflection, practical, assignment] = await Promise.all([
+      this.lessonModel.countDocuments({ course: course._id }),
+      this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
+      this.attemptModel.exists({ course: course._id, user: uid, passed: true }),
+      this.reflectionModel.findOne({ course: course._id, user: uid }).select('status').lean(),
+      this.practicalModel.findOne({ course: course._id, user: uid }).select('total').lean(),
+      this.assignmentModel.findOne({ course: course._id, user: uid }).select('certifiedAt').lean(),
+    ]);
+    const steps: TrainingStep[] = [{ label: 'Listen to every lesson', done: !!total && done >= total, detail: `${done} of ${total}` }];
+    if (course.questions.length) steps.push({ label: 'Pass the assessment', done: !!passed });
+    if (course.reflectionPrompt?.trim()) {
+      steps.push({
+        label: 'Share your reflection', done: reflection?.status === 'approved',
+        detail: !reflection ? 'not shared yet' : reflection.status === 'approved' ? 'approved' : reflection.status === 'revision' ? 'asked to revise' : 'waiting for review',
+      });
+    }
+    if (course.requirePractical) steps.push({ label: 'Practical assessment', done: !!practical && practicalBand(practical.total) !== 'practice' });
+    steps.push({ label: 'Certified', done: !!assignment?.certifiedAt });
+    return steps;
   }
 
   /** Everything the murabbi's course page needs (no answers, no trainer notes). */
@@ -603,7 +866,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
       this.reflectionModel.findOne({ course: course._id, user: new Types.ObjectId(user.id) }).select('text status feedback submittedAt reviewedAt').lean(),
       this.practicalModel.findOne({ course: course._id, user: new Types.ObjectId(user.id) }).select('scores total notes').lean(),
       this.pointsTotal(user.id),
-      this.training.certificatesFor([new Types.ObjectId(user.id)], course.tier),
+      course.tier ? this.training.certificatesFor([new Types.ObjectId(user.id)], course.tier) : Promise.resolve([] as any[]),
       this.recentFailures(course._id, user.id),
       this.flipModel.find({ course: course._id, user: new Types.ObjectId(user.id) }).select('chart seconds studiedAt').lean(),
     ]);
@@ -620,7 +883,9 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
       course: {
         key: course.key, title: course.title, titleUr: course.titleUr, trainer: course.trainer, badge: course.badge,
         completionThreshold: course.completionThreshold, sequential: course.sequential, passingScore: course.passingScore,
-        requirePractical: course.requirePractical, points: course.points,
+        requirePractical: course.requirePractical, points: course.points, audience: course.audience,
+        summary: course.summary, summaryUr: course.summaryUr,
+        hasAssessment: course.questions.length > 0, hasReflection: !!course.reflectionPrompt?.trim(),
       },
       assignment: assignment && { dueDate: assignment.dueDate, note: assignment.note, certifiedAt: assignment.certifiedAt },
       progress: {
@@ -658,7 +923,9 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
         ...(reflection && { text: reflection.text, status: reflection.status, feedback: reflection.feedback, submittedAt: reflection.submittedAt }),
       },
       practical: practical && { scores: practical.scores, total: practical.total, band: practicalBand(practical.total), notes: practical.notes, criteria: PRACTICAL_CRITERIA },
-      certificate: certs[0] ? { number: certs[0].certificateNumber, issuedAt: certs[0].issuedAt, tier: course.tier } : null,
+      certificate: course.tier
+        ? (certs[0] ? { number: certs[0].certificateNumber, issuedAt: certs[0].issuedAt, tier: course.tier } : null)
+        : (assignment?.certificateNumber ? { number: assignment.certificateNumber, issuedAt: assignment.certifiedAt, tier: null } : null),
       // A chart opens with the first lesson that explains it.
       flipCharts: (course.flipCharts ?? []).map((c) => {
         const linked = c.lessonCodes.map((code) => lessonByCode.get(code)).filter((l) => !!l);
@@ -745,10 +1012,11 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
         this.lessonModel.countDocuments({ course: course._id }),
         this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
       ]);
-      if (done === total && course.audience !== 'parent') {
+      if (done === total && !this.isCustom(course.key)) {
         void this.emailMurabbi(user.id, 'training.lessons-done', {
           courseTitle: course.title, total, questions: course.questions.length, passingScore: course.passingScore,
         }, { dedupeKey: `lessons-done:${String(course._id)}:${user.id}` });
+        await this.checkCertification(course, user.id);
       }
     }
     return { percent, completed: nowCompleted, justCompleted, sectionCompleted: sectionDone };
@@ -876,6 +1144,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
 
   async submitReflection(key: string, user: Requester, dto: ReflectionDto) {
     const course = await this.course(key);
+    if (!course.reflectionPrompt?.trim()) throw new BadRequestException('This training has no reflection.');
     await this.requireAssignment(course._id, user.id);
     await this.requireAllHeard(course, user.id);
     const text = dto.text.trim();
@@ -894,7 +1163,7 @@ export class CourseService implements OnModuleInit, OnModuleDestroy {
     const me = await this.userModel.findById(uid).select('fullName').lean();
     for (const a of admins) {
       this.notify(a._id.toString(), user.id, 'Training reflection to review',
-        `${me?.fullName ?? 'A murabbi'} submitted their ${course.title} reflection.`, { courseKey: course.key });
+        `${me?.fullName ?? 'Someone'} submitted their ${course.title} reflection.`, { courseKey: course.key });
     }
     return { message: 'Reflection submitted. An admin will review it.' };
   }

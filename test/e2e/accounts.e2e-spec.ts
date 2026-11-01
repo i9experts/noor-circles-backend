@@ -146,7 +146,7 @@ describe('Accounts from interest requests and parents', () => {
 
     it('parents only reach their own family page', async () => {
       const t = as(parentToken);
-      for (const p of ['murabbi/dashboard', 'parents', 'announcements', 'admin/murabbis', 'sessions', 'training/modules', 'course/my', 'syllabus/my-agenda', 'interest']) {
+      for (const p of ['murabbi/dashboard', 'parents', 'announcements', 'admin/murabbis', 'sessions', 'training/modules', 'syllabus/my-agenda', 'interest', 'trainings/admin/requests', 'parent-ratings']) {
         expect([p, (await t.get(p)).status]).toEqual([p, 403]);
       }
       expect((await as(w.A.token).get('family/me')).status).toBe(403);

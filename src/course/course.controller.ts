@@ -1,8 +1,8 @@
 import {
   BadRequestException, Body, Controller, Delete, Get, Headers, Param, Patch, Post, Put, Query, Req, Res,
-  UploadedFiles, UseGuards, UseInterceptors,
+  UploadedFile, UploadedFiles, UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { memoryStorage } from 'multer';
 import { Request, Response } from 'express';
@@ -14,8 +14,8 @@ import { CurrentUser }  from '../auth/decorators/current-user.decorator';
 import { UserDocument, UserRole } from '../user/user.schema';
 import { CourseService } from './course.service';
 import {
-  AssignCourseDto, FlipChartViewDto, HeartbeatDto, PracticalDto, ReflectionDto, ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto,
-  UpdateCourseSettingsDto,
+  AssignCourseDto, CourseLessonDto, CourseSectionDto, CreateCourseDto, FlipChartViewDto, HeartbeatDto, PracticalDto, ReflectionDto,
+  ReviewReflectionDto, SetQuestionsDto, SubmitAnswersDto, UpdateCourseLessonDto, UpdateCourseSectionDto, UpdateCourseSettingsDto,
 } from './course.dto';
 
 const who = (u: UserDocument) => ({ id: u._id.toString(), role: u.role });
@@ -34,7 +34,7 @@ export class CourseController {
   /** GET /course/my — trainings assigned to me. */
   @Get('my')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  @Roles(UserRole.MURABBI, UserRole.PARENT, UserRole.ADMIN)
   my(@CurrentUser() user: UserDocument) { return this.service.myCourses(user._id.toString()); }
 
   /** GET /course/badges — certified badges (all murabbis for admins, just mine otherwise). */
@@ -86,7 +86,7 @@ export class CourseController {
 
   @Get(':key/me')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  @Roles(UserRole.MURABBI, UserRole.PARENT, UserRole.ADMIN)
   myCourse(@Param('key') key: string, @CurrentUser() user: UserDocument) { return this.service.myCourse(key, who(user)); }
 
   /** POST /course/:key/flip-charts/:chart/view — how long a flip chart was on screen. */
@@ -100,22 +100,78 @@ export class CourseController {
 
   @Get(':key/assessment')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI, UserRole.ADMIN)
+  @Roles(UserRole.MURABBI, UserRole.PARENT, UserRole.ADMIN)
   assessment(@Param('key') key: string, @CurrentUser() user: UserDocument) { return this.service.assessment(key, who(user)); }
 
   @Post(':key/assessment')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI)
+  @Roles(UserRole.MURABBI, UserRole.PARENT)
   submit(@Param('key') key: string, @CurrentUser() user: UserDocument, @Body() dto: SubmitAnswersDto) {
     return this.service.submitAssessment(key, who(user), dto);
   }
 
   @Post(':key/reflection')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.MURABBI)
+  @Roles(UserRole.MURABBI, UserRole.PARENT)
   reflect(@Param('key') key: string, @CurrentUser() user: UserDocument, @Body() dto: ReflectionDto) {
     return this.service.submitReflection(key, who(user), dto);
   }
+
+  // ── Admin: building a training ────────────────────────────────────────────
+
+  /** POST /course — a new (unpublished) training. */
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  create(@Body() dto: CreateCourseDto) { return this.service.createCourse(dto); }
+
+  @Post(':key/sections')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  addSection(@Param('key') key: string, @Body() dto: CourseSectionDto) { return this.service.addSection(key, dto); }
+
+  @Patch('sections/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  updateSection(@Param('id') id: string, @Body() dto: UpdateCourseSectionDto) { return this.service.updateSection(objectId(id), dto); }
+
+  @Delete('sections/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  deleteSection(@Param('id') id: string) { return this.service.deleteSection(objectId(id)); }
+
+  @Post(':key/lessons')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  addLesson(@Param('key') key: string, @Body() dto: CourseLessonDto) { return this.service.addLesson(key, dto); }
+
+  /** GET /course/lessons/:id/edit — a lesson with its script, for editing. */
+  @Get('lessons/:id/edit')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  lessonForEdit(@Param('id') id: string) { return this.service.lessonForEdit(objectId(id)); }
+
+  @Patch('lessons/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  updateLesson(@Param('id') id: string, @Body() dto: UpdateCourseLessonDto) { return this.service.updateLesson(objectId(id), dto); }
+
+  @Delete('lessons/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  deleteLesson(@Param('id') id: string) { return this.service.deleteLesson(objectId(id)); }
+
+  /** POST /course/lessons/:id/audio — one lesson's MP3 (field "file"). */
+  @Post('lessons/:id/audio')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } }))
+  lessonAudio(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) { return this.service.uploadLessonAudio(objectId(id), file); }
+
+  @Delete(':key')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  remove(@Param('key') key: string) { return this.service.deleteCourse(key); }
 
   // ── Admin ──────────────────────────────────────────────────────────────────
 

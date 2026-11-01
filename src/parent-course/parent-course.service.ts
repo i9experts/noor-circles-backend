@@ -18,6 +18,8 @@ import content from './content/asaas-parents.json';
 import quizzes from './content/quizzes.json';
 import extras from './content/extras.json';
 import flipCharts from './content/flipcharts.json';
+import { ParentActivity, ParentActivityDocument, logParentActivity } from '../parent-rating/parent-rating.schema';
+import { Parent, ParentDocument } from '../parent/parent.schema';
 
 export const PARENT_COURSE_KEY = 'asaas-parents';
 
@@ -52,10 +54,34 @@ export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
     @InjectModel(ParentSelfCheck.name)   private readonly selfCheckModel:  Model<ParentSelfCheckDocument>,
     @InjectModel(ParentTarget.name)      private readonly targetModel:     Model<ParentTargetDocument>,
     @InjectModel(User.name)              private readonly userModel:       Model<UserDocument>,
+    @InjectModel(Parent.name)            private readonly parentModel:     Model<ParentDocument>,
+    @InjectModel(ParentActivity.name)    private readonly activityModel:   Model<ParentActivityDocument>,
     courses: CourseService,
     private readonly email: EmailService,
   ) {
     courses.registerSeeder(PARENT_COURSE_KEY, () => this.seed());
+    courses.registerSteps(PARENT_COURSE_KEY, (userId) => this.steps(userId));
+  }
+
+  /** What finishing Asaas for Parents means, step by step (shown in the trainings marketplace). */
+  async steps(userId: string) {
+    const course = await this.course();
+    const uid = new Types.ObjectId(userId);
+    const [total, heard, passed, endCheck, a] = await Promise.all([
+      this.lessonModel.countDocuments({ course: course._id }),
+      this.progressModel.countDocuments({ course: course._id, user: uid, completed: true }),
+      this.attemptModel.distinct('quiz', { course: course._id, user: uid, passed: true }),
+      this.selfCheckModel.exists({ course: course._id, user: uid, stage: 'end' }),
+      this.assignmentModel.findOne({ course: course._id, user: uid }).select('certificateNumber').lean(),
+    ]);
+    const modules = passed.filter((q) => q !== 'final').length;
+    return [
+      { label: 'Listen to every lesson', done: !!total && heard >= total, detail: `${heard} of ${total}` },
+      { label: 'Pass the module checks', done: modules >= PARENT_QUIZZES.length - 1, detail: `${modules} of ${PARENT_QUIZZES.length - 1}` },
+      { label: 'Pass the final check', done: passed.includes('final') },
+      { label: 'Share your closing self-check', done: !!endCheck },
+      { label: 'Certified', done: !!a?.certificateNumber },
+    ];
   }
 
   private emailTimer: NodeJS.Timeout | null = null;
@@ -129,7 +155,7 @@ export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
         course = await this.courseModel.create({
           key: PARENT_COURSE_KEY, title: c.title, titleUr: c.titleUr, trainer: c.trainer, audience: 'parent', tier: null,
           sequential: false, completionThreshold: 0.9, badge: extras.certificate.badgeEn, flipCharts,
-          reflectionPrompt: '', reflectionMinChars: 0,
+          reflectionPrompt: '', reflectionMinChars: 0, published: true, position: 10,
         });
       } catch (err: any) {
         if (err?.code !== 11000) throw err;
@@ -229,6 +255,8 @@ export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
     const course = await this.course();
     const a = await this.assignmentFor(course._id, userId);
     const uid = new Types.ObjectId(userId);
+    this.parentModel.findOne({ account: uid }).select('_id').lean()
+      .then((p) => p && logParentActivity(this.activityModel, p._id, 'training')).catch(() => {});
     const now = new Date();
     const day = dayIndex(a.createdAt, now);
     const [sections, { lessons, byLesson }, attempts, selfChecks, targets, flips, user, pointsAgg] = await Promise.all([
@@ -449,6 +477,54 @@ export class ParentCourseService implements OnModuleInit, OnModuleDestroy {
       await this.award(userId, 'parent-target', `${courseId}:${t.module}`, POINTS.target, `Target met: module ${t.module}`);
     }
     return { ticks: [...row.ticks].sort((x, y) => x - y), lighter: row.lighter, met };
+  }
+
+  // ══ Parent rating ══════════════════════════════════════════════════════════
+
+  /**
+   * This parent's home target cards and self-checks for a month (for the
+   * parent rating). A card counts if its fortnight overlaps the month; one
+   * still running is judged on the share of its fortnight gone by.
+   */
+  async ratingParts(userId: string, start: Date, end: Date) {
+    const course = await this.course();
+    const uid = new Types.ObjectId(userId);
+    const a = await this.assignmentModel.findOne({ course: course._id, user: uid }).lean() as (CourseAssignment & { createdAt?: Date }) | null;
+    if (!a) return null;
+    const [sections, rows, checks, closingHeard] = await Promise.all([
+      this.sectionModel.find({ course: course._id }).select('key unlockDay').lean(),
+      this.targetModel.find({ course: course._id, user: uid }).lean(),
+      this.selfCheckModel.find({ course: course._id, user: uid }).select('stage createdAt').lean(),
+      this.closingHeard(course._id, uid),
+    ]);
+    const now = Date.now();
+    const begun = new Date(a.createdAt ?? now).getTime();
+    const ratios: number[] = [];
+    for (const t of extras.targets) {
+      const section = sections.find((x) => x.key === `m${t.module}`);
+      if (!section) continue;
+      const from = a.allOpen ? begun : begun + (section.unlockDay ?? 0) * 86_400_000;
+      const to = from + 14 * 86_400_000;
+      if (from > now || to <= start.getTime() || from >= end.getTime()) continue;
+      const row = rows.find((r) => r.module === t.module);
+      const need = row?.lighter && t.lighterNeeded ? t.lighterNeeded : t.needed;
+      const share = Math.min(1, Math.max(1 / 14, (now - from) / (to - from)));
+      const expected = Math.max(1, Math.ceil(need * share));
+      ratios.push(Math.min(1, (row?.ticks.length ?? 0) / expected));
+    }
+    const inMonth = (d: Date) => d >= start && d < end;
+    return {
+      targets: ratios.length
+        ? { score: Math.round((ratios.reduce((x, y) => x + y, 0) / ratios.length) * 100), detail: `${ratios.length} target card${ratios.length === 1 ? '' : 's'} this month` }
+        : null,
+      selfChecksShared: checks.filter((c) => inMonth(new Date((c as any).createdAt))).length,
+      selfCheckDue: !checks.some((c) => c.stage === 'start') || (closingHeard && !checks.some((c) => c.stage === 'end')),
+    };
+  }
+
+  private async closingHeard(courseId: Types.ObjectId, uid: Types.ObjectId) {
+    const gate = await this.lessonModel.findOne({ course: courseId, code: CLOSING_GATE }).select('_id').lean();
+    return !!gate && !!(await this.progressModel.exists({ lesson: gate._id, user: uid, completed: true }));
   }
 
   // ══ Admin ══════════════════════════════════════════════════════════════════
