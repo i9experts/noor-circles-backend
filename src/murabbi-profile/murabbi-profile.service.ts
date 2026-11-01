@@ -70,7 +70,7 @@ export class MurabbiProfileService {
     const byUser = new Map(profiles.map((p) => [String(p.user), p]));
     const rows = users.map((u) => {
       const p = byUser.get(String(u._id));
-      const d = p?.data as Introduction | undefined;
+      const d = p?.data;
       const pct = p?.completeness ?? 0;
       return {
         _id: u._id, fullName: u.fullName, email: u.email, phone: u.phone, tier: u.tier ?? 1, isActive: u.isActive, image: (u as any).image ?? null,
@@ -78,7 +78,7 @@ export class MurabbiProfileService {
         quran: d?.quran ?? null, languages: d?.languages ?? [], specialisation: d?.specialisation ?? '',
         skills: Object.fromEntries(Object.entries(d?.skills ?? {}).map(([k, v]) => [k, v.level])) as Partial<Record<SkillKey, string | null>>,
         experienceCount: d?.experience?.length ?? 0,
-        _search: [u.fullName, u.email, d?.school, d?.college, d?.courses, d?.specialisation, ...(d?.experience ?? []).map((e) => e.organisation)].map(norm).join(' '),
+        search: [u.fullName, u.email, d?.school, d?.college, d?.courses, d?.specialisation, ...(d?.experience ?? []).map((e) => e.organisation)].map(norm).join(' '),
       };
     });
     const filtered = rows.filter((r) =>
@@ -86,7 +86,7 @@ export class MurabbiProfileService {
       && (!f.quran?.length || (r.quran && f.quran.includes(r.quran)))
       && (!f.languages?.length || f.languages.every((l) => r.languages.includes(l)))
       && (!f.skill || levelRank(r.skills[f.skill as SkillKey]) >= Math.max(0, levelRank(f.minLevel ?? 'good')))
-      && (!f.search || r._search.includes(norm(f.search))));
+      && (!f.search || r.search.includes(norm(f.search))));
 
     const withProfile = rows.filter((r) => r.status !== 'none');
     const count = (pick: (r: (typeof rows)[number]) => boolean) => withProfile.filter(pick).length;
@@ -99,7 +99,8 @@ export class MurabbiProfileService {
         // How many are good or better at each skill.
         skills: Object.fromEntries([...SOFT_SKILLS, ...HARD_SKILLS].map((k) => [k, count((r) => levelRank(r.skills[k]) >= 1)])),
       },
-      rows: filtered.map(({ _search, ...r }) => r),
+      // The search text stays on the server.
+      rows: filtered.map((r) => ({ ...r, search: undefined })),
       options: this.options(),
     };
   }
