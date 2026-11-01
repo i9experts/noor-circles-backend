@@ -6,6 +6,7 @@ import { Student, StudentSchema } from '../student/student.schema';
 import { User, UserSchema } from '../user/user.schema';
 import { ContributionModule } from '../contribution/contribution.module';
 import { EngagementModule } from '../engagement/engagement.module';
+import { ParentRatingModule } from '../parent-rating/parent-rating.module';
 import { NotificationModule } from '../notification/notification.module';
 import { RewardsService } from './rewards.service';
 import { RewardsController } from './rewards.controller';
@@ -21,6 +22,7 @@ import { RewardsController } from './rewards.controller';
     ]),
     ContributionModule,
     EngagementModule,
+    ParentRatingModule,
     NotificationModule,
   ],
   controllers: [RewardsController],

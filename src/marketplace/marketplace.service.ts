@@ -152,16 +152,16 @@ export class MarketplaceService {
       this.requestModel.aggregate([{ $match: { course: { $in: ids }, status: 'pending' } }, { $group: { _id: '$course', n: { $sum: 1 } } }]),
       this.lessonModel.aggregate([{ $match: { course: { $in: ids } } }, { $group: { _id: '$course', n: { $sum: 1 }, audio: { $sum: { $cond: [{ $ne: ['$audio.fileId', null] }, 1, 0] } }, sec: { $sum: '$durationSec' } } }]),
     ]);
-    const by = <T extends { _id: any }>(rows: T[]) => new Map(rows.map((r) => [String(r._id), r]));
+    const by = (rows: any[]) => new Map<string, any>(rows.map((r) => [String(r._id), r]));
     const a = by(assignments), p = by(pending), l = by(lessons);
     return courses.map(({ questions, reflectionPrompt, ...c }) => ({
       ...c,
       custom: this.courses.isCustom(c.key),
       questions: questions?.length ?? 0, hasReflection: !!reflectionPrompt?.trim(),
-      lessons: (l.get(String(c._id)) as any)?.n ?? 0, withAudio: (l.get(String(c._id)) as any)?.audio ?? 0,
-      minutes: Math.round(((l.get(String(c._id)) as any)?.sec ?? 0) / 60),
-      enrolled: (a.get(String(c._id)) as any)?.enrolled ?? 0, certified: (a.get(String(c._id)) as any)?.certified ?? 0,
-      pending: (p.get(String(c._id)) as any)?.n ?? 0,
+      lessons: l.get(String(c._id))?.n ?? 0, withAudio: l.get(String(c._id))?.audio ?? 0,
+      minutes: Math.round((l.get(String(c._id))?.sec ?? 0) / 60),
+      enrolled: a.get(String(c._id))?.enrolled ?? 0, certified: a.get(String(c._id))?.certified ?? 0,
+      pending: p.get(String(c._id))?.n ?? 0,
     }));
   }
 
@@ -228,10 +228,11 @@ export class MarketplaceService {
     const best = new Map<string, { user: any; tier: number; course: string; certifiedAt: Date | null }>();
     for (const c of certs) {
       const u = c.user as any;
-      const course = tierCourses.find((t) => String(t._id) === String(c.course))!;
-      if (!u || u.role !== UserRole.MURABBI || (u.tier ?? 1) >= (course.tier ?? 0)) continue;
+      const course = tierCourses.find((t) => String(t._id) === String(c.course));
+      if (!course?.tier) continue;
+      if (!u || u.role !== UserRole.MURABBI || (u.tier ?? 1) >= course.tier) continue;
       const prev = best.get(String(u._id));
-      if (!prev || prev.tier < (course.tier ?? 0)) best.set(String(u._id), { user: u, tier: course.tier!, course: course.title, certifiedAt: c.certifiedAt });
+      if (!prev || prev.tier < course.tier) best.set(String(u._id), { user: u, tier: course.tier, course: course.title, certifiedAt: c.certifiedAt });
     }
     return [...best.values()].map((b) => ({ user: { _id: b.user._id, fullName: b.user.fullName, email: b.user.email, tier: b.user.tier ?? 1 }, tier: b.tier, course: b.course, certifiedAt: b.certifiedAt }));
   }

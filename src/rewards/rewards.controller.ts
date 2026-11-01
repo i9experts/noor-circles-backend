@@ -18,8 +18,8 @@ export class RewardsController {
 
   /** GET /rewards/my — a murabbi's own approved/paid rewards */
   @Get('my')
-  @Roles(UserRole.MURABBI)
-  my(@CurrentUser() user: UserDocument) { return this.service.myRewards(user._id.toString()); }
+  @Roles(UserRole.MURABBI, UserRole.PARENT)
+  my(@CurrentUser() user: UserDocument) { return this.service.myRewards(user._id.toString(), user.role); }
 
   @Get('pools')
   @Roles(UserRole.ADMIN)

@@ -7,6 +7,7 @@ import {
 import { AddAllocationDto, CreatePoolDto, PayAllocationDto, UpdateAllocationDto, UpdatePoolDto } from './rewards.dto';
 import { ContributionService } from '../contribution/contribution.service';
 import { EngagementService } from '../engagement/engagement.service';
+import { ParentRatingService } from '../parent-rating/parent-rating.service';
 import { Incentive, IncentiveDocument } from '../incentive/incentive.schema';
 import { Student, StudentDocument } from '../student/student.schema';
 import { User, UserDocument, UserRole } from '../user/user.schema';
@@ -31,6 +32,7 @@ export class RewardsService {
     @InjectModel(User.name)             private readonly userModel:      Model<UserDocument>,
     private readonly contributions: ContributionService,
     private readonly engagement   : EngagementService,
+    private readonly parentRatings: ParentRatingService,
     private readonly notifService : NotificationService,
   ) {}
 
@@ -63,10 +65,9 @@ export class RewardsService {
   private async propose(pool: RewardPoolDocument) {
     await this.allocModel.deleteMany({ pool: pool._id, manual: false });
     // Recipients the admin added by hand keep their manual reward and aren't proposed twice.
-    const manual = await this.allocModel.find({ pool: pool._id, manual: true, status: { $ne: 'cancelled' } }).select('student murabbi').lean();
-    const manualIds = new Set(manual.map((a) => (a.student ?? a.murabbi)?.toString()));
-    const studentBudget = Math.floor((pool.budget * pool.studentSharePct) / 100);
-    const murabbiBudget = pool.budget - studentBudget;
+    const manual = await this.allocModel.find({ pool: pool._id, manual: true, status: { $ne: 'cancelled' } }).select('student murabbi parent').lean();
+    const manualIds = new Set(manual.map((a) => (a.student ?? a.murabbi ?? a.parent)?.toString()));
+    const { studentBudget, parentBudget, murabbiBudget } = split(pool);
 
     const students = (await this.studentPoints(pool.month, pool.maxStudents + manualIds.size))
       .filter((s) => !manualIds.has(s._id.toString()))
@@ -78,6 +79,13 @@ export class RewardsService {
       .slice(0, pool.maxMurabbis);
     const mAmounts = proportional(murabbiBudget, ratings.map((r) => r.finalScore));
 
+    const parents = parentBudget > 0
+      ? (await this.parentRatings.ratingsForMonth(pool.month))
+        .filter((r) => r.finalScore >= pool.minParentScore && !manualIds.has(String(r.user)))
+        .slice(0, pool.maxParents)
+      : [];
+    const pAmounts = proportional(parentBudget, parents.map((r) => r.finalScore));
+
     const docs = [
       ...students.map((s, i) => ({
         pool: pool._id, month: pool.month, recipientType: 'student', student: s._id,
@@ -87,6 +95,10 @@ export class RewardsService {
         pool: pool._id, month: pool.month, recipientType: 'murabbi', murabbi: (r.murabbi as any)._id,
         basisValue: r.finalScore, rank: i + 1, amount: mAmounts[i],
       })),
+      ...parents.map((r, i) => ({
+        pool: pool._id, month: pool.month, recipientType: 'parent', parent: r.user,
+        basisValue: r.finalScore, rank: i + 1, amount: pAmounts[i],
+      })),
     ].filter((d) => d.amount > 0);
     if (docs.length) await this.allocModel.insertMany(docs);
   }
@@ -94,6 +106,7 @@ export class RewardsService {
   // ══ Pools ══════════════════════════════════════════════════════════════════
 
   async createPool(dto: CreatePoolDto, adminId: string) {
+    assertShares(dto.studentSharePct ?? 60, dto.parentSharePct ?? 0);
     if (await this.poolModel.exists({ month: dto.month })) {
       throw new ConflictException(`A reward pool for ${dto.month} already exists.`);
     }
@@ -102,6 +115,7 @@ export class RewardsService {
       month: dto.month, budgetMode: dto.budgetMode, budgetValue: dto.budgetValue,
       contributionsCollected: collected, budget,
       studentSharePct: dto.studentSharePct ?? 60, maxStudents: dto.maxStudents ?? 10,
+      parentSharePct: dto.parentSharePct ?? 0, maxParents: dto.maxParents ?? 5, minParentScore: dto.minParentScore ?? 60,
       maxMurabbis: dto.maxMurabbis ?? 5, minMurabbiScore: dto.minMurabbiScore ?? 60,
       createdBy: new Types.ObjectId(adminId), notes: dto.notes ?? '',
     });
@@ -135,24 +149,27 @@ export class RewardsService {
     const allocations = await this.allocModel.find({ pool: pool._id })
       .populate({ path: 'student', select: 'fullName circle', populate: { path: 'circle', select: 'name' } })
       .populate('murabbi', 'fullName email image')
+      .populate('parent', 'fullName email')
       .populate('paidBy', 'fullName')
       .sort({ recipientType: 1, rank: 1 })
       .lean();
     const live = allocations.filter((a) => a.status !== 'cancelled');
     const allocated = live.reduce((s, a) => s + a.amount, 0);
-    const studentBudget = Math.floor((pool.budget * pool.studentSharePct) / 100);
+    const { studentBudget, parentBudget, murabbiBudget } = split(pool);
     return {
       pool: pool.toObject(),
       allocations,
       totals: {
         budget        : pool.budget,
         studentBudget,
-        murabbiBudget : pool.budget - studentBudget,
+        parentBudget,
+        murabbiBudget,
         allocated,
         remaining     : pool.budget - allocated,
         paid          : live.filter((a) => a.status === 'paid').reduce((s, a) => s + a.amount, 0),
         toStudents    : live.filter((a) => a.recipientType === 'student').reduce((s, a) => s + a.amount, 0),
         toMurabbis    : live.filter((a) => a.recipientType === 'murabbi').reduce((s, a) => s + a.amount, 0),
+        toParents     : live.filter((a) => a.recipientType === 'parent').reduce((s, a) => s + a.amount, 0),
       },
     };
   }
@@ -164,6 +181,7 @@ export class RewardsService {
   async updatePool(month: string, dto: UpdatePoolDto) {
     const pool = await this.findPool(month);
     this.assertDraft(pool);
+    assertShares(dto.studentSharePct ?? pool.studentSharePct, dto.parentSharePct ?? pool.parentSharePct ?? 0);
     Object.assign(pool, dto);
     const { collected, budget } = await this.computeBudget(month, pool.budgetMode, pool.budgetValue);
     pool.contributionsCollected = collected;
@@ -215,11 +233,12 @@ export class RewardsService {
     const pool = await this.findPool(month);
     this.assertDraft(pool);
     const isStudent = dto.recipientType === 'student';
+    const role = dto.recipientType === 'parent' ? UserRole.PARENT : UserRole.MURABBI;
     const exists = isStudent
       ? await this.studentModel.exists({ _id: dto.recipientId })
-      : await this.userModel.exists({ _id: dto.recipientId, role: UserRole.MURABBI });
-    if (!exists) throw new NotFoundException(isStudent ? 'Student not found.' : 'Murabbi not found.');
-    const field = isStudent ? 'student' : 'murabbi';
+      : await this.userModel.exists({ _id: dto.recipientId, role });
+    if (!exists) throw new NotFoundException(isStudent ? 'Student not found.' : role === UserRole.PARENT ? 'Parent account not found.' : 'Murabbi not found.');
+    const field = dto.recipientType as 'student' | 'murabbi' | 'parent';
     const recipient = new Types.ObjectId(dto.recipientId);
     if (await this.allocModel.exists({ pool: pool._id, [field]: recipient, status: { $ne: 'cancelled' } })) {
       throw new ConflictException('This recipient already has a reward in this pool — edit that one instead.');
@@ -264,9 +283,10 @@ export class RewardsService {
       await pool.save();
     }
 
-    if (a.recipientType === 'murabbi' && a.murabbi) {
+    const recipient = a.recipientType === 'murabbi' ? a.murabbi : a.recipientType === 'parent' ? a.parent : null;
+    if (recipient) {
       this.notifService.create({
-        recipient: a.murabbi.toString(),
+        recipient: recipient.toString(),
         sender   : adminId,
         type     : NotificationType.REWARD,
         title    : 'You received a reward',
@@ -279,11 +299,23 @@ export class RewardsService {
 
   // ══ Murabbi view ═══════════════════════════════════════════════════════════
 
-  myRewards(murabbiId: string) {
+  myRewards(userId: string, role: string = UserRole.MURABBI) {
+    const field = role === UserRole.PARENT ? 'parent' : 'murabbi';
     return this.allocModel
-      .find({ murabbi: new Types.ObjectId(murabbiId), status: { $in: ['approved', 'paid'] } })
+      .find({ [field]: new Types.ObjectId(userId), status: { $in: ['approved', 'paid'] } })
       .select('month amount status paidAt method basisValue rank')
       .sort({ month: -1 })
       .lean();
   }
+}
+
+/** How a pool's budget divides: students, parents, and the rest to murabbis. */
+function split(pool: { budget: number; studentSharePct: number; parentSharePct?: number }) {
+  const studentBudget = Math.floor((pool.budget * pool.studentSharePct) / 100);
+  const parentBudget = Math.floor((pool.budget * (pool.parentSharePct ?? 0)) / 100);
+  return { studentBudget, parentBudget, murabbiBudget: pool.budget - studentBudget - parentBudget };
+}
+
+function assertShares(student: number, parent: number) {
+  if (student + parent > 100) throw new BadRequestException('The students’ and parents’ shares can’t add up to more than 100%.');
 }

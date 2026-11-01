@@ -34,6 +34,7 @@ import { EmailModule }         from './email/email.module';
 import { InsightsModule }      from './insights/insights.module';
 import { ClusterModule }       from './cluster/cluster.module';
 import { MarketplaceModule }   from './marketplace/marketplace.module';
+import { ParentRatingModule }  from './parent-rating/parent-rating.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { MarketplaceModule }   from './marketplace/marketplace.module';
     InsightsModule,
     ClusterModule,
     MarketplaceModule,
+    ParentRatingModule,
   ],
   providers: [
     // Apply rate limiting globally

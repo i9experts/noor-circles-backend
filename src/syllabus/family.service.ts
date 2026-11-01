@@ -16,6 +16,7 @@ import { SyllabusService } from './syllabus.service';
 import { addDays, pkToday } from './schedule.util';
 import { EmailService } from '../email/email.service';
 import { FamilyProfileDto, cleanProfile } from '../insights/family-profile';
+import { ParentActivity, ParentActivityDocument, logParentActivity } from '../parent-rating/parent-rating.schema';
 
 const AWARD_LABELS: Record<string, string> = {
   'noor-star'       : 'Noor Star',
@@ -47,6 +48,7 @@ export class FamilyService {
     @InjectModel(SyllabusSession.name) private readonly sessionModel:    Model<SyllabusSessionDocument>,
     @InjectModel(SessionCoverage.name) private readonly coverageModel:   Model<SessionCoverageDocument>,
     @InjectModel(StudentNote.name)     private readonly noteModel:       Model<StudentNoteDocument>,
+    @InjectModel(ParentActivity.name)  private readonly activityModel:   Model<ParentActivityDocument>,
     private readonly syllabus: SyllabusService,
     private readonly email: EmailService,
   ) {
@@ -129,6 +131,7 @@ export class FamilyService {
   async view(token: string) {
     const parent = await this.parentFromToken(token);
     this.parentModel.updateOne({ _id: parent._id }, { $set: { familyLinkLastViewedAt: new Date() } }).catch(() => {});
+    logParentActivity(this.activityModel, parent._id, 'family-page');
     return this.build(parent);
   }
 
@@ -136,6 +139,7 @@ export class FamilyService {
   async viewForAccount(userId: string, accountName: string) {
     const parent = await this.parentModel.findOne({ account: new Types.ObjectId(userId) }).select('fullName students profile').lean();
     if (!parent) throw new NotFoundException('We couldn’t find your family record. Please contact the Noor Circles team.');
+    logParentActivity(this.activityModel, parent._id, 'portal');
     // Greet them by their own name (the record may have been entered as e.g. "Parent of Ahmed").
     return this.build({ ...parent, fullName: accountName || parent.fullName });
   }

@@ -27,6 +27,15 @@ export class CreatePoolDto {
   @IsOptional() @IsInt() @Min(0) @Max(100)
   minMurabbiScore?: number;
 
+  @IsOptional() @IsInt() @Min(0) @Max(100)
+  parentSharePct?: number;
+
+  @IsOptional() @IsInt() @Min(0) @Max(100)
+  maxParents?: number;
+
+  @IsOptional() @IsInt() @Min(0) @Max(100)
+  minParentScore?: number;
+
   @IsOptional() @IsString() @MaxLength(1000) @Transform(safeTrim)
   notes?: string;
 }
@@ -50,12 +59,21 @@ export class UpdatePoolDto {
   @IsOptional() @IsInt() @Min(0) @Max(100)
   minMurabbiScore?: number;
 
+  @IsOptional() @IsInt() @Min(0) @Max(100)
+  parentSharePct?: number;
+
+  @IsOptional() @IsInt() @Min(0) @Max(100)
+  maxParents?: number;
+
+  @IsOptional() @IsInt() @Min(0) @Max(100)
+  minParentScore?: number;
+
   @IsOptional() @IsString() @MaxLength(1000) @Transform(safeTrim)
   notes?: string;
 }
 
 export class AddAllocationDto {
-  @IsIn(['student', 'murabbi'])
+  @IsIn(['student', 'murabbi', 'parent'])
   recipientType: string;
 
   @IsMongoId({ message: 'Select a recipient.' })

@@ -5,6 +5,8 @@ import {
   CourseSectionSchema, FlipChartView, FlipChartViewSchema, LessonProgress, LessonProgressSchema, MurabbiPoint, MurabbiPointSchema,
 } from '../course/course.schema';
 import { User, UserSchema } from '../user/user.schema';
+import { Parent, ParentSchema } from '../parent/parent.schema';
+import { ParentActivity, ParentActivitySchema } from '../parent-rating/parent-rating.schema';
 import { CourseModule } from '../course/course.module';
 import {
   ParentQuizAttempt, ParentQuizAttemptSchema, ParentSelfCheck, ParentSelfCheckSchema, ParentTarget, ParentTargetSchema,
@@ -26,6 +28,8 @@ import { ParentCourseController } from './parent-course.controller';
       { name: ParentSelfCheck.name,   schema: ParentSelfCheckSchema   },
       { name: ParentTarget.name,      schema: ParentTargetSchema      },
       { name: User.name,              schema: UserSchema              },
+      { name: Parent.name,            schema: ParentSchema            },
+      { name: ParentActivity.name,    schema: ParentActivitySchema    },
     ]),
     CourseModule,
   ],
