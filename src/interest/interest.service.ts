@@ -7,6 +7,7 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../notification/notification.schema';
 import { EmailService } from '../email/email.service';
 import { cleanProfile } from '../insights/family-profile';
+import { PlacesService } from '../places/places.service';
 
 const ROLE_LABEL: Record<string, string> = { parent: 'parent', mentor: 'mentor', host: 'host' };
 
@@ -18,6 +19,7 @@ export class InterestService {
     @InjectModel(Interest.name) private readonly interestModel: Model<InterestDocument>,
     private readonly notifService: NotificationService,
     private readonly email: EmailService,
+    private readonly places: PlacesService,
   ) {}
 
   async create(dto: CreateInterestDto) {
@@ -28,14 +30,20 @@ export class InterestService {
       return thanks;
     }
 
+    const tidy = await this.places.tidy(dto.city, dto.neighbourhood);
     const interest = await this.interestModel.create({
       role         : dto.role,
       firstName    : dto.firstName,
       lastName     : dto.lastName,
       email        : dto.email,
       phone        : dto.phone,
-      city         : dto.city,
-      neighbourhood: dto.neighbourhood,
+      city         : tidy.city,
+      neighbourhood: tidy.area,
+      cityRaw      : dto.city,
+      neighbourhoodRaw: dto.neighbourhood,
+      district     : dto.district ?? '',
+      province     : dto.province ?? '',
+      location     : dto.location ? { lat: Math.round(dto.location.lat * 100) / 100, lng: Math.round(dto.location.lng * 100) / 100 } : null,
       roleDetail   : dto.roleDetail ?? '',
       profile      : dto.role === 'parent' && dto.profile ? cleanProfile(dto.profile, 'website') : null,
     });

@@ -35,6 +35,7 @@ import { InsightsModule }      from './insights/insights.module';
 import { ClusterModule }       from './cluster/cluster.module';
 import { MarketplaceModule }   from './marketplace/marketplace.module';
 import { ParentRatingModule }  from './parent-rating/parent-rating.module';
+import { PlacesModule }        from './places/places.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { ParentRatingModule }  from './parent-rating/parent-rating.module';
     ClusterModule,
     MarketplaceModule,
     ParentRatingModule,
+    PlacesModule,
   ],
   providers: [
     // Apply rate limiting globally
