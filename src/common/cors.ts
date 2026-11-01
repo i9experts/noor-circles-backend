@@ -7,9 +7,11 @@ import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-option
  * being listed in FRONTEND_URL. (The landing page's interest form was
  * silently blocked by CORS when its domain wasn't in that list.)
  */
-const PUBLIC_PATHS = [
-  /^\/api\/v1\/interest\/?(\?.*)?$/,
-  /^\/api\/v1\/contributions\/public\/checkout\/?(\?.*)?$/,
+const PUBLIC: { method: 'GET' | 'POST'; path: RegExp }[] = [
+  { method: 'POST', path: /^\/api\/v1\/interest\/?(\?.*)?$/ },
+  { method: 'POST', path: /^\/api\/v1\/contributions\/public\/checkout\/?(\?.*)?$/ },
+  // The interest form's city / area lists and "Use my location".
+  { method: 'GET', path: /^\/api\/v1\/places(\/reverse)?\/?(\?.*)?$/ },
 ];
 
 const BASE: CorsOptions = {
@@ -19,8 +21,8 @@ const BASE: CorsOptions = {
 
 /**
  * CORS per request: the configured portal origins (with credentials) for
- * everything, plus any origin, without credentials, for the public form
- * endpoint's POST and its preflight.
+ * everything, plus any origin, without credentials, for the public
+ * endpoints above (and their preflights).
  */
 export function buildCorsDelegate(allowedOrigins: string[]) {
   return (
@@ -28,9 +30,12 @@ export function buildCorsDelegate(allowedOrigins: string[]) {
     callback: (err: Error | null, options: CorsOptions) => void,
   ) => {
     const method = (req.method || '').toUpperCase();
-    const isPublic =
-      (method === 'POST' || method === 'OPTIONS') &&
-      PUBLIC_PATHS.some((re) => re.test(req.originalUrl || req.url || ''));
+    // A preflight asks about the method it will use next.
+    const wanted = method === 'OPTIONS'
+      ? String(req.headers['access-control-request-method'] || '').toUpperCase()
+      : method;
+    const url = req.originalUrl || req.url || '';
+    const isPublic = PUBLIC.some((p) => (p.method === wanted || (p.method === 'GET' && wanted === 'HEAD')) && p.path.test(url));
 
     callback(
       null,

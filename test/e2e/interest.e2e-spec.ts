@@ -237,6 +237,18 @@ describe('Interest form CORS', () => {
     expect(list.headers['access-control-allow-origin']).toBeUndefined();
   });
 
+  // Regression: the website's city / area lists were blocked the same way,
+  // so the form fell back to plain text boxes.
+  it('any website may load the place lists and use “Use my location”', async () => {
+    const r = await ctx.http().get(`${API}/places`).set('Origin', SITE);
+    expect(r.status).toBe(200);
+    expect(r.headers['access-control-allow-origin']).toBe(SITE);
+    const rev = await ctx.http().get(`${API}/places/reverse?lat=24.9&lng=67.1`).set('Origin', SITE);
+    expect(rev.headers['access-control-allow-origin']).toBe(SITE);
+    // Only reading: other methods on these paths stay closed.
+    expect((await preflight('/places', SITE, 'POST')).headers['access-control-allow-origin']).toBeUndefined();
+  });
+
   it('the portal keeps credentialed CORS everywhere', async () => {
     const pre = await preflight('/auth/me', PORTAL_ORIGIN, 'GET');
     expect(pre.headers['access-control-allow-origin']).toBe(PORTAL_ORIGIN);
