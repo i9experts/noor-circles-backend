@@ -12,6 +12,8 @@ const PUBLIC: { method: 'GET' | 'POST'; path: RegExp }[] = [
   { method: 'POST', path: /^\/api\/v1\/contributions\/public\/checkout\/?(\?.*)?$/ },
   // The interest form's city / area lists and "Use my location".
   { method: 'GET', path: /^\/api\/v1\/places(\/reverse)?\/?(\?.*)?$/ },
+  // "Meet the Founder" on the website.
+  { method: 'GET', path: /^\/api\/v1\/founder(\/posts)?\/?(\?.*)?$/ },
 ];
 
 const BASE: CorsOptions = {

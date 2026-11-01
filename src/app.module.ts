@@ -37,6 +37,7 @@ import { MarketplaceModule }   from './marketplace/marketplace.module';
 import { ParentRatingModule }  from './parent-rating/parent-rating.module';
 import { PlacesModule }        from './places/places.module';
 import { MurabbiProfileModule } from './murabbi-profile/murabbi-profile.module';
+import { FounderModule }       from './founder/founder.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { MurabbiProfileModule } from './murabbi-profile/murabbi-profile.module';
     ParentRatingModule,
     PlacesModule,
     MurabbiProfileModule,
+    FounderModule,
   ],
   providers: [
     // Apply rate limiting globally
