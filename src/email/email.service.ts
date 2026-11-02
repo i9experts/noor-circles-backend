@@ -25,6 +25,7 @@ import { CampaignDto, AudienceDto } from './email.dto';
 const CATEGORY: Record<string, OptionalCategory> = {
   'training.reminder': 'training-reminders',
   'parent-course.module-open': 'training-reminders',
+  'journal.reminder': 'training-reminders',
   campaign: 'announcements',
 };
 
@@ -510,6 +511,8 @@ const SAMPLES: { kind: string; title: string; when: string; audience: string; da
     data: { name: 'Bilal Khan', courseTitle: 'Asaas Murabbi Training', lessons: 119, minutes: 108, badge: 'Certified Asaas Murabbi', dueDate: '2026-12-15', url: `${L}/murabbi` } },
   { kind: 'training.reminder', title: 'Training reminders', when: 'Not started after 3 days · no listening for 7 days · due in 7 days and 1 day · overdue', audience: 'Murabbis',
     data: { name: 'Bilal Khan', courseTitle: 'Asaas Murabbi Training', variant: 'due-soon', days: 7, dueDate: '2026-12-15', done: 40, total: 119, url: `${L}/murabbi` } },
+  { kind: 'journal.reminder', title: 'Noor Journal reminder', when: 'An admin presses “Send reminder” on the Journal insights', audience: 'Murabbis',
+    data: { name: 'Bilal Khan', done: 3, total: 12, waiting: 4, next: 'Qualities Inventory', url: `${L}/murabbi` } },
   { kind: 'training.lessons-done', title: 'Every lesson heard', when: 'The last lesson is completed', audience: 'Murabbis',
     data: { name: 'Bilal Khan', courseTitle: 'Asaas Murabbi Training', total: 119, questions: 30, passingScore: 70, url: `${L}/murabbi` } },
   { kind: 'training.assessment', title: 'Assessment result', when: 'After each assessment attempt', audience: 'Murabbis',
