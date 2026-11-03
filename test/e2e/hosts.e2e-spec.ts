@@ -137,6 +137,9 @@ describe('Hosts and their spaces', () => {
     const after = (await as(host).get('host/training')).body.data;
     expect(after).toMatchObject({ done: 6, total: 6, certificate: { number: last.body.data.certificate } });
     const overview = (await as(w.admin).get('host/admin/training')).body.data;
+    const mods = (await as(w.admin).get('host/admin/training/modules')).body.data;
+    expect(mods.map((m: any) => [m.key, m.audio])).toEqual(HOST_MODULES.map((m) => [m.key, null]));
+    expect((await as(host).get('host/admin/training/modules')).status).toBe(403);
     expect(overview.find((h: any) => h.user.fullName === 'Saad Hussaini')).toMatchObject({ done: 6, certificate: { number: last.body.data.certificate } });
   });
 

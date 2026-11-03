@@ -122,6 +122,12 @@ export class HostController {
   @Roles(UserRole.ADMIN)
   trainingOverview() { return this.hosts.trainingOverview(); }
 
+  /** GET /host/admin/training/modules — the 6 modules and whether each has audio. */
+  @Get('admin/training/modules')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  modules() { return this.hosts.audioStatus(); }
+
   @Post('admin/training/:key/audio')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

@@ -265,6 +265,15 @@ export class HostService {
     return { message: 'Audio added to the module.' };
   }
 
+  /** Which modules have audio (for the admin training tab). */
+  async audioStatus() {
+    const audios = await this.audioModel.find().select('module durationSec updatedAt').lean();
+    return HOST_MODULES.map((m) => {
+      const a = audios.find((x) => x.module === m.key);
+      return { key: m.key, number: m.number, titleEn: m.titleEn, titleUr: m.titleUr, audio: a ? { durationSec: a.durationSec, updatedAt: (a as any).updatedAt } : null };
+    });
+  }
+
   async removeAudio(key: string) {
     const old = await this.audioModel.findOneAndDelete({ module: key }).lean();
     if (old) await this.audio.remove(old.file);
