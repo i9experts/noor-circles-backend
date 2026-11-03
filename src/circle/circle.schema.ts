@@ -23,6 +23,9 @@ export class Circle {
   // ── Schedule & syllabus ─────────────────────────────────────────────────────
 
   /** Syllabus track the circle follows (by age group). */
+  @Prop({ type: Types.ObjectId, ref: 'HostSpace', default: null })
+  venue: Types.ObjectId | null;
+
   @Prop({ type: Types.ObjectId, ref: 'SyllabusTrack', default: null })
   track: Types.ObjectId | null;
 

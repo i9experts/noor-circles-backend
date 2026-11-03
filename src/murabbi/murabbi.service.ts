@@ -121,6 +121,7 @@ export class MurabbiService {
     const circles = await this.circleModel
       .find({ murabbi: new Types.ObjectId(murabbiId) })
       .populate('neighbourhood', 'name city area mosques status')
+      .populate({ path: 'venue', select: 'name address area city host', populate: { path: 'host', select: 'fullName phone' } })
       .sort({ createdAt: -1 })
       .lean();
 

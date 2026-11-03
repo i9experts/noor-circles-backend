@@ -107,7 +107,7 @@ export type TemplateData = Record<string, any>;
 export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build: (d: TemplateData) => Content }> = {
   // 1. Account created
   'account.welcome': {
-    lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
+    lang: (d) => (d.role === 'parent' || d.role === 'host' ? 'ur-first' : 'en-first'),
     build: (d) => ({
       subject: `Your Noor Circles account is ready · آپ کا اکاؤنٹ تیار ہے`,
       preheader: 'Set your password to sign in.',
@@ -116,6 +116,8 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       en: [
         d.role === 'parent'
           ? 'Your family now has a Noor Circles account. Once you sign in you can follow your child’s circle: attendance, this week’s topic and home activity, the calendar and notes from the murabbi.'
+          : d.role === 'host'
+            ? 'Your host account is ready. Sign in to describe your space, see the circle that meets there and its murabbi, tell the team about any date the space can’t be used, and complete the short Asaas for Hosts training.'
           : d.role === 'supervisor'
             ? 'Your cluster supervisor account is ready. Sign in to see the circles in your cluster, log your visits and support the murabbis and families.'
             : 'Your murabbi account is ready. Sign in to see your circles, your weekly agenda and your training.',
@@ -124,6 +126,8 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       ur: [
         d.role === 'parent'
           ? 'آپ کے خاندان کا Noor Circles اکاؤنٹ بن گیا ہے۔ سائن اِن کر کے آپ اپنے بچے کے circle کی حاضری، اس ہفتے کا موضوع، گھر کی سرگرمی، کیلنڈر اور مربی کے نوٹس دیکھ سکتے ہیں۔'
+          : d.role === 'host'
+            ? 'آپ کا میزبان اکاؤنٹ تیار ہے۔ سائن اِن کر کے اپنی جگہ کی تفصیل لکھیں، وہاں ہونے والا حلقہ اور اس کے مربی کو دیکھیں، جگہ دستیاب نہ ہو تو ٹیم کو بتائیں، اور مختصر "میزبانوں کا Asaas" تربیت مکمل کریں۔'
           : d.role === 'supervisor'
             ? 'آپ کا کلسٹر سپروائزر اکاؤنٹ تیار ہے۔ سائن اِن کر کے اپنے کلسٹر کے circles دیکھیں، وزٹ رپورٹ لکھیں اور مربیوں اور خاندانوں کا ساتھ دیں۔'
             : 'آپ کا مربی اکاؤنٹ تیار ہے۔ سائن اِن کر کے اپنے circles، ہفتہ وار ایجنڈا اور تربیت دیکھیں۔',
@@ -314,6 +318,48 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       en: ['Someone used “Find your place” on the website.'],
       facts: [['Name', d.name], ['Role', d.role], ['Email', d.email], ['Phone', d.phone], ['Area', `${d.neighbourhood}, ${d.city}`], ...(d.roleDetail ? [['Detail', d.roleDetail] as [string, string]] : [])],
       button: { label: 'Open Interest Requests', url: d.adminUrl },
+    }),
+  },
+
+  // Hosts: a date the space can't be used (to the circle's murabbi, and to the team)
+  'space.unavailable': {
+    lang: () => 'en-first',
+    build: (d) => ({
+      subject: `Space unavailable on ${fmtDate(d.date)}: ${d.spaceName}`,
+      preheader: `${d.hostName} can't host ${d.circles || 'the circle'} that day.`,
+      heading: `${d.spaceName} can't be used on ${fmtDate(d.date)}`,
+      headingUr: 'جگہ دستیاب نہیں',
+      en: [
+        `${d.hostName} has let us know that **${d.spaceName}** can't be used on **${fmtDate(d.date)}**.${d.reason ? ` Reason: ${d.reason}` : ''}`,
+        d.circles ? `Circles affected: **${d.circles}**. Please arrange another place or let the families know the session is moved.` : 'No circle meets there yet.',
+      ],
+      ur: [`${d.hostName} نے بتایا ہے کہ ${fmtDate(d.date)} کو جگہ دستیاب نہیں۔ براہِ کرم متبادل جگہ کا انتظام کریں یا خاندانوں کو اطلاع دیں۔`],
+      facts: [['Space', d.spaceName], ['Date', fmtDate(d.date)], ['Host', d.hostName], ...(d.hostPhone ? [['Host phone', d.hostPhone] as [string, string]] : [])],
+      button: { label: 'Open the portal', url: d.url },
+    }),
+  },
+  // Hosts: the space was approved after the visit
+  'host.space-approved': {
+    lang: () => 'ur-first',
+    build: (d) => ({
+      subject: `Your space is approved · آپ کی جگہ منظور ہو گئی`,
+      heading: `JazakAllah khair, ${first(d.name)}: ${d.spaceName} is approved`,
+      headingUr: 'آپ کی جگہ منظور ہو گئی',
+      en: ['Thank you for opening your space. After the visit, the Noor Circles team has approved it for a circle. We will let you know when a circle is placed there and who its murabbi is.', 'Please finish the short Asaas for Hosts training in your portal if you haven’t yet.'],
+      ur: ['اپنی جگہ پیش کرنے کا شکریہ۔ وزٹ کے بعد نور سرکلز ٹیم نے اسے حلقے کے لیے منظور کر لیا ہے۔ جب حلقہ یہاں رکھا جائے گا تو ہم آپ کو مربی کے بارے میں بتائیں گے۔', 'اگر ابھی تک نہیں کی تو پورٹل میں مختصر "میزبانوں کا Asaas" تربیت مکمل کر لیں۔'],
+      button: { label: 'Open my host portal', labelUr: 'پورٹل کھولیں', url: d.url },
+    }),
+  },
+  // Hosts: a circle now meets in their space
+  'host.circle-placed': {
+    lang: () => 'ur-first',
+    build: (d) => ({
+      subject: `A circle will meet at ${d.spaceName} · آپ کی جگہ پر حلقہ`,
+      heading: `${d.circleName} will meet at ${d.spaceName}`,
+      headingUr: 'آپ کی جگہ پر حلقہ',
+      en: [`The circle **${d.circleName}** will meet in your space${d.schedule ? ` (${d.schedule})` : ''}. Its murabbi is **${d.murabbiName}**${d.murabbiPhone ? `, ${d.murabbiPhone}` : ''}.`, 'You can see the schedule and tell us about any date the space can’t be used in your portal.'],
+      ur: [`حلقہ "${d.circleName}" آپ کی جگہ پر ہوگا${d.schedule ? ` (${d.schedule})` : ''}۔ اس کے مربی ${d.murabbiName} ہیں۔ شیڈول اور "جگہ دستیاب نہیں" پورٹل میں ہیں۔`],
+      button: { label: 'Open my host portal', labelUr: 'پورٹل کھولیں', url: d.url },
     }),
   },
 

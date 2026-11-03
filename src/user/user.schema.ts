@@ -10,6 +10,8 @@ export enum UserRole {
   PARENT = 'parent',
   /** Looks after the circles in one or more clusters (groups of neighbourhoods). */
   SUPERVISOR = 'supervisor',
+  /** Offers a space (home, lawn, hall) where a circle meets. */
+  HOST = 'host',
 }
 
 @Schema({ timestamps: true })

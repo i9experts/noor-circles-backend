@@ -39,6 +39,7 @@ import { PlacesModule }        from './places/places.module';
 import { MurabbiProfileModule } from './murabbi-profile/murabbi-profile.module';
 import { FounderModule }       from './founder/founder.module';
 import { JournalModule }       from './journal/journal.module';
+import { HostModule }          from './host/host.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { JournalModule }       from './journal/journal.module';
     MurabbiProfileModule,
     FounderModule,
     JournalModule,
+    HostModule,
   ],
   providers: [
     // Apply rate limiting globally

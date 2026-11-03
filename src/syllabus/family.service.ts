@@ -158,7 +158,7 @@ export class FamilyService {
   private async build(parent: { _id: Types.ObjectId; fullName: string; students: Types.ObjectId[]; profile?: unknown }) {
 
     const students = await this.studentModel.find({ _id: { $in: parent.students }, isActive: true })
-      .populate({ path: 'circle', populate: [{ path: 'murabbi', select: 'fullName' }, { path: 'track', select: 'name ageGroup' }, { path: 'neighbourhood', select: 'name' }] })
+      .populate({ path: 'circle', populate: [{ path: 'murabbi', select: 'fullName' }, { path: 'track', select: 'name ageGroup' }, { path: 'neighbourhood', select: 'name' }, { path: 'venue', select: 'name address area city' }] })
       .select('fullName circle').sort({ fullName: 1 }).lean();
 
     const circles = new Map<string, any>();
@@ -205,6 +205,7 @@ export class FamilyService {
           name: circle.name, neighbourhood: circle.neighbourhood?.name ?? null,
           meetingDay: circle.meetingDay, meetingTime: circle.meetingTime,
           murabbi: firstName(circle.murabbi?.fullName), track: circle.track?.name ?? null,
+          venue: circle.venue ? { name: circle.venue.name, address: circle.venue.address || null, area: circle.venue.area || null, city: circle.venue.city || null } : null,
         },
         attendance: {
           present, total: history.length,
