@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '../user/user.schema';
 import { Circle, CircleSchema } from '../circle/circle.schema';
+import { Cluster, ClusterSchema } from '../cluster/cluster.schema';
+import { EmailLog, EmailLogSchema } from '../email/email.schema';
 import {
   Course, CourseAssignment, CourseAssignmentSchema, CourseLesson, CourseLessonSchema, CourseReflection, CourseReflectionSchema,
   CourseSchema, LessonProgress, LessonProgressSchema, MurabbiPoint, MurabbiPointSchema,
@@ -23,6 +25,8 @@ import { JournalController } from './journal.controller';
       { name: MurabbiPoint.name,     schema: MurabbiPointSchema     },
       { name: User.name,             schema: UserSchema             },
       { name: Circle.name,           schema: CircleSchema           },
+      { name: Cluster.name,          schema: ClusterSchema          },
+      { name: EmailLog.name,         schema: EmailLogSchema         },
     ]),
   ],
   controllers: [JournalController],

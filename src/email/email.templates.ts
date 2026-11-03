@@ -389,6 +389,23 @@ export const TEMPLATES: Record<string, { lang: (d: TemplateData) => Lang; build:
       };
     },
   },
+  // Noor Journal: a reminder an admin sends from the Journal insights
+  'journal.reminder': {
+    lang: () => 'en-first',
+    build: (d) => ({
+      subject: 'Your Noor Journal is waiting',
+      preheader: `${d.done} of ${d.total} pages written.`,
+      heading: `${first(d.name)}, your Noor Journal is waiting`,
+      headingUr: 'آپ کا نور جرنل آپ کا منتظر ہے',
+      en: [
+        `So far you have written **${d.done} of ${d.total}** pages of your Noor Journal.${d.waiting ? ` ${d.waiting} page${d.waiting === 1 ? ' is' : 's are'} already open and waiting for your words${d.next ? `, starting with **${d.next}**` : ''}.` : ''}`,
+        'Each page takes a few minutes and follows the activity in the Asaas audio. Write in Urdu, English or your own language.',
+        ...(d.note ? [`Note from the team: ${d.note}`] : []),
+      ],
+      ur: [`آپ نے اب تک نور جرنل کے ${d.total} میں سے ${d.done} صفحات لکھے ہیں۔ ہر صفحہ چند منٹ کا ہے اور اساس آڈیو کی سرگرمی کے مطابق ہے۔ اردو، انگریزی یا اپنی زبان میں لکھیں۔`],
+      button: { label: 'Open my Noor Journal', labelUr: 'نور جرنل کھولیں', url: d.url },
+    }),
+  },
   // 22. All lessons heard
   'training.lessons-done': {
     lang: (d) => (d.role === 'parent' ? 'ur-first' : 'en-first'),
