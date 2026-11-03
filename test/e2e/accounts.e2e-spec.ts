@@ -87,11 +87,14 @@ describe('Accounts from interest requests and parents', () => {
       expect(s.body.data.user.mustChangePassword).toBe(true);
     });
 
-    it('hosts don’t get accounts; only admins can create them', async () => {
+    it('hosts get a host account with their space; only admins can create accounts', async () => {
       await interest('host', 'Masjid', 'host@e2e.test', '03009998877', 'Masjid');
       const id = await interestId('host@e2e.test');
-      expect((await adm().post(`interest/${id}/account`)).status).toBe(400);
       expect((await as(w.A.token).post(`interest/${id}/account`)).status).toBe(403);
+      const r = await adm().post(`interest/${id}/account`);
+      expect(r.status).toBe(201);
+      expect(r.body.data.account.role).toBe('host');
+      expect(r.body.data.spaceId).toBeTruthy();
       expect((await as(w.A.token).post(`accounts/${userId}/reset-password`)).status).toBe(403);
     });
 

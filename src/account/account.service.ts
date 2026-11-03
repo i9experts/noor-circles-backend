@@ -9,6 +9,7 @@ import { Interest, InterestDocument } from '../interest/interest.schema';
 import { CourseService, ASAAS_KEY } from '../course/course.service';
 import { ParentCourseService } from '../parent-course/parent-course.service';
 import { UsersService } from '../user/user.service';
+import { HostService } from '../host/host.service';
 import { EmailService } from '../email/email.service';
 import { ConvertInterestDto, CreateParentAccountDto } from './account.dto';
 import { tempPassword } from './temp-password';
@@ -36,6 +37,7 @@ export class AccountService {
     private readonly parentCourse: ParentCourseService,
     private readonly users: UsersService,
     private readonly email: EmailService,
+    private readonly hosts: HostService,
     config: ConfigService,
   ) {
     const portal = (config.get<string>('PORTAL_URL')
@@ -90,13 +92,17 @@ export class AccountService {
     if (interest.account && await this.userModel.exists({ _id: interest.account })) {
       throw new ConflictException('An account was already created for this request. Use “Reset password” to issue a new password.');
     }
-    if (interest.role === 'host') {
-      throw new BadRequestException('Hosts offer a space and don’t need a portal account. Add the space under Neighbourhoods instead.');
-    }
     const fullName = `${interest.firstName} ${interest.lastName}`.trim().slice(0, 60);
 
-    let result: ReturnType<AccountService['credentials']> & { parentId?: string; linkedExisting?: boolean; training?: string | null };
-    if (interest.role === 'mentor') {
+    let result: ReturnType<AccountService['credentials']> & { parentId?: string; linkedExisting?: boolean; training?: string | null; spaceId?: string };
+    if (interest.role === 'host') {
+      const { user, password, emailed } = await this.createUser({
+        fullName, email: interest.email, role: UserRole.HOST, phone: interest.phone,
+        address: `${interest.neighbourhood}, ${interest.city}`.slice(0, 200),
+      });
+      const space = await this.hosts.createFromInterest(user._id, interest as any);
+      result = { ...this.credentials(user, password, emailed), spaceId: space._id.toString() };
+    } else if (interest.role === 'mentor') {
       const { user, password, emailed } = await this.createUser({
         fullName, email: interest.email, role: UserRole.MURABBI, phone: interest.phone,
         address: `${interest.neighbourhood}, ${interest.city}`.slice(0, 200),
@@ -140,7 +146,7 @@ export class AccountService {
     if (interest.status === 'new') interest.status = 'contacted';
     await interest.save();
     this.logger.log(`Account created from interest → ${result.account.email} [${result.account.role}]`);
-    return { message: `${result.account.role === 'murabbi' ? 'Murabbi' : 'Parent'} account created. Share the sign-in details with ${fullName}.`, ...result };
+    return { message: `${({ murabbi: 'Murabbi', host: 'Host', parent: 'Parent' } as Record<string, string>)[result.account.role] ?? 'Account'} account created. Share the sign-in details with ${fullName}.`, ...result };
   }
 
   // ── Parents already on file ─────────────────────────────────────────────────
@@ -174,7 +180,7 @@ export class AccountService {
   private async managedUser(userId: string) {
     if (!Types.ObjectId.isValid(userId)) throw new BadRequestException('Invalid id.');
     const user = await this.userModel.findById(userId);
-    if (!user || ![UserRole.MURABBI, UserRole.PARENT, UserRole.SUPERVISOR].includes(user.role)) throw new NotFoundException('Account not found.');
+    if (!user || ![UserRole.MURABBI, UserRole.PARENT, UserRole.SUPERVISOR, UserRole.HOST].includes(user.role)) throw new NotFoundException('Account not found.');
     return user;
   }
 

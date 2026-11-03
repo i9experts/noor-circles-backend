@@ -6,6 +6,7 @@ import { Interest, InterestSchema } from '../interest/interest.schema';
 import { CourseModule } from '../course/course.module';
 import { ParentCourseModule } from '../parent-course/parent-course.module';
 import { UsersModule } from '../user/user.module';
+import { HostModule } from '../host/host.module';
 import { AccountService } from './account.service';
 import { AccountController } from './account.controller';
 
@@ -19,6 +20,7 @@ import { AccountController } from './account.controller';
     CourseModule,
     ParentCourseModule,
     UsersModule,
+    HostModule,
   ],
   controllers: [AccountController],
   providers  : [AccountService],
