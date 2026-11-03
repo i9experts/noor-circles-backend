@@ -20,7 +20,8 @@ interface Requester { _id: Types.ObjectId | string; role: string; fullName?: str
 const oid = (v: string | Types.ObjectId) => new Types.ObjectId(String(v));
 const pkToday = () => new Date(Date.now() + 5 * 3600_000).toISOString().slice(0, 10);
 const addDays = (iso: string, n: number) => new Date(Date.parse(`${iso}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
-const typeLabel = (t: string) => SPACE_TYPES.find((x) => x.value === t)?.en ?? 'Space';
+/** For a new space's default name: "Hussaini family lawn". */
+const SHORT_NAME: Record<string, string> = { 'living-room': 'home', lawn: 'lawn', community: 'space', 'masjid-room': 'masjid room', hall: 'hall', other: 'space' };
 const fmtTime = (t?: string | null) => {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
@@ -67,7 +68,7 @@ export class HostService {
       ? await this.nbhModel.findOne({ name: new RegExp(`^${interest.neighbourhood.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }).select('_id').lean()
       : null;
     const space = await this.spaceModel.create({
-      host: hostId, name: `${interest.lastName || interest.firstName} family ${typeLabel(type).toLowerCase()}`.slice(0, 100),
+      host: hostId, name: `${interest.lastName || interest.firstName} family ${SHORT_NAME[type] ?? 'space'}`.slice(0, 100),
       type, city: interest.city ?? '', area: interest.neighbourhood ?? '', neighbourhood: nbh?._id ?? null, interest: interest._id,
     });
     await this.trainingModel.updateOne({ user: hostId }, { $setOnInsert: { user: hostId } }, { upsert: true });
