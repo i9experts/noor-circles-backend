@@ -31,5 +31,6 @@ import { JournalController } from './journal.controller';
   ],
   controllers: [JournalController],
   providers  : [JournalService],
+  exports    : [JournalService],
 })
 export class JournalModule {}
