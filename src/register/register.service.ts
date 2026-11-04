@@ -215,7 +215,7 @@ export class RegisterService {
     const accountIds = parents.map((p) => p.account).filter(Boolean) as Types.ObjectId[];
     const studentIds = parents.flatMap((p) => p.students ?? []);
     const month = pkMonth();
-    const [users, students, places, follows, asaas, ratings, rewards] = await Promise.all([
+    const [users, students, places, follows, asaas, ratings, rewards, interests] = await Promise.all([
       this.userModel.find({ _id: { $in: accountIds } }).select('isActive pendingApproval mustChangePassword lastLoginAt createdAt').lean(),
       this.studentModel.find({ _id: { $in: studentIds } }).select('fullName dateOfBirth circle neighbourhood murabbi isActive enrollmentDate')
         .populate('circle', 'name').populate('murabbi', 'fullName').lean(),
@@ -227,6 +227,7 @@ export class RegisterService {
         { $match: { recipientType: 'parent', parent: { $in: accountIds }, status: { $in: ['approved', 'paid'] } } },
         { $group: { _id: '$parent', paid: { $sum: { $cond: [{ $eq: ['$status', 'paid'] }, '$amount', 0] } }, approved: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0] } } } },
       ]),
+      this.interestsFor(accountIds),
     ]);
     const attendance = await this.attendanceModel.aggregate([
       { $match: { 'records.student': { $in: studentIds } } },
@@ -247,6 +248,7 @@ export class RegisterService {
       const acc = p.account ? String(p.account) : null;
       const kids = students.filter((s: any) => (p.students ?? []).some((x: any) => String(x) === String(s._id)));
       const place = kids.map((s: any) => places.get(String(s.neighbourhood))).find(Boolean);
+      const interest = acc ? interests.get(acc) : null;
       const a = acc ? asaasBy.get(acc) : null;
       const rating = acc ? ratings.find((r) => String(r.user) === acc && r.month === month) : null;
       const rw = acc ? rewards.find((r) => String(r._id) === acc) : null;
@@ -254,7 +256,7 @@ export class RegisterService {
       return {
         _id: id,
         fullName: p.fullName, phone: p.phone ?? '', whatsapp: p.whatsappNumber || p.phone || '', email: p.email ?? '',
-        area: place?.area ?? '', city: place?.city ?? '', cluster: place?.cluster ?? null,
+        area: place?.area ?? interest?.neighbourhood ?? '', city: place?.city ?? interest?.city ?? '', cluster: place?.cluster ?? null,
         engaged: p.isEngaged !== false, notes: p.notes ?? '', addedAt: p.createdAt ?? null,
         account: { ...this.account(acc ? userBy.get(acc) : null), userId: acc },
         children: kids.map((s: any) => {
