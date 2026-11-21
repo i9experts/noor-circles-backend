@@ -1,7 +1,8 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UseGuards,
+  Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Query, Res, UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Types } from 'mongoose';
 import { JwtAuthGuard }   from '../auth/guards/jwt-auth.guard';
 import { RolesGuard }     from '../auth/guards/roles.guard';
 import { Roles }          from '../auth/decorators/roles.decorator';
@@ -203,6 +204,24 @@ export class TrainingController {
     @Res() res: Response,
   ) {
     const pdf = await this.trainingService.generateCertificatePdf(user._id.toString(), Number(tier));
+    res.set({
+      'Content-Type'       : 'application/pdf',
+      'Content-Disposition': `attachment; filename="noor-circles-tier-${tier}-certificate.pdf"`,
+      'Content-Length'     : pdf.length,
+    });
+    res.send(pdf);
+  }
+
+  /** GET /training/admin/certificate/:userId/:tier/download — the same PDF, for the team to print. */
+  @Get('admin/certificate/:userId/:tier/download')
+  @Roles(UserRole.ADMIN)
+  async downloadCertificateFor(
+    @Param('userId') userId: string,
+    @Param('tier') tier: string,
+    @Res() res: Response,
+  ) {
+    if (!Types.ObjectId.isValid(userId)) throw new NotFoundException('Murabbi not found.');
+    const pdf = await this.trainingService.generateCertificatePdf(userId, Number(tier));
     res.set({
       'Content-Type'       : 'application/pdf',
       'Content-Disposition': `attachment; filename="noor-circles-tier-${tier}-certificate.pdf"`,
