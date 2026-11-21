@@ -258,6 +258,19 @@ describe('Training', () => {
       expect(pdf.status).toBe(200);
       expect(pdf.headers['content-type']).toBe('application/pdf');
       expect((pdf.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
+
+      // The team can print the same certificate; murabbis can't fetch anyone's.
+      const asPdf = (r: any) => r.buffer(true).parse((res: any, cb: any) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => cb(null, Buffer.concat(chunks)));
+      });
+      const adminPdf = await asPdf(adm().get(`admin/certificate/${w.A.id}/1/download`));
+      expect(adminPdf.status).toBe(200);
+      expect((adminPdf.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
+      expect((await adm().get(`admin/certificate/${w.B.id}/1/download`)).status).toBe(404);
+      expect((await adm().get('admin/certificate/not-an-id/1/download')).status).toBe(404);
+      expect((await mA().get(`admin/certificate/${w.A.id}/1/download`)).status).toBe(403);
     });
 
     it('admin lists + revokes certificates', async () => {
