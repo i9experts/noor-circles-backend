@@ -10,6 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CERT_LOGO_PNG, CERT_SIGNATORY, CERT_SIGNATURE_PNG } from './certificate-assets';
 // pdfkit exports `module.exports = PDFDocument` (no ES default export),
 // so `import * as PDFDocument` binds a namespace object, not the class
 // itself — `new PDFDocument()` then fails with "not a constructor".
@@ -516,37 +517,37 @@ export class TrainingService {
       doc.lineWidth(10).strokeColor(MAROON).rect(24, 24, W - 48, H - 48).stroke();
       doc.lineWidth(1.5).strokeColor(GOLD).rect(38, 38, W - 76, H - 76).stroke();
 
-      doc.fillColor(MAROON)
-        .font('Times-Bold').fontSize(14)
-        .text('NOOR CIRCLES', 0, 68, { align: 'center', characterSpacing: 4 });
+      // The official logo (it carries the name and the strapline).
+      const logoW = 240;
+      doc.image(CERT_LOGO_PNG, (W - logoW) / 2, 56, { width: logoW });
 
       doc.fillColor('#555')
-        .font('Times-Roman').fontSize(11)
-        .text('The Deen Way (TDW) Education Network', 0, 90, { align: 'center' });
+        .font('Times-Roman').fontSize(10.5)
+        .text('The Deen Way (TDW) Education Network', 0, 124, { align: 'center' });
 
-      doc.moveTo(W / 2 - 60, 118).lineTo(W / 2 + 60, 118).lineWidth(1).strokeColor(GOLD).stroke();
+      doc.moveTo(W / 2 - 60, 144).lineTo(W / 2 + 60, 144).lineWidth(1).strokeColor(GOLD).stroke();
 
       doc.fillColor(MAROON)
         .font('Times-Bold').fontSize(28)
-        .text('Certificate of Completion', 0, 140, { align: 'center' });
+        .text('Certificate of Completion', 0, 158, { align: 'center' });
 
       doc.fillColor('#333')
         .font('Times-Roman').fontSize(13)
-        .text('This is to certify that', 0, 190, { align: 'center' });
+        .text('This is to certify that', 0, 200, { align: 'center' });
 
       doc.fillColor(MAROON)
         .font('Times-Bold').fontSize(30)
-        .text(fullName, 0, 215, { align: 'center' });
+        .text(fullName, 0, 222, { align: 'center' });
 
       doc.fillColor('#333')
         .font('Times-Roman').fontSize(13)
         .text(
           `has successfully completed the ${this.tierName(tier)} Murabbi Training Programme,`,
-          80, 260, { align: 'center', width: W - 160 },
+          80, 266, { align: 'center', width: W - 160 },
         )
         .text(
           'demonstrating the knowledge and character required to lead a Noor Circle under EDUDEEN supervision.',
-          80, 280, { align: 'center', width: W - 160 },
+          80, 286, { align: 'center', width: W - 160 },
         );
 
       if (tier === 1) {
@@ -554,8 +555,8 @@ export class TrainingService {
         const label = 'CERTIFIED ASAAS MURABBI';
         doc.font('Times-Bold').fontSize(12);
         const bw = doc.widthOfString(label, { characterSpacing: 2 }) + 40;
-        doc.roundedRect((W - bw) / 2, 318, bw, 28, 14).lineWidth(1.5).fillAndStroke('#fbf4e2', GOLD);
-        doc.fillColor(MAROON).text(label, 0, 328, { align: 'center', characterSpacing: 2 });
+        doc.roundedRect((W - bw) / 2, 320, bw, 28, 14).lineWidth(1.5).fillAndStroke('#fbf4e2', GOLD);
+        doc.fillColor(MAROON).text(label, 0, 330, { align: 'center', characterSpacing: 2 });
       }
 
       const issued = new Date(cert.issuedAt);
@@ -565,9 +566,14 @@ export class TrainingService {
         .text(`Certificate No. ${cert.certificateNumber}`, 80, H - 110, { width: 250 })
         .text(`Issued ${dateStr}`, 80, H - 92, { width: 250 });
 
+      // The founder's signature above the line, with name and title below.
+      const sigW = 120;
+      doc.image(CERT_SIGNATURE_PNG, W - 205 - sigW / 2, H - 200, { width: sigW });
       doc.moveTo(W - 330, H - 110).lineTo(W - 80, H - 110).lineWidth(1).strokeColor('#999').stroke();
-      doc.font('Times-Italic').fontSize(11).fillColor('#555')
-        .text('Authorised Signatory', W - 330, H - 100, { width: 250, align: 'center' });
+      doc.font('Times-Bold').fontSize(11.5).fillColor(MAROON)
+        .text(CERT_SIGNATORY.name, W - 330, H - 102, { width: 250, align: 'center' });
+      doc.font('Times-Italic').fontSize(10.5).fillColor('#555')
+        .text(CERT_SIGNATORY.title, W - 330, H - 87, { width: 250, align: 'center' });
 
       doc.end();
     });
