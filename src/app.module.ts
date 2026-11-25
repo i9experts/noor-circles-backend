@@ -41,6 +41,7 @@ import { FounderModule }       from './founder/founder.module';
 import { JournalModule }       from './journal/journal.module';
 import { HostModule }          from './host/host.module';
 import { RegisterModule }      from './register/register.module';
+import { ParentJournalModule } from './parent-journal/parent-journal.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { RegisterModule }      from './register/register.module';
     JournalModule,
     HostModule,
     RegisterModule,
+    ParentJournalModule,
   ],
   providers: [
     // Apply rate limiting globally
